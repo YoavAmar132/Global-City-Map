@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Text?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="167.0" prefWidth="308.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Text layoutX="37.0" layoutY="79.0" strokeType="OUTSIDE" strokeWidth="0.0" text="you have successfully entered the system. wellcome!" textAlignment="CENTER" wrappingWidth="233.92449951171875" />
+   </children>
+</AnchorPane>
