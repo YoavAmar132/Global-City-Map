@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gcm.client.controllers.WelcomeController">
+
+    <!-- Close (X) button -->
+    <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;" text="✕" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
+
+    <!-- Welcome card -->
+    <StackPane layoutX="100.0" layoutY="100.0" prefHeight="200.0" prefWidth="400.0" style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+        <effect>
+            <DropShadow color="#00000055" radius="10.0" />
+        </effect>
+
+        <VBox alignment="CENTER" spacing="15.0">
+            <Label fx:id="welcomeText" style="-fx-font-size: 26; -fx-font-weight: bold;" text="Welcome!" textFill="white" />
+        </VBox>
+    </StackPane>
+</AnchorPane>
