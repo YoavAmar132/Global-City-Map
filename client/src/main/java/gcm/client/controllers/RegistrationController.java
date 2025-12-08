@@ -10,15 +10,18 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
-public class LoginController {
+import javax.xml.validation.Validator;
 
+public class RegistrationController {
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
-
-
+    @FXML private PasswordField confirmPasswordField;
+    private String Errormsg;
+    private boolean filledform=false;
     private GcmClient client;
-
+    //network init
     @FXML
     public void initialize() {
         client = ClientApp.getClient();
@@ -26,40 +29,49 @@ public class LoginController {
         // for now: handle all responses here (only LOGIN exists)
         client.setResponseHandler(this::handleResponse);
     }
-    public void onRegisterClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(RegistrationController.class);
+
+
+
+    public void onFillEForm() {
     }
 
-    @FXML
-    private void onLoginClicked() {
+
+    public void onRegisterClicked() {
         String username = usernameField.getText();
         String password = passwordField.getText();
+        String confirmPassword = confirmPasswordField.getText();
+        if((password.equals(confirmPassword))) {
 
-        LoginPayload payload = new LoginPayload(username, password);
-        GcmRequest request = new GcmRequest(RequestType.LOGIN, payload);
+            LoginPayload payload = new LoginPayload(username, password);
+            GcmRequest request = new GcmRequest(RequestType.REGISTER, payload);
 
-        client.sendRequest(request);
+            client.sendRequest(request);
+              return;
+        }
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error:");
+        alert.setContentText("passwords don't match");
+        alert.showAndWait();
     }
 
     private void handleResponse(GcmResponse response) {
         if (!response.isSuccess()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Login Failed");
+            alert.setTitle("registration Failed");
             alert.setContentText(response.getErrorMessage());
             alert.showAndWait();
         }else {
 
             User user = (User) response.getData();
-            System.out.println("Logged in as: " + user.getUsername() + " (" + user.getRole() + ")");
-            ClientApp.getNavigator().show(WelcomeController.class);
+            System.out.println("registered as: " + user.getUsername() + " (" + user.getRole() + ")");
+            ClientApp.getNavigator().show(LoginController.class);
         }
 
     }
-    @FXML
-    private void handleClose() {
+
+
+    public void handleClose() {
         client.closeConnectionSafe();
         javafx.application.Platform.exit();
     }
-
-
 }

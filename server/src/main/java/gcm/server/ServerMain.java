@@ -14,7 +14,6 @@ public class ServerMain {
             UserRepo UserRepository = new UserRepo();
             AuthService authService = new AuthService(UserRepository);
             authService.loadUsersFromDb(); // fills the ArrayList<User>
-
             RequestHandler handler = new RequestHandler(authService);
 
             GcmServer server = new GcmServer(5555, handler);

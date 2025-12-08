@@ -51,4 +51,42 @@ public class UserRepo {
             }
         }
     }
+    public int getMaxUserId() {
+        String sql = "SELECT MAX(id) AS max_id FROM users";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+                return rs.getInt("max_id");  // returns max id, or 0 if table is empty
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0; // safe fallback if no users exist
+    }
+    public boolean insertUser(User user) {
+        String sql = "INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, user.getId());
+            stmt.setString(2, user.getUsername());
+            stmt.setString(3, user.getPassword());
+            stmt.setString(4, user.getRole());
+
+            int rows = stmt.executeUpdate();
+            return rows > 0;   // true if inserted successfully
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 }

@@ -1,5 +1,6 @@
 package gcm.client.utill;
 
+import gcm.client.controllers.RegistrationController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -21,6 +22,7 @@ public class SceneNavigator {
         // NOTE: leading "/" and matching src/main/resources structure
         routes.put(LoginController.class, "/gcm/client/LoginScreen.fxml");
         routes.put(WelcomeController.class, "/gcm/client/WelcomeScreen.fxml");
+        routes.put(RegistrationController.class, "/gcm/client/RegistrationScreen.fxml");
     }
 
     public <T> void show(Class<T> controllerClass) {

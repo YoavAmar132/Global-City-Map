@@ -3,6 +3,7 @@ public enum RequestType {
     // Auth
     LOGIN,
     LOGOUT,
+    REGISTER,
 
     // Catalog
     LIST_CITIES,
