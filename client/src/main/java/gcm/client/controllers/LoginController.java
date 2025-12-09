@@ -51,7 +51,30 @@ public class LoginController {
 
             User user = (User) response.getData();
             System.out.println("Logged in as: " + user.getUsername() + " (" + user.getRole() + ")");
-            ClientApp.getNavigator().show(WelcomeController.class);
+            switch (user.getRole()) {
+                case "user":
+                    ClientApp.getNavigator().show(UserMenuController.class);
+                    break;
+
+                case "content_worker":
+                    ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+                    break;
+
+                    case "content_manager":
+                        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+                        break;
+
+                        case "manager":
+                            ClientApp.getNavigator().show(ManagerMenuController.class);
+                            break;
+
+                            case "customer_support":
+                                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
+                                break;
+
+
+            }
+
         }
 
     }

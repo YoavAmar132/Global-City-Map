@@ -1,11 +1,9 @@
 package gcm.client.utill;
 
-import gcm.client.controllers.RegistrationController;
+import gcm.client.controllers.*;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import gcm.client.controllers.LoginController;
-import gcm.client.controllers.WelcomeController;
 
 import java.io.IOException;
 import java.net.URL;
@@ -23,6 +21,11 @@ public class SceneNavigator {
         routes.put(LoginController.class, "/gcm/client/LoginScreen.fxml");
         routes.put(WelcomeController.class, "/gcm/client/WelcomeScreen.fxml");
         routes.put(RegistrationController.class, "/gcm/client/RegistrationScreen.fxml");
+        routes.put(UserMenuController.class, "/gcm/client/UserMenuScreen.fxml");
+        routes.put(ContentWorkerMenuController.class, "/gcm/client/ContentWorkerMenuScreen.fxml");
+        routes.put(ManagerMenuController.class, "/gcm/client/ManagerMenuScreen.fxml");
+        routes.put(CustomerSupportMenuController.class, "/gcm/client/CustomerSupportMenuScreen.fxml");
+
     }
 
     public <T> void show(Class<T> controllerClass) {
