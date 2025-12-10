@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.fxml.FXML?>
+<?import javafx.fxml.FXMLLoader?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.map.MapViewerController">
+
+    <!-- Optional top toolbar -->
+    <top>
+        <ToolBar>
+            <Label text="Map Viewer" />
+            <Region prefWidth="20"/>
+            <Button text="Zoom +" onAction="#onZoomIn"/>
+            <Button text="Zoom -" onAction="#onZoomOut"/>
+            <Region fx:id="spacer" BorderPane.alignment="CENTER" />
+        </ToolBar>
+    </top>
+
+    <!-- Center: StackPane with 2 included FXMLs -->
+    <center>
+        <StackPane fx:id="stackPane">
+            <!-- Base tiles layer -->
+            <fx:include source="MapBaseLayer.fxml" fx:id="baseLayer"/>
+
+            <!-- Transparent overlay layer for POIs & routes -->
+            <fx:include source="MapOverlayLayer.fxml" fx:id="overlayLayer"/>
+        </StackPane>
+    </center>
+
+</BorderPane>

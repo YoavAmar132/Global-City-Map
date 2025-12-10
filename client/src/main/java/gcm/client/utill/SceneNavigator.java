@@ -1,6 +1,11 @@
 package gcm.client.utill;
 
 import gcm.client.controllers.*;
+import gcm.client.controllers.map.MapViewerController;
+import gcm.client.controllers.menu.ContentWorkerMenuController;
+import gcm.client.controllers.menu.CustomerSupportMenuController;
+import gcm.client.controllers.menu.ManagerMenuController;
+import gcm.client.controllers.menu.UserMenuController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -18,13 +23,14 @@ public class SceneNavigator {
         this.stage = stage;
 
         // NOTE: leading "/" and matching src/main/resources structure
-        routes.put(LoginController.class, "/gcm/client/LoginScreen.fxml");
-        routes.put(WelcomeController.class, "/gcm/client/WelcomeScreen.fxml");
-        routes.put(RegistrationController.class, "/gcm/client/RegistrationScreen.fxml");
-        routes.put(UserMenuController.class, "/gcm/client/UserMenuScreen.fxml");
-        routes.put(ContentWorkerMenuController.class, "/gcm/client/ContentWorkerMenuScreen.fxml");
-        routes.put(ManagerMenuController.class, "/gcm/client/ManagerMenuScreen.fxml");
-        routes.put(CustomerSupportMenuController.class, "/gcm/client/CustomerSupportMenuScreen.fxml");
+        routes.put(LoginController.class, "/gcm/client/Login/LoginScreen.fxml");
+        routes.put(WelcomeController.class, "/gcm/client/Login/WelcomeScreen.fxml");
+        routes.put(RegistrationController.class, "/gcm/client/Login/RegistrationScreen.fxml");
+        routes.put(UserMenuController.class, "/gcm/client/menu/UserMenuScreen.fxml");
+        routes.put(ContentWorkerMenuController.class, "/gcm/client/menu/ContentWorkerMenuScreen.fxml");
+        routes.put(ManagerMenuController.class, "/gcm/client/menu/ManagerMenuScreen.fxml");
+        routes.put(CustomerSupportMenuController.class, "/gcm/client/menu/CustomerSupportMenuScreen.fxml");
+        routes.put(MapViewerController.class, "/gcm/client/map/MapViewerRoot.fxml");
 
     }
 
