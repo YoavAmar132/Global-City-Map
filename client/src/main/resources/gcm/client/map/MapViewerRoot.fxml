@@ -23,6 +23,13 @@
             <Button text="Zoom +" onAction="#onZoomIn"/>
             <Button text="Zoom -" onAction="#onZoomOut"/>
             <Region fx:id="spacer" BorderPane.alignment="CENTER" />
+
+            <Region prefWidth="20"/>
+
+            <!-- New buttons -->
+            <Button text="Add POI"   onAction="#onAddPoiMode"/>
+            <Button text="Add Route" onAction="#onAddRouteMode"/>
+            <Button text="View Mode" onAction="#onViewMode"/>
         </ToolBar>
     </top>
 

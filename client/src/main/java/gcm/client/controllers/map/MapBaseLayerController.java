@@ -80,17 +80,15 @@ public class MapBaseLayerController {
         initMouseHandlers();
         centerOnAvailableTiles();
         redraw();
-    }
-
-    private void initMouseHandlers() {
+    }private void initMouseHandlers() {
 
         mapCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
             dragStartX = e.getX();
             dragStartY = e.getY();
+            System.out.println("PRESS: " + dragStartX + ", " + dragStartY);
         });
 
         mapCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, e -> {
-            // IMPORTANT: do NOT check e.getButton()
             double dx = e.getX() - dragStartX;
             double dy = e.getY() - dragStartY;
 
@@ -99,6 +97,9 @@ public class MapBaseLayerController {
 
             dragStartX = e.getX();
             dragStartY = e.getY();
+
+            System.out.println("DRAG: dx=" + dx + " dy=" + dy +
+                    " offsetX=" + offsetX + " offsetY=" + offsetY);
 
             redraw();
         });

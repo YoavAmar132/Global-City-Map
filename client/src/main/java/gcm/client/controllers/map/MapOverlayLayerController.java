@@ -24,7 +24,11 @@ public class MapOverlayLayerController {
 
     @FXML
     private void initialize() {
-        // nothing yet
+        // Just to be doubly sure (matches FXML)
+        routeLayer.setMouseTransparent(true);
+        routeLayer.setPickOnBounds(false);
+
+        poiLayer.setPickOnBounds(false);
     }
 
     public void setMapper(MapCoordinateMapper mapper) {
@@ -67,11 +71,12 @@ public class MapOverlayLayerController {
 
         poiViews.values().forEach(view -> {
             Poi p = view.getPoi();
-            double[] xy = mapper.mapLonLatToView(p.getLon(), p.getLat());
+            double[] xy = mapper.mapLonLatToView(p.getLon(), p.getLat()); // or worldX/worldY
             view.setLayoutX(xy[0]);
             view.setLayoutY(xy[1]);
         });
 
         routeViews.values().forEach(routeView -> routeView.rebuildGeometry(mapper));
     }
+
 }

@@ -1,4 +1,3 @@
-// client/src/main/java/gcm/client/map/PoiView.java
 package gcm.client.controllers.map;
 
 import common.model.Poi;
@@ -22,9 +21,19 @@ public class PoiView extends StackPane {
 
         setAlignment(Pos.TOP_CENTER);
         getChildren().addAll(circle, label);
-        setPickOnBounds(false);
+
+        // Important for overlay behavior:
+        setPickOnBounds(false);     // only actual shapes receive clicks
+        setMouseTransparent(false); // this node CAN receive mouse events
+
+        // Example click handler
+        setOnMouseClicked(e -> {
+            System.out.println("Clicked POI: " + poi.getName());
+            e.consume(); // stop event from going down to canvas if you want
+        });
     }
 
+    // ⬅ This is what you’re missing
     public Poi getPoi() {
         return poi;
     }
