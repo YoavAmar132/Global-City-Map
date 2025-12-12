@@ -10,10 +10,35 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.image.Image;
 
+
 import java.io.File;
+import java.util.function.Consumer;
 
 public class MapBaseLayerController {
+    public enum InteractionMode {
+        VIEW,
+        ADD_POI
+    }
 
+    private InteractionMode mode = InteractionMode.VIEW;
+    // make tiles cache to load smoother
+    private final java.util.Map<String, Image> tileCache = new java.util.HashMap<>();
+
+    public void setInteractionMode(InteractionMode mode) {
+        System.out.println("BaseLayer mode set to: " + mode);
+        this.mode = mode;
+    }
+    public InteractionMode getInteractionMode() {
+        return this.mode;
+    }
+
+    // callback that you will set from MapViewerController
+    private Consumer<double[]> onPoiClick;
+
+    public void setOnPoiClick(Consumer<double[]> handler) {
+        System.out.println("BaseLayer: onPoiClick handler set = " + (handler != null));
+        this.onPoiClick = handler;
+    }
     private static final int TILE_SIZE = 256;
 
     // folder with zoom/x/y.jpg inside
@@ -74,44 +99,53 @@ public class MapBaseLayerController {
             redraw();
         });
 
+
         mapCanvas.setWidth(parent.getWidth());
         mapCanvas.setHeight(parent.getHeight());
 
         initMouseHandlers();
         centerOnAvailableTiles();
         redraw();
-    }private void initMouseHandlers() {
+    }
+
+    private void initMouseHandlers() {
 
         mapCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
-            dragStartX = e.getX();
-            dragStartY = e.getY();
-            System.out.println("PRESS: " + dragStartX + ", " + dragStartY);
+            System.out.println("MOUSE_PRESSED mode=" + mode);
+
+            if (mode == InteractionMode.VIEW) {
+                // start pan
+                dragStartX = e.getX();
+                dragStartY = e.getY();
+
+            } else if (mode == InteractionMode.ADD_POI) {
+                // click => world coords => callback
+                double[] world = mapViewToWorld(e.getX(), e.getY());
+                if (onPoiClick != null) {
+                    onPoiClick.accept(world);
+                }
+            }
         });
 
         mapCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, e -> {
+            if (mode != InteractionMode.VIEW) return;
+
             double dx = e.getX() - dragStartX;
             double dy = e.getY() - dragStartY;
-
             offsetX += dx;
             offsetY += dy;
-
             dragStartX = e.getX();
             dragStartY = e.getY();
-
-            System.out.println("DRAG: dx=" + dx + " dy=" + dy +
-                    " offsetX=" + offsetX + " offsetY=" + offsetY);
-
             redraw();
         });
 
         mapCanvas.addEventHandler(ScrollEvent.SCROLL, e -> {
-            if (e.getDeltaY() > 0 && zoom < MAX_ZOOM) {
-                setZoom(zoom + 1);
-            } else if (e.getDeltaY() < 0 && zoom > MIN_ZOOM) {
-                setZoom(zoom - 1);
-            }
+            if (mode != InteractionMode.VIEW) return;  // no zoom in ADD_POI
+            if (e.getDeltaY() > 0 && zoom < MAX_ZOOM) setZoom(zoom + 1);
+            else if (e.getDeltaY() < 0 && zoom > MIN_ZOOM) setZoom(zoom - 1);
         });
     }
+
 
 
     /* ========= public API used by MapViewerController ========= */
@@ -141,7 +175,12 @@ public class MapBaseLayerController {
     /* ================= drawing ================= */
 
     private void redraw() {
-        if (gc == null) return;
+        System.out.println("redraw: start");
+        if (gc == null)
+        {
+            System.out.println("gc was null");
+            return;
+        }
 
         gc.setFill(Color.LIGHTGRAY);
         gc.fillRect(0, 0, mapCanvas.getWidth(), mapCanvas.getHeight());
@@ -149,9 +188,12 @@ public class MapBaseLayerController {
         drawTiles(gc, mapCanvas);
 
         if (onViewChanged != null) {
+            System.out.println("redraw: calling onViewChanged");
             onViewChanged.run();
+            System.out.println("redraw: returned from onViewChanged");
         }
     }
+
 
     private void drawTiles(GraphicsContext gc, Canvas canvas) {
         int z = zoom;
@@ -167,31 +209,54 @@ public class MapBaseLayerController {
         int minTileY = (int) Math.floor(topWorld   / TILE_SIZE);
         int maxTileY = (int) Math.floor(bottomWorld/ TILE_SIZE);
 
+        // ✅ CLAMP to legal tile indices to avoid huge loops
+        int clampedMinX = Math.max(0, Math.min(minTileX, tilesCount - 1));
+        int clampedMaxX = Math.max(0, Math.min(maxTileX, tilesCount - 1));
+        int clampedMinY = Math.max(0, Math.min(minTileY, tilesCount - 1));
+        int clampedMaxY = Math.max(0, Math.min(maxTileY, tilesCount - 1));
+
+        // ✅ if view is outside the world (or overflow happened), nothing to draw
+        if (clampedMaxX < clampedMinX || clampedMaxY < clampedMinY) {
+            System.out.println("drawTiles: nothing in range (clamped)");
+            return;
+        }
+
+        // ✅ Debug (TEMP): print ranges so we can confirm it’s sane
+        System.out.println("drawTiles range: z=" + z +
+                " X=" + clampedMinX + ".." + clampedMaxX +
+                " Y=" + clampedMinY + ".." + clampedMaxY);
+
         int drawn = 0;
 
-        for (int tx = minTileX; tx <= maxTileX; tx++) {
-            for (int ty = minTileY; ty <= maxTileY; ty++) {
-                if (tx < 0 || ty < 0 || tx >= tilesCount || ty >= tilesCount) continue;
-
+        for (int tx = clampedMinX; tx <= clampedMaxX; tx++) {
+            for (int ty = clampedMinY; ty <= clampedMaxY; ty++) {
                 File tileFile = new File(
                         tileRoot + File.separator + z + File.separator +
                                 tx + File.separator + ty + ".jpg"
                 );
                 if (!tileFile.exists()) continue;
 
-                Image img = new Image(tileFile.toURI().toString(), false);
+                String key = z + "/" + tx + "/" + ty;
+                Image img = tileCache.get(key);
+                if (img == null) {
+                    img = new Image(tileFile.toURI().toString(), true); // background loading
+                    tileCache.put(key, img);
+                }
 
-                double worldX = tx * TILE_SIZE;
-                double worldY = ty * TILE_SIZE;
-                double screenX = worldX + offsetX;
-                double screenY = worldY + offsetY;
+                double screenX = tx * TILE_SIZE + offsetX;
+                double screenY = ty * TILE_SIZE + offsetY;
 
-                gc.drawImage(img, screenX, screenY, TILE_SIZE, TILE_SIZE);
-                drawn++;
+                if (!img.isError()) {
+                    gc.drawImage(img, screenX, screenY, TILE_SIZE, TILE_SIZE);
+                    drawn++;
+                }
             }
         }
+
         System.out.println("drawTiles: zoom=" + z + " tilesDrawn=" + drawn);
     }
+
+
 
     /** copied from your test app, adapted to use tileRoot + mapCanvas */
     private void centerOnAvailableTiles() {

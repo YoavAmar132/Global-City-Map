@@ -4,21 +4,23 @@ package common.model;
 public class Poi {
     private final int id;
     private final String name;
-    private final double lon;   // or x in map coords
-    private final double lat;   // or y in map coords
-    private final String category;
+    private final String description;
+    private final double worldX ;   // or x in map coords
+    private final double worldy ;   // or y in map coords
+    private final POI_Category category;
 
-    public Poi(int id, String name, double lon, double lat, String category) {
+    public Poi(int id, String name, String description,double worldX , double worldy, POI_Category category) {
         this.id = id;
         this.name = name;
-        this.lon = lon;
-        this.lat = lat;
+        this.description = description;
+        this.worldX  = worldX ;
+        this.worldy = worldy;
         this.category = category;
     }
 
     public int getId() { return id; }
     public String getName() { return name; }
-    public double getLon() { return lon; }
-    public double getLat() { return lat; }
-    public String getCategory() { return category; }
+    public double getWorldX () { return worldX ; }
+    public double getWorldy() { return worldy; }
+    public POI_Category getCategory() { return category; }
 }

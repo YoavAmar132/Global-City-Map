@@ -1,4 +1,15 @@
 package common.model;
 
-public class POI_Category {
+
+
+public enum POI_Category {
+    RESTAURANT,
+    MUSEUM,
+    HOTEL,
+    PARK,
+    SHOP,
+    CINEMA,
+    BAR,
+    MONUMENT,
+    OTHER;
 }

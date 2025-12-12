@@ -30,7 +30,7 @@ public class RouteView extends Group {
     public void rebuildGeometry(MapCoordinateMapper mapper) {
         polyline.getPoints().clear();
         for (Poi p : route.getPoisInOrder()) {
-            double[] xy = mapper.mapLonLatToView(p.getLon(), p.getLat());
+            double[] xy = mapper.mapLonLatToView(p.getWorldX(), p.getWorldy());
             polyline.getPoints().addAll(xy[0], xy[1]);
         }
     }
