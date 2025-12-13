@@ -1,5 +1,6 @@
 package gcm.client.controllers.map;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -34,6 +35,13 @@ public class MapBaseLayerController {
 
     // callback that you will set from MapViewerController
     private Consumer<double[]> onPoiClick;
+
+    private Runnable onRightClick;
+
+    public void setOnRightClick(Runnable r) {
+        this.onRightClick = r;
+    }
+
 
     public void setOnPoiClick(Consumer<double[]> handler) {
         System.out.println("BaseLayer: onPoiClick handler set = " + (handler != null));
@@ -104,14 +112,22 @@ public class MapBaseLayerController {
         mapCanvas.setHeight(parent.getHeight());
 
         initMouseHandlers();
-        centerOnAvailableTiles();
-        redraw();
+        Platform.runLater(() -> {
+            centerOnAvailableTiles();
+            redraw();
+        });
+
     }
 
     private void initMouseHandlers() {
 
         mapCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
             System.out.println("MOUSE_PRESSED mode=" + mode);
+
+            if (e.getButton() == MouseButton.SECONDARY) {
+                if (onRightClick != null) onRightClick.run();
+                return;
+            }
 
             if (mode == InteractionMode.VIEW) {
                 // start pan
@@ -153,10 +169,38 @@ public class MapBaseLayerController {
     public void setZoom(int newZoom) {
         int clamped = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
         if (clamped == this.zoom) return;
+
+        // zoom around screen center by default
+        double anchorX = mapCanvas.getWidth() / 2.0;
+        double anchorY = mapCanvas.getHeight() / 2.0;
+
+        setZoomAt(clamped, anchorX, anchorY);
+    }
+
+    public void setZoomAt(int newZoom, double anchorScreenX, double anchorScreenY) {
+        int clamped = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+        if (clamped == this.zoom) return;
+
+        int oldZoom = this.zoom;
+        double scale = Math.pow(2, clamped - oldZoom);
+
+        // world point currently under the anchor
+        double anchorWorldX = anchorScreenX - offsetX;
+        double anchorWorldY = anchorScreenY - offsetY;
+
+        // after zoom, world pixels scale
+        double anchorWorldXNew = anchorWorldX * scale;
+        double anchorWorldYNew = anchorWorldY * scale;
+
+        // adjust offsets so anchor stays fixed on screen
+        offsetX = anchorScreenX - anchorWorldXNew;
+        offsetY = anchorScreenY - anchorWorldYNew;
+
         this.zoom = clamped;
-        centerOnAvailableTiles();
+
         redraw();
     }
+
 
     public int getZoom() {
         return zoom;
@@ -239,7 +283,7 @@ public class MapBaseLayerController {
                 String key = z + "/" + tx + "/" + ty;
                 Image img = tileCache.get(key);
                 if (img == null) {
-                    img = new Image(tileFile.toURI().toString(), true); // background loading
+                    img = new Image(tileFile.toURI().toString(), false); // background loading
                     tileCache.put(key, img);
                 }
 
@@ -304,4 +348,55 @@ public class MapBaseLayerController {
         offsetX = mapCanvas.getWidth()  / 2.0 - centerWorldX;
         offsetY = mapCanvas.getHeight() / 2.0 - centerWorldY;
     }
+
+
+    public void handleExternalClick(double sceneX, double sceneY) {
+        javafx.geometry.Point2D local = mapCanvas.sceneToLocal(sceneX, sceneY);
+
+        if (mode == InteractionMode.ADD_POI && onPoiClick != null) {
+            double[] world = mapViewToWorld(local.getX(), local.getY());
+            onPoiClick.accept(world);
+        }
+    }
+    public void handleExternalPress(double sceneX, double sceneY, boolean primaryDown) {
+        if (!primaryDown) return;
+
+        javafx.geometry.Point2D local = mapCanvas.sceneToLocal(sceneX, sceneY);
+
+        if (mode == InteractionMode.VIEW) {
+            dragStartX = local.getX();
+            dragStartY = local.getY();
+        } else if (mode == InteractionMode.ADD_POI && onPoiClick != null) {
+            double[] world = mapViewToWorld(local.getX(), local.getY());
+            onPoiClick.accept(world);
+        }
+    }
+
+    public void handleExternalDrag(double sceneX, double sceneY, boolean primaryDown) {
+        if (!primaryDown) return;
+        if (mode != InteractionMode.VIEW) return;
+
+        javafx.geometry.Point2D local = mapCanvas.sceneToLocal(sceneX, sceneY);
+
+        double dx = local.getX() - dragStartX;
+        double dy = local.getY() - dragStartY;
+
+        offsetX += dx;
+        offsetY += dy;
+
+        dragStartX = local.getX();
+        dragStartY = local.getY();
+
+        redraw();
+    }
+
+    public void handleExternalScroll(double deltaY) {
+        if (deltaY > 0 && zoom < MAX_ZOOM) setZoom(zoom + 1);
+        else if (deltaY < 0 && zoom > MIN_ZOOM) setZoom(zoom - 1);
+    }
+    public void recenterNow() {
+        centerOnAvailableTiles();
+        redraw();
+    }
+
 }

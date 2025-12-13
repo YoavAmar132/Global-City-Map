@@ -7,6 +7,7 @@ import gcm.client.controllers.menu.CustomerSupportMenuController;
 import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.controllers.menu.UserMenuController;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
@@ -51,7 +52,13 @@ public class SceneNavigator {
             }
 
             FXMLLoader loader = new FXMLLoader(url);
-            stage.setScene(new Scene(loader.load()));
+            Parent root = loader.load();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(
+                    getClass().getResource("/gcm/client/map/map.css").toExternalForm()
+            );
+
+            stage.setScene(scene);
             if (!stage.isShowing()) stage.show();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load " + fxml, e);

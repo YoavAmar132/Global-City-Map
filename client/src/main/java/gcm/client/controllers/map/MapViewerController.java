@@ -5,9 +5,10 @@ import common.model.Poi;
 import common.model.Route;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceDialog;
+import javafx.geometry.Side;
+import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
-import javafx.scene.control.TextInputDialog;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -19,6 +20,10 @@ public class MapViewerController {
     @FXML
     private StackPane stackPane;
     private List<Poi> pois = new ArrayList<>();
+    private Route buildingRoute = null;
+    private boolean buildingRouteWaitingFirstPoint = false;
+    private int routeId = 0;
+
 
     // These are injected because of fx:id="baseLayer" / "overlayLayer" on the fx:include tags
     @FXML
@@ -30,6 +35,7 @@ public class MapViewerController {
     @FXML
     private void initialize() {
         baseLayerController.setTileRoot("C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Tiels");
+        overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
 
         overlayLayerController.setMapper((worldX, worldY) ->
@@ -39,6 +45,32 @@ public class MapViewerController {
         // 2. Whenever the base layer view changes (pan / zoom), rerender overlay.
         //    → Requires a small setter in MapBaseLayerController (see below).
         baseLayerController.setOnViewChanged(() -> overlayLayerController.rerender());
+
+        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW); // optional safety
+        baseLayerController.setZoom(baseLayerController.getZoom());
+        overlayLayerController.setOnEmptyMapClick((sx, sy) -> {
+            baseLayerController.handleExternalClick(sx, sy);
+        });
+        overlayLayerController.setOnEmptyPress((sx, sy) ->
+                baseLayerController.handleExternalPress(sx, sy, true)
+        );
+
+        overlayLayerController.setOnEmptyDrag((sx, sy) ->
+                baseLayerController.handleExternalDrag(sx, sy, true)
+        );
+
+        overlayLayerController.setOnScroll(dy ->
+                baseLayerController.handleExternalScroll(dy)
+        );
+        overlayLayerController.setOnPoiSelected((poi, node) -> {
+            showPoiPopover(poi, node);
+        });
+
+
+
+        baseLayerController.recenterNow();
+
+
     }
 
     /* ===========================
@@ -83,7 +115,7 @@ public class MapViewerController {
 
         if (routes != null) {
             for (Route r : routes) {
-                overlayLayerController.addRoute(r);
+              //  overlayLayerController.addRoute(r);
             }
         }
 
@@ -99,9 +131,15 @@ public class MapViewerController {
           baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.ADD_POI);
 
         baseLayerController.setOnPoiClick(world -> {
+            int currentZoom = baseLayerController.getZoom();
 
             double worldX = world[0];
             double worldY = world[1];
+
+// convert current zoom coords -> BASE_ZOOM coords
+            double scaleUp = Math.pow(2, Poi.BASE_ZOOM - currentZoom);
+            double baseWorldX = worldX * scaleUp;
+            double baseWorldY = worldY * scaleUp;
             System.out.printf("worldx:"+worldX+",worldy:"+worldY);
             // ask name
             try {
@@ -121,15 +159,15 @@ public class MapViewerController {
                 //ask category
                 POI_Category category = askPoiCategory();
                 if (category == null) return;
-                Poi poi = new Poi(id, name, description, worldX, worldY, category);
-                id++;
+
+                Poi poi = new Poi(id, name, description, baseWorldX, baseWorldY, category);  id++;
                 overlayLayerController.addPoi(poi);
                 pois.add(poi);
                 System.out.println("Created POI " + name + " at " + worldX + ", " + worldY);
 
             }finally {
                 baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
-                baseLayerController.setOnPoiClick(null);
+              //  baseLayerController.setOnPoiClick(null);
             }
 
 
@@ -202,8 +240,104 @@ public class MapViewerController {
     }
 
 
+    @FXML
     public void onAddRouteMode(ActionEvent actionEvent) {
+        System.out.println("Add Route mode");
+
+        // start a new route
+        buildingRoute = null;
+        buildingRouteWaitingFirstPoint = true;
+
+        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.ADD_POI);
+
+        baseLayerController.setOnPoiClick(world -> {
+            double worldX = world[0];
+            double worldY = world[1];
+
+            int currentZoom = baseLayerController.getZoom();
+            double scaleUp = Math.pow(2, Poi.BASE_ZOOM - currentZoom);
+
+            double baseWorldX = worldX * scaleUp;
+            double baseWorldY = worldY * scaleUp;
+
+            try {
+                // FIRST point: ask metadata once
+                if (buildingRouteWaitingFirstPoint) {
+                    String name = askPoiName();
+                    if (name == null) return;
+
+                    String description = askPoiDescription();
+                    if (description == null) return;
+
+                    POI_Category category = askPoiCategory();
+                    if (category == null) return;
+
+                    // Create route object (adjust ctor to your Route model)
+                    buildingRoute = new Route(routeId++, name, description, category,null);
+                    buildingRouteWaitingFirstPoint = false;
+
+                    // Add first point
+                    buildingRoute.addBasePoint(baseWorldX, baseWorldY);
+
+                    // Add to overlay immediately so user sees it grow
+                    overlayLayerController.addRoute(buildingRoute);
+                    overlayLayerController.rerender();
+
+                    System.out.println("Started route: " + name);
+                    return;
+                }
+
+                // NEXT points: only coords
+                if (buildingRoute != null) {
+                    buildingRoute.addBasePoint(baseWorldX, baseWorldY);
+                    overlayLayerController.rerender();
+                    System.out.println("Added route point: " + baseWorldX + "," + baseWorldY);
+                }
+
+            } finally {
+                // We do NOT exit route mode after each click.
+                // We stay in ADD_POI mode so user can keep clicking points.
+                // So: no reset here.
+            }
+        });
+
+        // Optional: add a right-click to finish route
+        baseLayerController.setOnRightClick(() -> finishRouteMode());
     }
+    private void finishRouteMode() {
+        System.out.println("Finish Route mode");
+
+        buildingRoute = null;
+        buildingRouteWaitingFirstPoint = false;
+
+        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
+        baseLayerController.setOnPoiClick(null);
+
+        // If you added a right-click hook:
+        baseLayerController.setOnRightClick(null);
+    }
+    private void showPoiPopover(Poi poi, Node anchor) {
+        System.out.println("should pop");
+        ContextMenu menu = new ContextMenu();
+
+        MenuItem title = new MenuItem(poi.getName());
+        title.setDisable(true);
+
+        MenuItem desc = new MenuItem(poi.getDescription());
+        desc.setDisable(true);
+
+        MenuItem cat = new MenuItem("Category: " + poi.getCategory());
+        cat.setDisable(true);
+
+        MenuItem close = new MenuItem("Close");
+
+        menu.getItems().addAll(title, desc, cat, new SeparatorMenuItem(), close);
+
+        menu.show(anchor, Side.TOP, 0, -10);
+    }
+
+
+
 
     public void onViewMode(ActionEvent actionEvent) {
     }

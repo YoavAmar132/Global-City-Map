@@ -5,23 +5,21 @@
 
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
+            fx:id="overlayRoot"
             fx:controller="gcm.client.controllers.map.MapOverlayLayerController"
             style="-fx-background-color: transparent;"
-            pickOnBounds="false"
-            mouseTransparent="true">
-    <!--
-        mouseTransparent="true" → by default, overlay lets mouse pass THROUGH
-        pickOnBounds="false"    → empty areas are not clickable at all
-        We'll re-enable mouse only on the actual POI nodes.
-    -->
+            pickOnBounds="true">
 
-    <!-- Routes: drawn visually, but never block mouse -->
     <Pane fx:id="routeLayer"
-          style="-fx-background-color: transparent;"
-          pickOnBounds="false" />
+          AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0"
+          AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
+          mouseTransparent="true"
+          pickOnBounds="false"
+          style="-fx-background-color: transparent;" />
 
-    <!-- POIs: their own nodes will turn mouse back on -->
     <Pane fx:id="poiLayer"
-          style="-fx-background-color: transparent;"
-          pickOnBounds="false" />
+          AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0"
+          AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0"
+          pickOnBounds="false"
+          style="-fx-background-color: transparent;" />
 </AnchorPane>

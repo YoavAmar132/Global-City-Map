@@ -1,26 +1,46 @@
 
 package common.model;
-
 public class Poi {
+    public static final int BASE_ZOOM = 16;
+
     private final int id;
     private final String name;
     private final String description;
-    private final double worldX ;   // or x in map coords
-    private final double worldy ;   // or y in map coords
     private final POI_Category category;
 
-    public Poi(int id, String name, String description,double worldX , double worldy, POI_Category category) {
+    // Stored in BASE_ZOOM world-pixels
+    private final double baseWorldX;
+    private final double baseWorldY;
+
+    public Poi(int id, String name, String description,
+               double baseWorldX, double baseWorldY,
+               POI_Category category) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.worldX  = worldX ;
-        this.worldy = worldy;
+        this.baseWorldX = baseWorldX;
+        this.baseWorldY = baseWorldY;
         this.category = category;
     }
 
     public int getId() { return id; }
     public String getName() { return name; }
-    public double getWorldX () { return worldX ; }
-    public double getWorldy() { return worldy; }
+    public String getDescription() { return description; }
     public POI_Category getCategory() { return category; }
+
+    // Convert BASE_ZOOM world-pixels -> requested zoom world-pixels
+    public double getWorldX(int zoomLevel) {
+        double scale = Math.pow(2, BASE_ZOOM - zoomLevel);
+        return baseWorldX / scale;
+    }
+
+    public double getWorldY(int zoomLevel) {
+        double scale = Math.pow(2, BASE_ZOOM - zoomLevel);
+        return baseWorldY / scale;
+    }
+
+    // Optional: if you ever need raw base coords
+    public double getBaseWorldX() { return baseWorldX; }
+    public double getBaseWorldY() { return baseWorldY; }
 }
+
