@@ -1,8 +1,14 @@
 package gcm.client.controllers.map;
 
+import common.messages.GcmRequest;
+import common.messages.GcmResponse;
+import common.messages.RequestType;
+import common.model.MapSheet;
 import common.model.POI_Category;
 import common.model.Poi;
 import common.model.Route;
+import gcm.client.network.GcmClient;
+import gcm.client.utill.ClientApp;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Side;
@@ -21,8 +27,10 @@ public class MapViewerController {
     private StackPane stackPane;
     private List<Poi> pois = new ArrayList<>();
     private Route buildingRoute = null;
+    private List<Route> routes = new ArrayList<>();
     private boolean buildingRouteWaitingFirstPoint = false;
     private int routeId = 0;
+private String path="C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Tiels";
 
 
     // These are injected because of fx:id="baseLayer" / "overlayLayer" on the fx:include tags
@@ -31,10 +39,12 @@ public class MapViewerController {
 
     @FXML
     private MapOverlayLayerController overlayLayerController;
-
+    private GcmClient client;
     @FXML
     private void initialize() {
-        baseLayerController.setTileRoot("C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Tiels");
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+        baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
 
@@ -62,6 +72,8 @@ public class MapViewerController {
         overlayLayerController.setOnScroll(dy ->
                 baseLayerController.handleExternalScroll(dy)
         );
+        overlayLayerController.setOnEmptyRightClick(this::finishRouteMode);
+
         overlayLayerController.setOnPoiSelected((poi, node) -> {
             showPoiPopover(poi, node);
         });
@@ -200,6 +212,39 @@ public class MapViewerController {
             // else loop again automatically
         }
     }
+    int askVersionnum() {
+        while (true) {
+
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("New Map Version");
+            dialog.setHeaderText("Enter Map Version");
+            dialog.setContentText("Version:");
+
+            Optional<String> result = dialog.showAndWait();
+
+            // User clicked CANCEL
+            if (result.isEmpty()) {
+                return -1;
+            }
+
+            String text = result.get().trim();
+
+            try {
+                int version = Integer.parseInt(text);
+
+                // optional validation
+                if (version >= 0) {
+                    return version;
+                }
+
+            } catch (NumberFormatException e) {
+                // not a valid integer → loop again
+            }
+
+            // If we reach here, input was invalid → show dialog again
+        }
+    }
+
     String askPoiDescription() {
         while (true) {
 
@@ -278,9 +323,12 @@ public class MapViewerController {
 
                     // Add first point
                     buildingRoute.addBasePoint(baseWorldX, baseWorldY);
+                     Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER);
+                    overlayLayerController.addPoi(start);
 
                     // Add to overlay immediately so user sees it grow
                     overlayLayerController.addRoute(buildingRoute);
+                    routes.add(buildingRoute);
                     overlayLayerController.rerender();
 
                     System.out.println("Started route: " + name);
@@ -320,10 +368,10 @@ public class MapViewerController {
         System.out.println("should pop");
         ContextMenu menu = new ContextMenu();
 
-        MenuItem title = new MenuItem(poi.getName());
+        MenuItem title = new MenuItem("Name: "+poi.getName());
         title.setDisable(true);
 
-        MenuItem desc = new MenuItem(poi.getDescription());
+        MenuItem desc = new MenuItem("Description : "+poi.getDescription());
         desc.setDisable(true);
 
         MenuItem cat = new MenuItem("Category: " + poi.getCategory());
@@ -337,8 +385,27 @@ public class MapViewerController {
     }
 
 
+    private void handleResponse(GcmResponse response) {
+        if (!response.isSuccess()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("pending Failed");
+            alert.setContentText(response.getErrorMessage());
+            alert.showAndWait();
+        }else{
+            System.out.println("sent succsesfuly");
+        }
+
+    }
+
+    public void onSubmitMap(ActionEvent actionEvent) {
+    int version=askVersionnum();
+    String name = askPoiName();
+    String description=askPoiDescription();
 
 
-    public void onViewMode(ActionEvent actionEvent) {
+        MapSheet map =new MapSheet(version,name,description,path, (ArrayList) routes, (ArrayList) pois);
+        GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
+        client.sendRequest(request);
+
     }
 }

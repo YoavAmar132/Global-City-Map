@@ -14,7 +14,28 @@ public class PoiView extends Button {
         this.poi = poi;
 
         setText("");
-        getStyleClass().add("poi-marker");
+        switch (poi.getCategory()){
+            case RESTAURANT : getStyleClass().addAll("poi", "poi-restaurant");
+            break;
+            case BAR: getStyleClass().addAll("poi", "poi-bar");
+            break;
+            case HOTEL: getStyleClass().addAll("poi", "poi-hotel");
+            break;
+            case PARK:getStyleClass().addAll("poi", "poi-park");
+            break;
+            case SHOP:getStyleClass().addAll("poi", "poi-shop");
+            break;
+            case CINEMA: SHOP:getStyleClass().addAll("poi", "poi-cinema");
+            break;
+            case MUSEUM:getStyleClass().addAll("poi", "poi-museum");
+            break;
+            case MONUMENT:getStyleClass().addAll("poi", "poi-monument");
+            break;
+            case OTHER:getStyleClass().addAll("poi", "poi-other");
+            break;
+            case null, default:getStyleClass().addAll("poi", "poi-other");
+            break;
+        }
         setFocusTraversable(false);
         setPickOnBounds(true);
 

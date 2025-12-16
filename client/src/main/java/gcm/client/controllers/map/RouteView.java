@@ -4,14 +4,20 @@ package gcm.client.controllers.map;
 import common.model.Route;
 import common.model.Poi;
 import javafx.scene.Group;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
-public class RouteView extends javafx.scene.shape.Polyline {
+public class RouteView extends Pane {
     private final Route route;
+    private final Polyline polyline = new Polyline();
 
     public RouteView(Route route) {
         this.route = route;
-        setStrokeWidth(3);
+        polyline.setStrokeWidth(3);
         setMouseTransparent(true);
+        polyline.setStroke(Color.BLUE);   // ✅ ROUTE COLOR HERE
+        polyline.setFill(null);
+        getChildren().add(polyline);
     }
 
     public Route getRoute() {
@@ -19,11 +25,11 @@ public class RouteView extends javafx.scene.shape.Polyline {
     }
 
     public void rebuildGeometry(MapCoordinateMapper mapper, int zoomLevel) {
-        getPoints().clear();
+        polyline.getPoints().clear();
 
         for (double[] p : route.getPointsAtZoom(zoomLevel)) {
             double[] xy = mapper.mapLonLatToView(p[0], p[1]); // world -> view
-            getPoints().addAll(xy[0], xy[1]);
+            polyline.getPoints().addAll(xy[0], xy[1]);
         }
     }
 }

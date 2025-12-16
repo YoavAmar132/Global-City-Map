@@ -29,7 +29,7 @@
             <!-- New buttons -->
             <Button text="Add POI"   onAction="#onAddPoiMode"/>
             <Button text="Add Route" onAction="#onAddRouteMode"/>
-            <Button text="View Mode" onAction="#onViewMode"/>
+            <Button text="Submit Map" onAction="#onSubmitMap"/>
         </ToolBar>
     </top>
 

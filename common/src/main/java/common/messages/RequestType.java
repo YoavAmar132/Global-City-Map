@@ -30,6 +30,7 @@ public enum RequestType {
 
     // Admin / Manager
     LIST_PENDING_MAP_VERSIONS,
+    PEND_MAP,
     APPROVE_MAP_VERSION,
     GET_ACTIVITY_REPORT,
 

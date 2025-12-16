@@ -1,9 +1,10 @@
 package common.model;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-public class Route {
+public class Route implements Serializable {
     public static final int BASE_ZOOM = Poi.BASE_ZOOM; // keep one base for whole app
 
     private final int id;
@@ -25,6 +26,14 @@ public class Route {
 
     public int getId() { return id; }
     public String getName() { return name; }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public POI_Category getCategory() {
+        return category;
+    }
 
     public void addBasePoint(double baseWorldX, double baseWorldY) {
         basePoints.add(new double[]{baseWorldX, baseWorldY});

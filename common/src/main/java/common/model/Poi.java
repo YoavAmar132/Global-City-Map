@@ -1,6 +1,9 @@
 
 package common.model;
-public class Poi {
+
+import java.io.Serializable;
+
+public class Poi implements Serializable {
     public static final int BASE_ZOOM = 16;
 
     private final int id;
@@ -27,6 +30,7 @@ public class Poi {
     public String getName() { return name; }
     public String getDescription() { return description; }
     public POI_Category getCategory() { return category; }
+
 
     // Convert BASE_ZOOM world-pixels -> requested zoom world-pixels
     public double getWorldX(int zoomLevel) {

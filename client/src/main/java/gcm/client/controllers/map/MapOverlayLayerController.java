@@ -36,6 +36,12 @@ public class MapOverlayLayerController {
     public void setOnEmptyMapClick(BiConsumer<Double, Double> handler) {
         this.onEmptyMapClick = handler;
     }
+    private Runnable onEmptyRightClick;
+
+    public void setOnEmptyRightClick(Runnable r) {
+        this.onEmptyRightClick = r;
+    }
+
 
 
     public void setOnPoiSelected(BiConsumer<Poi, Node> handler) {
@@ -78,7 +84,11 @@ public class MapOverlayLayerController {
         });
         overlayRoot.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, e -> {
             if (isClickOnPoi(e.getTarget())) return;
-
+            if (e.getButton() == javafx.scene.input.MouseButton.SECONDARY) {
+                if (onEmptyRightClick != null) onEmptyRightClick.run();
+                e.consume();
+                return;
+            }
             if (onEmptyPress != null) onEmptyPress.accept(e.getSceneX(), e.getSceneY());
             e.consume();
         });

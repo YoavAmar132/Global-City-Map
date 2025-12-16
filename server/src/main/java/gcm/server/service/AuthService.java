@@ -1,6 +1,9 @@
 package gcm.server.service;
 
+import common.model.Poi;
 import common.model.User;
+import gcm.server.data.PoiRepo;
+import gcm.server.data.RouteRepo;
 import gcm.server.data.UserRepo;
 
 import java.sql.SQLException;
@@ -10,6 +13,7 @@ import java.util.List;
 public class AuthService {
 
     private final UserRepo userRepository;
+
     private final List<User> users = new ArrayList<>();
     public   String Errormsg;
 

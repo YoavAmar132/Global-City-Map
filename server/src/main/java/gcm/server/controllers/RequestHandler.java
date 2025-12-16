@@ -4,19 +4,22 @@ import common.messages.GcmRequest;
 import common.messages.GcmResponse;
 import common.messages.RequestType;
 import common.messages.LoginPayload;
+import common.model.MapSheet;
 import common.model.User;
+import gcm.server.data.MapRepo;
 import gcm.server.service.AuthService;
+import gcm.server.service.MapService;
 
 import java.sql.SQLException;
 
 public class RequestHandler {
 
     private final AuthService authService;
+    private final MapService mapservice;
 
-
-    public RequestHandler(AuthService authService) {
+    public RequestHandler(AuthService authService, MapService mapservice) {
         this.authService = authService;
-
+        this.mapservice = mapservice;
     }
 
     /**
@@ -41,6 +44,16 @@ public class RequestHandler {
                 throw new RuntimeException("failed to register user", e);
             }
         }
+        if(type==RequestType.PEND_MAP) {
+            System.out.println("map handler created");
+        try {
+            System.out.println("request detected");
+            return handleMapPending(request);
+        }  catch (SQLException e) {
+            throw new RuntimeException("failed to register user", e);
+        }
+        }
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -72,7 +85,16 @@ public class RequestHandler {
         // 4. Success → return the User directly
         return GcmResponse.ok(user);
     }
-
+    // map pending handeler
+    private GcmResponse handleMapPending(GcmRequest request) throws SQLException {
+        System.out.println("map pending request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MapSheet mapSheet)) {
+            return GcmResponse.error("Invalid payload for map pending request");
+        }
+        if(!mapservice.PendMap(mapSheet)){ return GcmResponse.error("faild to pend");}
+        return GcmResponse.ok(mapSheet);
+    }
     //registration handler
     private GcmResponse handleRegistration(GcmRequest request) throws SQLException {
         System.out.println("registration request received");
