@@ -62,6 +62,7 @@ public class RequestHandler {
      * Handles LOGIN requests.
      * Expects payload = LoginPayload
      * Returns: GcmResponse.ok(User) on success, or GcmResponse.error(...) on failure.
+     * overall perfect stuff from yoav just added try-catch for the exception
      */
     private GcmResponse handleLogin(GcmRequest request) throws SQLException {
         System.out.println("login request received");
@@ -74,28 +75,23 @@ public class RequestHandler {
         String username = payload.getUsername();
         String password = payload.getPassword();
 
-        // 2. Delegate to AuthService to check DB / users list
-        User user = authService.login(username, password);
+        try {
+            // 2. Delegate to AuthService to check DB / users list
+            User user = authService.login(username, password);
+            // 3. Handle failure
+            if (user == null) {
+                return GcmResponse.error(authService.getErrorMsg());   // we have error function so use it :D
+            }
+            // 4. Success → return the User directly
+            return GcmResponse.ok(user);
 
-        // 3. Handle failure
-        if (user == null) {
-            return GcmResponse.error("Invalid username or password");
+        } catch (SQLException e) {
+            e.printStackTrace(); // server log don't really care :D
+            return GcmResponse.error("Server error during registration");
         }
+    }
 
-        // 4. Success → return the User directly
-        return GcmResponse.ok(user);
-    }
-    // map pending handeler
-    private GcmResponse handleMapPending(GcmRequest request) throws SQLException {
-        System.out.println("map pending request received");
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof MapSheet mapSheet)) {
-            return GcmResponse.error("Invalid payload for map pending request");
-        }
-        if(!mapservice.PendMap(mapSheet)){ return GcmResponse.error("faild to pend");}
-        return GcmResponse.ok(mapSheet);
-    }
-    //registration handler
+    //registration handler (perfect from yoav just added try-catch)
     private GcmResponse handleRegistration(GcmRequest request) throws SQLException {
         System.out.println("registration request received");
         // 1. Validate and cast payload
@@ -107,15 +103,34 @@ public class RequestHandler {
         String username = payload.getUsername();
         String password = payload.getPassword();
 
-        // 2. Delegate to AuthService to check DB / users list
-        User user = authService.register(username,password);
+        try {
+            // 2. Delegate to AuthService to check DB / users list
+            User user = authService.register(username, password);
+            // 3. Handle failure
+            if (user == null) {
+                return GcmResponse.error(authService.getErrorMsg());
+            }
+            // 4. Success → return the User directly
+            return GcmResponse.ok(user);
 
-        // 3. Handle failure
-        if (user == null) {
-            return GcmResponse.error(authService.getErrormsg());
+        } catch (SQLException e) {
+        e.printStackTrace(); // server log
+        return GcmResponse.error("Server error during registration");
         }
-
-        // 4. Success → return the User directly
-        return GcmResponse.ok(user);
     }
+
+    // map pending handeler
+    private GcmResponse handleMapPending(GcmRequest request) throws SQLException {
+        System.out.println("map pending request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MapSheet mapSheet)) {
+            return GcmResponse.error("Invalid payload for map pending request");
+        }
+        if(!mapservice.PendMap(mapSheet)){ return GcmResponse.error("faild to pend");}
+        return GcmResponse.ok(mapSheet);
+    }
+
+
+
+
 }

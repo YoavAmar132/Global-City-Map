@@ -1,93 +1,160 @@
 package gcm.server.data;
 
-import common.model.User ;
+import gcm.server.model.UserEntity;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+
+/**
+ *  removed loadAllUsers not needed now since we use dp (inefficient when users number grow)
+ *  removed getMaxUserId idk why its there xD
+ */
 
 public class UserRepo {
 
-    // Load ALL users into an ArrayList from MySQL
-    public List<User> loadAllUsers() throws SQLException {
-        String sql = "SELECT id, username, password, role FROM users"; // adjust column names
 
-        List<User> users = new ArrayList<>();
+    // Find user by username (LOGIN)
+    public UserEntity findByUsername(String username) throws SQLException {
+
+        String sql = """
+            SELECT UserID, UserName, Password, Role,
+                   failedAttempts, isLocked, lockedUntil
+            FROM Users
+            WHERE UserName = ?
+        """;
 
         try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            while (rs.next()) {
-                int id          = rs.getInt("id");
-                String username = rs.getString("username");
-                String password = rs.getString("password"); // or password_hash
-                String role     = rs.getString("role");      // or default "CUSTOMER"
+            stmt.setString(1, username);
 
-                users.add(new User(id, username, password, role));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) return null;
+
+                return new UserEntity(
+                        rs.getInt("UserID"),
+                        rs.getString("UserName"),
+                        rs.getString("Password"),   // password HASH
+                        rs.getString("Role"),
+                        rs.getInt("failedAttempts"),
+                        rs.getBoolean("isLocked"),
+                        rs.getTimestamp("lockedUntil")
+                );
             }
         }
-
-        return users;
     }
 
-    // Example: load one user by username (useful for login)
-    public User findByUsername(String username) throws SQLException {
-        String sql = "SELECT id, username, password, role FROM users WHERE username = ?";
+    // Check if username exists
+    public boolean existsByUsername(String username) throws SQLException {
+
+        String sql = "SELECT 1 FROM Users WHERE UserName = ?";
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (!rs.next()) return null;
-
-                int id          = rs.getInt("id");
-                String uname    = rs.getString("username");
-                String password = rs.getString("password");
-                String role     = rs.getString("role");
-
-                return new User(id, uname, password, role);
+                return rs.next();
             }
         }
     }
-    public int getMaxUserId() {
-        String sql = "SELECT MAX(id) AS max_id FROM users";
 
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+    // Insert new user (REGISTER)
+    public boolean insertUser(String username, String passwordHash, String role)
+            throws SQLException {
 
-            if (rs.next()) {
-                return rs.getInt("max_id");  // returns max id, or 0 if table is empty
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return 0; // safe fallback if no users exist
-    }
-    public boolean insertUser(User user) {
-        String sql = "INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)";
+        String sql = """
+            INSERT INTO Users (UserName, Password, Role)
+            VALUES (?, ?, ?)
+        """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, user.getId());
-            stmt.setString(2, user.getUsername());
-            stmt.setString(3, user.getPassword());
-            stmt.setString(4, user.getRole());
+            stmt.setString(1, username);
+            stmt.setString(2, passwordHash);
+            stmt.setString(3, role);
 
-            int rows = stmt.executeUpdate();
-            return rows > 0;   // true if inserted successfully
+            return stmt.executeUpdate() == 1;
+        }
+    }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+    // Login SUCCESS
+    public void recordLoginSuccess(int userId) throws SQLException {
+
+        String sql = """
+            UPDATE Users
+            SET lastLogin = NOW(),
+                failedAttempts = 0,
+                isLocked = FALSE,
+                lockedUntil = NULL
+            WHERE UserID = ?
+        """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+    }
+
+    // Login FAILURE
+    public void recordLoginFailure(int userId, int maxAttempts, int lockMinutes)
+            throws SQLException {
+
+        String sql = """
+        UPDATE Users
+        SET failedAttempts = failedAttempts + 1,
+            isLocked = CASE
+                WHEN failedAttempts + 1 >= ? THEN TRUE
+                ELSE isLocked
+            END,
+            lockedUntil = CASE
+                WHEN failedAttempts + 1 >= ?
+                     AND lockedUntil IS NULL
+                THEN DATE_ADD(NOW(), INTERVAL ? MINUTE)
+                ELSE lockedUntil
+            END
+        WHERE UserID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, maxAttempts);
+            stmt.setInt(2, maxAttempts);
+            stmt.setInt(3, lockMinutes);
+            stmt.setInt(4, userId);
+
+            stmt.executeUpdate();
         }
     }
 
 
+    //does as it says :D
+    public void unlockIfExpired(int userId) throws SQLException {
+
+        String sql = """
+        UPDATE Users
+        SET isLocked = FALSE,
+            failedAttempts = 0,
+            lockedUntil = NULL
+        WHERE UserID = ?
+          AND isLocked = TRUE
+          AND (
+                lockedUntil IS NULL
+                OR lockedUntil <= NOW()
+              )
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        }
+    }
+
 
 }
+
