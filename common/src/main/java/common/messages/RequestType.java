@@ -9,14 +9,15 @@ public enum RequestType {
     LIST_CITIES,
     GET_CITY_DETAILS,
     LIST_MAPS_FOR_CITY,
-    GET_MAP_DETAILS,
+    GET_MAP,
 
     // POIs
     LIST_POIS_FOR_CITY,
     SEARCH_POIS,
     CREATE_POI,      // optional
     UPDATE_POI,      // optional
-    DELETE_POI,      // optional
+   GET_POI_INDEX,
+    GET_ROUTE_INDEX,      // optional
 
     // Routes
     LIST_ROUTES_FOR_CITY,

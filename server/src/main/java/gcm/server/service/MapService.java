@@ -7,7 +7,7 @@ import gcm.server.data.MapRepo;
 import gcm.server.data.PoiRepo;
 import gcm.server.data.RouteRepo;
 import gcm.server.data.UserRepo;
-
+import common.messages.IndexPayload;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,5 +32,14 @@ public class MapService {
     public MapSheet PullMap(int version)
     {
         return  mapRepository.loadPendingMap(version);
+    }
+
+    public int getPoiIndex() throws SQLException {
+        PoiRepo poirepository=mapRepository.getPoirepo();
+       return poirepository.getLastPoiId();
+    }
+    public int getRouteIndex() throws SQLException {
+        RouteRepo routerepository=mapRepository.getRouteRepo();
+        return routerepository.getLastRouteId();
     }
 }
