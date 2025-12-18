@@ -17,12 +17,12 @@ public class AuthService {
 
 
     private final UserRepo userRepo;
-    private String errorMsg;
+    private String Errormsg;
 
     //private final List<User> users = new ArrayList<>();
 
-    public String getErrorMsg() {
-        return errorMsg;
+    public String getErrormsg() {
+        return Errormsg;
     }
 
     public AuthService(UserRepo userRepository) {
@@ -36,7 +36,7 @@ public class AuthService {
         UserEntity entity = userRepo.findByUsername(username);
 
         if (entity == null) {
-            errorMsg = "User not found";
+            Errormsg = "User not found";
             return null;
         }
 
@@ -47,7 +47,7 @@ public class AuthService {
         // still locked
         if (entity.isLocked()) {
             Timestamp until = entity.getLockedUntil();
-            errorMsg = (until != null)
+            Errormsg = (until != null)
                     ? "Account is locked until " + until
                     : "Account is locked. Try again later.";
             return null;
@@ -67,10 +67,10 @@ public class AuthService {
 
             if (entity.isLocked() && entity.getLockedUntil() != null) {
                 // 🔒 JUST got locked — show timestamp
-                errorMsg = "Account is locked until " + entity.getLockedUntil();
+                Errormsg = "Account is locked until " + entity.getLockedUntil();
             } else {
                 int attemptsLeft = MAX_ATTEMPTS - entity.getFailedAttempts();
-                errorMsg = "Wrong password. Attempts left: " + attemptsLeft;
+                Errormsg = "Wrong password. Attempts left: " + attemptsLeft;
             }
 
             return null;
@@ -87,7 +87,7 @@ public class AuthService {
     public User register(String username, String password) throws SQLException {
 
         if (userRepo.existsByUsername(username)) {
-            errorMsg = "Username is already in use";
+            Errormsg = "Username is already in use";
             return null;
         }
 
@@ -99,7 +99,7 @@ public class AuthService {
         boolean inserted = userRepo.insertUser(username, password, "Customer");
 
         if (!inserted) {
-            errorMsg = "Failed to create user";
+            Errormsg = "Failed to create user";
             return null;
         }
 
@@ -121,11 +121,11 @@ public class AuthService {
         lastDot = Username.lastIndexOf('.');
 
         if (totalLen < 2 || totalLen > 50) {
-            errorMsg="Username is too long, try something shorter ";
+            Errormsg ="Username is too long, try something shorter ";
             return false;
         }
         if (atIndex <= 0  || lastDot == -1 || lastDot < atIndex) {
-            errorMsg = "Please enter a valid Email as username ";
+            Errormsg = "Please enter a valid Email as username ";
             return false;
         }
 
@@ -136,19 +136,19 @@ public class AuthService {
         //first part check
         len1 = part1.length();
         if (len1 < 1) {
-            errorMsg="Please enter a valid Email as username ";
+            Errormsg ="Please enter a valid Email as username ";
             return false;
         }
         //second part
         boolean valid = part2.matches("[A-Za-z0-9.-]+");
         if (!valid) {
-            errorMsg= "Please enter a valid Email as username ";
+            Errormsg = "Please enter a valid Email as username ";
             return false;
         }
         //third part check
         len3 = part3.length();
         if (len3 < 2) {
-            errorMsg= "Please enter a valid Email as username ";
+            Errormsg = "Please enter a valid Email as username ";
             return false;
         }
 
@@ -166,27 +166,27 @@ public class AuthService {
         boolean hasSign    = password.matches(".*[!@#$%^&*()_./?<>].*");
 
         if (!hasCapital) {
-            errorMsg = "Password must contain at least one uppercase letter";
+            Errormsg = "Password must contain at least one uppercase letter";
             return false;
         }
         if (!hasLower) {
-            errorMsg = "Password must contain at least one lowercase letter";
+            Errormsg = "Password must contain at least one lowercase letter";
             return false;
         }
         if (!hasDigit) {
-            errorMsg = "Password must contain at least one digit";
+            Errormsg = "Password must contain at least one digit";
             return false;
         }
         if (!hasSign) {
-            errorMsg = "Password must contain at least one special character";
+            Errormsg = "Password must contain at least one special character";
             return false;
         }
         if (passwordLen < 8) {
-            errorMsg = "Your password is too short, add more characters";
+            Errormsg = "Your password is too short, add more characters";
             return false;
         }
         if (passwordLen > 12) {
-            errorMsg = "Your password is too long, try a shorter one";
+            Errormsg = "Your password is too long, try a shorter one";
             return false;
         }
         return true;
