@@ -1,11 +1,12 @@
 package gcm.client.controllers.map;
 
-import common.messages.*;
-import common.model.*;
-import gcm.client.controllers.menu.ContentWorkerMenuController;
-import gcm.client.controllers.menu.CustomerSupportMenuController;
-import gcm.client.controllers.menu.ManagerMenuController;
-import gcm.client.controllers.menu.UserMenuController;
+import common.messages.GcmRequest;
+import common.messages.GcmResponse;
+import common.messages.RequestType;
+import common.model.MapSheet;
+import common.model.POI_Category;
+import common.model.Poi;
+import common.model.Route;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import javafx.event.ActionEvent;
@@ -21,34 +22,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MapViewerController {
-    private int poid=0;
-    private int routid=0;
+    static int id=0;
     @FXML
     private StackPane stackPane;
-    private boolean submitInProgress = false;
     private List<Poi> pois = new ArrayList<>();
     private Route buildingRoute = null;
     private List<Route> routes = new ArrayList<>();
     private boolean buildingRouteWaitingFirstPoint = false;
     private int routeId = 0;
-    private String path="C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Haifa";
+private String path="/Users/yahlio/IdeaProjects/Global-City-Map/client/src/main/resources/gcm/client/map/Tiels";
 
-public int getPoid()
-{
-    return this.poid;
-}
-    public int getRoutid()
-    {
-        return this.routeId;
-    }
-    public void setPoid(int id)
-    {
-        this.poid=id;
-    }
-    public void setRoutid(int id)
-    {
-         this.routeId=id;
-    }
+
     // These are injected because of fx:id="baseLayer" / "overlayLayer" on the fx:include tags
     @FXML
     private MapBaseLayerController baseLayerController;
@@ -60,13 +44,7 @@ public int getPoid()
     private void initialize() {
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
-        IndexPayload index=new IndexPayload(0);
-        RouteIndexPayload index1= new RouteIndexPayload(0);
-        System.out.println("should send requests");
-        GcmRequest request = new GcmRequest(RequestType.GET_POI_INDEX, index);
-        client.sendRequest(request);
-         request = new GcmRequest(RequestType.GET_ROUTE_INDEX, index1);
-        client.sendRequest(request);
+        baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
 
@@ -105,11 +83,6 @@ public int getPoid()
         baseLayerController.recenterNow();
 
 
-    }
-    public void setVals(String path)
-    {
-        this.path=path;
-        baseLayerController.setTileRoot(path);
     }
 
     /* ===========================
@@ -199,7 +172,7 @@ public int getPoid()
                 POI_Category category = askPoiCategory();
                 if (category == null) return;
 
-                Poi poi = new Poi(poid++, name, description, baseWorldX, baseWorldY, category);
+                Poi poi = new Poi(id, name, description, baseWorldX, baseWorldY, category);  id++;
                 overlayLayerController.addPoi(poi);
                 pois.add(poi);
                 System.out.println("Created POI " + name + " at " + worldX + ", " + worldY);
@@ -214,8 +187,89 @@ public int getPoid()
         });
     }
 
+    String askPoiName() {
+        while (true) {
 
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("New POI");
+            dialog.setHeaderText("Enter POI name");
+            dialog.setContentText("Name:");
 
+            Optional<String> result = dialog.showAndWait();
+
+            // User clicked CANCEL
+            if (result.isEmpty()) {
+                return null; // or return "" if you prefer
+            }
+
+            String name = result.get().trim();
+
+            // If empty → ask again
+            if (!name.isEmpty()) {
+                return name; // valid! break the loop
+            }
+
+            // else loop again automatically
+        }
+    }
+    int askVersionnum() {
+        while (true) {
+
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("New Map Version");
+            dialog.setHeaderText("Enter Map Version");
+            dialog.setContentText("Version:");
+
+            Optional<String> result = dialog.showAndWait();
+
+            // User clicked CANCEL
+            if (result.isEmpty()) {
+                return -1;
+            }
+
+            String text = result.get().trim();
+
+            try {
+                int version = Integer.parseInt(text);
+
+                // optional validation
+                if (version >= 0) {
+                    return version;
+                }
+
+            } catch (NumberFormatException e) {
+                // not a valid integer → loop again
+            }
+
+            // If we reach here, input was invalid → show dialog again
+        }
+    }
+
+    String askPoiDescription() {
+        while (true) {
+
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("New POI");
+            dialog.setHeaderText("Enter POI Description");
+            dialog.setContentText("Description:");
+
+            Optional<String> result = dialog.showAndWait();
+
+            // User clicked CANCEL
+            if (result.isEmpty()) {
+                return null; // or return "" if you prefer
+            }
+
+            String Description = result.get().trim();
+
+            // If empty → ask again
+            if (!Description.isEmpty()) {
+                return Description; // valid! break the loop
+            }
+
+            // else loop again automatically
+        }
+    }
     private POI_Category askPoiCategory() {
 
         List<POI_Category> choices = Arrays.asList(POI_Category.values());
@@ -254,10 +308,10 @@ public int getPoid()
             try {
                 // FIRST point: ask metadata once
                 if (buildingRouteWaitingFirstPoint) {
-                    String name = askRouteName();
+                    String name = askPoiName();
                     if (name == null) return;
 
-                    String description = askRouteDescription();
+                    String description = askPoiDescription();
                     if (description == null) return;
 
                     POI_Category category = askPoiCategory();
@@ -269,7 +323,7 @@ public int getPoid()
 
                     // Add first point
                     buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER);
+                     Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER);
                     overlayLayerController.addPoi(start);
 
                     // Add to overlay immediately so user sees it grow
@@ -338,174 +392,20 @@ public int getPoid()
             alert.setContentText(response.getErrorMessage());
             alert.showAndWait();
         }else{
-            Object t =response.getData();
-            if(t instanceof RouteIndexPayload indexPayload)
-            {
-                setRoutid(((RouteIndexPayload) t).getIndex()+1);
-            }else if(t instanceof IndexPayload indexPayload)
-            {
-                setPoid(((IndexPayload)t).getIndex()+1);
-            }
             System.out.println("sent succsesfuly");
         }
 
     }
 
     public void onSubmitMap(ActionEvent actionEvent) {
-        if (submitInProgress) {
-            System.out.println("tried to dupe");
-            return;
-        }
-        submitInProgress = true;
+    int version=askVersionnum();
+    String name = askPoiName();
+    String description=askPoiDescription();
 
-        int version = askVersionNum();
-        if (version < 0) { submitInProgress = false; return; }
 
-        double price = askPrice();
-        if (price < 0) { submitInProgress = false; return; }
-
-        String name = askMapName();
-        if (name == null) { submitInProgress = false; return; }
-
-        String description = askMapDescription();
-        if (description == null) { submitInProgress = false; return; }
-
-        MapSheet map = new MapSheet(version, price, name, description, path,
-                (ArrayList) routes, (ArrayList) pois);
-
+        MapSheet map =new MapSheet(version,name,description,path, (ArrayList) routes, (ArrayList) pois);
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
         client.sendRequest(request);
-    }
 
-
-
-
-
-
-
-
-    private int askNonNegativeInt(String title, String header, String label) {
-        while (true) {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle(title);
-            dialog.setHeaderText(header);
-            dialog.setContentText(label);
-
-            Optional<String> result = dialog.showAndWait();
-
-            if (result.isEmpty()) {
-                return -1; // CANCEL
-            }
-
-            try {
-                int value = Integer.parseInt(result.get().trim());
-                if (value >= 0) {
-                    return value;
-                }
-            } catch (NumberFormatException ignored) {}
-        }
-    }
-
-    private double askNonNegativeDouble(String title, String header, String label) {
-        while (true) {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle(title);
-            dialog.setHeaderText(header);
-            dialog.setContentText(label);
-
-            Optional<String> result = dialog.showAndWait();
-
-            if (result.isEmpty()) {
-                return -1; // CANCEL
-            }
-
-            try {
-                double value = Double.parseDouble(result.get().trim());
-                if (value >= 0) {
-                    return value;
-                }
-            } catch (NumberFormatException ignored) {}
-        }
-    }
-
-
-    private String askNonEmptyString(String title, String header, String label) {
-        while (true) {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle(title);
-            dialog.setHeaderText(header);
-            dialog.setContentText(label);
-
-            Optional<String> result = dialog.showAndWait();
-
-            if (result.isEmpty()) {
-                return null; // CANCEL
-            }
-
-            String value = result.get().trim();
-            if (!value.isEmpty()) {
-                return value;
-            }
-        }
-    }
-
-    String askPoiName() {
-        return askNonEmptyString("New POI", "Enter POI name", "Name:");
-    }
-
-    String askRouteName() {
-        return askNonEmptyString("New Route", "Enter route name", "Name:");
-    }
-
-    String askMapName() {
-        return askNonEmptyString("New Map", "Enter map name", "Name:");
-    }
-
-    String askPoiDescription() {
-        return askNonEmptyString("New POI", "Enter POI description", "Description:");
-    }
-
-    String askRouteDescription() {
-        return askNonEmptyString("New Route", "Enter route description", "Description:");
-    }
-
-    String askMapDescription() {
-        return askNonEmptyString("New Map", "Enter map description", "Description:");
-    }
-
-    int askVersionNum() {
-        return askNonNegativeInt("New Map Version", "Enter Map Version", "Version:");
-    }
-
-
-    double askPrice() {
-        return askNonNegativeDouble("New Map Price", "Enter Map Price", "Price:");
-    }
-
-
-
-
-    public void handleClose(ActionEvent actionEvent) {
-        User current=ClientApp.getCurrentUser();
-        switch (current.getRole())
-        {
-            case "Customer":
-                ClientApp.getNavigator().show(UserMenuController.class);
-                break;
-            case "ContentManager":
-            case "Worker":
-            case "ContentEmployee":
-                ClientApp.getNavigator().show(ContentWorkerMenuController.class);
-                break;
-
-            case "CustomerSupport":
-                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
-                break;
-
-
-            case "CompanyManager":
-                ClientApp.getNavigator().show(ManagerMenuController.class);
-                break;
-        }
     }
 }

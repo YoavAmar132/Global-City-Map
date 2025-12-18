@@ -13,7 +13,6 @@ import javafx.scene.image.Image;
 
 
 import java.io.File;
-import java.net.URL;
 import java.util.function.Consumer;
 
 public class MapBaseLayerController {
@@ -89,8 +88,8 @@ public class MapBaseLayerController {
         gc = mapCanvas.getGraphicsContext2D();
 
         File testTile = new File(
-               "C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Tel-Aviv/13/4887/3323.jpg"
-       );
+                "/Users/yahlio/IdeaProjects/Global-City-Map/client/src/main/resources/gcm/client/map/Tiels/13/4891/3303.jpg"
+        );
         System.out.println("DEBUG testTile: " + testTile.getAbsolutePath()
                 + " exists=" + testTile.exists());
 
