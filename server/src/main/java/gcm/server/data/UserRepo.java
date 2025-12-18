@@ -106,11 +106,11 @@ public class UserRepo {
         UPDATE Users
         SET failedAttempts = failedAttempts + 1,
             isLocked = CASE
-                WHEN failedAttempts + 1 >= ? THEN TRUE
+                WHEN failedAttempts  >= ? THEN TRUE
                 ELSE isLocked
             END,
             lockedUntil = CASE
-                WHEN failedAttempts + 1 >= ?
+                WHEN failedAttempts  >= ?
                      AND lockedUntil IS NULL
                 THEN DATE_ADD(NOW(), INTERVAL ? MINUTE)
                 ELSE lockedUntil
