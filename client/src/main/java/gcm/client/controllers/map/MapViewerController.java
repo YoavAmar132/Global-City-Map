@@ -1,8 +1,6 @@
 package gcm.client.controllers.map;
 
-import common.messages.GcmRequest;
-import common.messages.GcmResponse;
-import common.messages.RequestType;
+import common.messages.*;
 import common.model.MapSheet;
 import common.model.POI_Category;
 import common.model.Poi;
@@ -22,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MapViewerController {
-    static int id=0;
+    private int poid=0;
+    private int routid=0;
     @FXML
     private StackPane stackPane;
     private List<Poi> pois = new ArrayList<>();
@@ -32,7 +31,22 @@ public class MapViewerController {
     private int routeId = 0;
 private String path="C:/Users/ADAM/Desktop/DONT YOU DARE/Labs/Global-City-Map/client/src/main/resources/gcm/client/map/Tiels";
 
-
+public int getPoid()
+{
+    return this.poid;
+}
+    public int getRoutid()
+    {
+        return this.routeId;
+    }
+    public void setPoid(int id)
+    {
+        this.poid=id;
+    }
+    public void setRoutid(int id)
+    {
+         this.routeId=id;
+    }
     // These are injected because of fx:id="baseLayer" / "overlayLayer" on the fx:include tags
     @FXML
     private MapBaseLayerController baseLayerController;
@@ -44,6 +58,13 @@ private String path="C:/Users/ADAM/Desktop/DONT YOU DARE/Labs/Global-City-Map/cl
     private void initialize() {
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
+        IndexPayload index=new IndexPayload(0);
+        RouteIndexPayload index1= new RouteIndexPayload(0);
+        System.out.println("should send requests");
+        GcmRequest request = new GcmRequest(RequestType.GET_POI_INDEX, index);
+        client.sendRequest(request);
+         request = new GcmRequest(RequestType.GET_ROUTE_INDEX, index1);
+        client.sendRequest(request);
         baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
@@ -172,7 +193,7 @@ private String path="C:/Users/ADAM/Desktop/DONT YOU DARE/Labs/Global-City-Map/cl
                 POI_Category category = askPoiCategory();
                 if (category == null) return;
 
-                Poi poi = new Poi(id, name, description, baseWorldX, baseWorldY, category);  id++;
+                Poi poi = new Poi(poid++, name, description, baseWorldX, baseWorldY, category);  this.poid++;
                 overlayLayerController.addPoi(poi);
                 pois.add(poi);
                 System.out.println("Created POI " + name + " at " + worldX + ", " + worldY);
@@ -392,6 +413,14 @@ private String path="C:/Users/ADAM/Desktop/DONT YOU DARE/Labs/Global-City-Map/cl
             alert.setContentText(response.getErrorMessage());
             alert.showAndWait();
         }else{
+            Object t =response.getData();
+            if(t instanceof RouteIndexPayload indexPayload)
+            {
+                setRoutid(((RouteIndexPayload) t).getIndex()+1);
+            }else if(t instanceof IndexPayload indexPayload)
+            {
+                setPoid(((IndexPayload)t).getIndex()+1);
+            }
             System.out.println("sent succsesfuly");
         }
 

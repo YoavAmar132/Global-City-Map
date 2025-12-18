@@ -23,13 +23,13 @@ public MapSheet(int version, String name, String description,String path,
     this.path = path;
     this.routes = routes;
     this.pois = pois;
-    if (pois != null && routes != null) {
+    if (this.pois != null && this.routes != null) {
         Poi firstp = (Poi) pois.get(0);
         Poi lastp = (Poi) pois.get(pois.size() - 1);
         this.FirstPoi = firstp.getId();
         this.LastPoi = lastp.getId();
         Route firstr = (Route) routes.get(0);
-        Route lastr = (Route) routes.get(pois.size() - 1);
+        Route lastr = (Route) routes.get(routes.size() - 1);
         this.FirstRoute = firstr.getId();
         this.LastRoute = lastr.getId();
 

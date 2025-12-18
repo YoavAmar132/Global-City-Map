@@ -20,15 +20,22 @@ public class MapRepo {
             System.out.println("map repo created");
         }
 
+    public RouteRepo getRouteRepo() {
+        return routeRepo;
+    }
+
+    public PoiRepo getPoirepo() {
+        return poirepo;
+    }
 
     public boolean insertPendingMap(MapSheet map) {
 
         String sql = """
-        INSERT INTO pending_maps
-            (version, name, description, path, firstPoi, lastPoi, firstRoute, lastRoute)
-        VALUES
-            (?, ?, ?, ?, ?, ?, ?, ?)
-        """;
+    INSERT INTO pending_maps
+    (version, name, description, path, poi_array,route_array)
+    VALUES (?, ?, ?, ?, ?,?)
+""";
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -39,10 +46,9 @@ public class MapRepo {
             stmt.setString(2, map.getName());
             stmt.setString(3, map.getDescription());
             stmt.setString(4, map.getPath());
-            stmt.setInt(5, map.getFirstPoi());
-            stmt.setInt(6, map.getLastPoi());
-            stmt.setInt(7, map.getFirstRoute());
-            stmt.setInt(8, map.getLastRoute());
+            stmt.setString(5, JsonUtil.poiListToJson(map.getPois()));
+            stmt.setString(6, JsonUtil.routeListToJson(map.getRoutes()));
+            stmt.executeUpdate();
 
             return stmt.executeUpdate() == 1;
 
@@ -53,8 +59,7 @@ public class MapRepo {
     }
     public MapSheet loadPendingMap(int version) {
         String sql = """
-        SELECT version, name, description, path,
-               firstPoi, lastPoi, firstRoute, lastRoute
+        SELECT version, name, description, path, poi_array,route_array
         FROM pending_maps
         WHERE version = ?
         """;
@@ -67,12 +72,12 @@ public class MapRepo {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     //load arrays
-                  int firstp=  rs.getInt("firstPoi");
-                     int lastp=       rs.getInt("lastPoi");
-                          int firstr =rs.getInt("firstRoute");
-                          int lastr=  rs.getInt("lastRoute");
-                          ArrayList<Poi> pois= poirepo.loadAllPois(firstp,lastp);
-                          ArrayList<Route> routes=routeRepo.loadAllRoutes(firstr,lastr);
+                    String poiJson = rs.getString("poi_array");
+                    String routeJson = rs.getString("route_array");
+
+                    ArrayList<Poi> pois= JsonUtil.jsonToPoiList(poiJson);
+                    ArrayList<Route> routes= JsonUtil.jsonTorouteList(routeJson);
+
 
                     return new MapSheet(
                             rs.getInt("version"),
