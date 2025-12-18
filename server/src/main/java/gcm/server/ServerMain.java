@@ -11,13 +11,17 @@ import gcm.server.service.MapService;
 
 public class ServerMain {
 
+    /**
+     * removed loadUSersFromDb
+     * @param args
+     */
     public static void main(String[] args) {
         try {
             UserRepo UserRepository = new UserRepo();
             AuthService authService = new AuthService(UserRepository);
             MapRepo mapRepository=new MapRepo();
             MapService mapService=new MapService(mapRepository);
-            authService.loadUsersFromDb(); // fills the ArrayList<User>
+            //authService.loadUsersFromDb(); // fills the ArrayList<User>
             RequestHandler handler = new RequestHandler(authService,mapService);
 
             GcmServer server = new GcmServer(5555, handler);

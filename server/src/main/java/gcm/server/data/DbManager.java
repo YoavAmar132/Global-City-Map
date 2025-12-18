@@ -7,9 +7,9 @@ import java.sql.SQLException;
 public class DbManager {
 
     // TODO: the sql we will use(adam)
-    private static final String URL  = "jdbc:mysql://localhost:3306/GCM_DB";
+    private static final String URL  = "jdbc:mysql://localhost:3306/GCM";
     private static final String USER = "root";
-    private static final String PASS = "Yahlio919";
+    private static final String PASS = "Yoavamar132!";
 
     static {
         try {
