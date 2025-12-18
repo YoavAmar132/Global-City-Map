@@ -1,98 +1,134 @@
 package gcm.server.service;
 
-import common.model.Poi;
 import common.model.User;
-import gcm.server.data.PoiRepo;
-import gcm.server.data.RouteRepo;
 import gcm.server.data.UserRepo;
+import gcm.server.model.UserEntity;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Timestamp;
 
+/**
+ * removed user list ofc and loadUsersFromDb + getUsers
+  */
 public class AuthService {
 
-    private final UserRepo userRepository;
+    private static final int MAX_ATTEMPTS = 5;  // same as in lab3
+    private static final int LOCK_MINUTES = 1;
 
-    private final List<User> users = new ArrayList<>();
-    public   String Errormsg;
+
+    private final UserRepo userRepo;
+    private String Errormsg;
+
+    //private final List<User> users = new ArrayList<>();
 
     public String getErrormsg() {
         return Errormsg;
     }
 
     public AuthService(UserRepo userRepository) {
-        this.userRepository = userRepository;
+        this.userRepo = userRepository;
     }
 
-    // Call this once when server starts
-    public void loadUsersFromDb() throws SQLException {
-        users.clear();
-        users.addAll(userRepository.loadAllUsers());
-        System.out.println("Loaded " + users.size() + " users from DB");
-    }
 
-    // Simple login check using the in-memory ArrayList
+    // LOGIN
     public User login(String username, String password) throws SQLException {
-        User u=userRepository.findByUsername(username); //check if user exist and provide
-        if(u==null){
-            Errormsg="User not found";
+
+        UserEntity entity = userRepo.findByUsername(username);
+
+        if (entity == null) {
+            Errormsg = "User not found";
             return null;
         }
-            if (u.getUsername().equals(username))
-            {
-                if( u.getPassword().equals(password)) {
-                    return u;
-                }
-                    Errormsg="Wrong password";
 
+        // unlock if expired
+        userRepo.unlockIfExpired(entity.getId());
+        entity = userRepo.findByUsername(username);
 
-            }else{
-                Errormsg="Wrong username or password";
-            }
-        return null;
-    }
-//register check
-public User register(String username, String password) throws SQLException {
-    User check=userRepository.findByUsername(username); //check if name taken
-    if(check!=null){
-        Errormsg="Username is already in use";
-        return null;
-    }
-    if(ValidUsername(username)&&ValidPassword(password)) {
-        User user=new User(userRepository.getMaxUserId()+1, username,password,"user");
-        if(userRepository.insertUser(user)) {
-            return user;
+        // still locked
+        if (entity.isLocked()) {
+            Timestamp until = entity.getLockedUntil();
+            Errormsg = (until != null)
+                    ? "Account is locked until " + until
+                    : "Account is locked. Try again later.";
+            return null;
         }
-        Errormsg="faild to insert user";
+
+        // wrong password
+        if (!entity.getPasswordHash().equals(password)) {
+
+            userRepo.recordLoginFailure(
+                    entity.getId(),
+                    MAX_ATTEMPTS,
+                    LOCK_MINUTES
+            );
+
+            // reload after failure
+            entity = userRepo.findByUsername(username);
+
+            if (entity.isLocked() && entity.getLockedUntil() != null) {
+                // 🔒 JUST got locked — show timestamp
+                Errormsg = "Account is locked until " + entity.getLockedUntil();
+            } else {
+                int attemptsLeft = MAX_ATTEMPTS - entity.getFailedAttempts();
+                Errormsg = "Wrong password. Attempts left: " + attemptsLeft;
+            }
+
+            return null;
+        }
+
+        // success
+        userRepo.recordLoginSuccess(entity.getId());
+        return new User(entity.getId(), entity.getUsername(), entity.getRole());
     }
 
-    return null;
-}
-    public List<User> getUsers() {
-        return users;
+
+
+    //  REGISTER
+    public User register(String username, String password) throws SQLException {
+
+        if (userRepo.existsByUsername(username)) {
+            Errormsg = "Username is already in use";
+            return null;
+        }
+
+        if (!validUsername(username) || !validPassword(password)) {
+            return null;
+        }
+
+        // TEMP: store plaintext, later hash
+        boolean inserted = userRepo.insertUser(username, password, "Customer");
+
+        if (!inserted) {
+            Errormsg = "Failed to create user";
+            return null;
+        }
+
+        UserEntity entity = userRepo.findByUsername(username);
+        return new User(entity.getId(), entity.getUsername(), entity.getRole());
     }
+
 
 
 
     // other methods:
-    //username validation
-    public boolean ValidUsername(String Username) {
+    //username validation      (didn't really dive deep assumed its working :D)
+    public boolean validUsername(String Username) {
 
-        int Totalen,len1,len3,NumOfParts,atIndex,lastDot; //variables to split tokens
+        int totalLen = Username.length() ,len1,len3,NumOfParts,atIndex,lastDot; //variables to split tokens
 
         //default checks:
         atIndex = Username.indexOf('@');
         lastDot = Username.lastIndexOf('.');
-        if (atIndex == -1 || lastDot == -1 || lastDot < atIndex) {
-            Errormsg= "Please enter a valid Email as username ";
+
+        if (totalLen < 2 || totalLen > 50) {
+            Errormsg ="Username is too long, try something shorter ";
             return false;
         }
-        Totalen = Username.length();
-        if (Totalen < 2 || Totalen > 50) {
-            Errormsg="Username is too long, try something shorter ";
+        if (atIndex <= 0  || lastDot == -1 || lastDot < atIndex) {
+            Errormsg = "Please enter a valid Email as username ";
             return false;
         }
+
         // dividing to tokens
         String part1 = Username.substring(0, atIndex);
         String part2 = Username.substring(atIndex + 1, lastDot);
@@ -100,53 +136,60 @@ public User register(String username, String password) throws SQLException {
         //first part check
         len1 = part1.length();
         if (len1 < 1) {
-            Errormsg="Please enter a valid Email as username ";
+            Errormsg ="Please enter a valid Email as username ";
             return false;
         }
         //second part
         boolean valid = part2.matches("[A-Za-z0-9.-]+");
         if (!valid) {
-            Errormsg= "Please enter a valid Email as username ";
+            Errormsg = "Please enter a valid Email as username ";
             return false;
         }
         //third part check
         len3 = part3.length();
         if (len3 < 2) {
-            Errormsg= "Please enter a valid Email as username ";
+            Errormsg = "Please enter a valid Email as username ";
             return false;
         }
 
         return true;
     }
 
-    // password validation
-    public boolean ValidPassword(String password) {
+    // password validation  (just gave better error messages )
+    public boolean validPassword(String password) {
+
         int passwordLen = password.length();
+
         boolean hasCapital = password.matches(".*[A-Z].*");
-        boolean hasLower = password.matches(".*[a-z].*");
-        boolean hasDigit = password.matches(".*[0-9].*");
-        boolean hasSign  = password.matches(".*[!@#$%^&*()_./?<>].*");
-        if((hasCapital ||hasLower)==false) {
-            Errormsg="Please enter a valid password";
+        boolean hasLower   = password.matches(".*[a-z].*");
+        boolean hasDigit   = password.matches(".*[0-9].*");
+        boolean hasSign    = password.matches(".*[!@#$%^&*()_./?<>].*");
+
+        if (!hasCapital) {
+            Errormsg = "Password must contain at least one uppercase letter";
             return false;
         }
-        if((hasSign)==false) {
-            Errormsg="Please enter a valid password";
+        if (!hasLower) {
+            Errormsg = "Password must contain at least one lowercase letter";
             return false;
         }
-        if((hasDigit)==false) {
-            Errormsg="Please enter a valid password";
+        if (!hasDigit) {
+            Errormsg = "Password must contain at least one digit";
             return false;
         }
-        if (passwordLen < 8 ) {
-            Errormsg="Your password is too short, add more characters ";
+        if (!hasSign) {
+            Errormsg = "Password must contain at least one special character";
             return false;
         }
-        if(passwordLen > 12)
-        {
-            Errormsg="Your password is too long, try a shorter one  ";
+        if (passwordLen < 8) {
+            Errormsg = "Your password is too short, add more characters";
+            return false;
+        }
+        if (passwordLen > 12) {
+            Errormsg = "Your password is too long, try a shorter one";
             return false;
         }
         return true;
     }
+
 }

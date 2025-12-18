@@ -49,37 +49,41 @@ public class LoginController {
             alert.setTitle("Login Failed");
             alert.setContentText(response.getErrorMessage());
             alert.showAndWait();
-        }else {
-
-            User user = (User) response.getData();
-            System.out.println("Logged in as: " + user.getUsername() + " (" + user.getRole() + ")");
-            switch (user.getRole()) {
-                case "user":
-                    ClientApp.getNavigator().show(UserMenuController.class);
-                    break;
-
-                case "content_worker":
-                    ClientApp.getNavigator().show(ContentWorkerMenuController.class);
-                    break;
-
-                    case "content_manager":
-                        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
-                        break;
-
-                        case "manager":
-                            ClientApp.getNavigator().show(ManagerMenuController.class);
-                            break;
-
-                            case "customer_support":
-                                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
-                                break;
-
-
-            }
-
+            return;
         }
 
+        User user = (User) response.getData();
+        ClientApp.setCurrentUser(user);          // store the logged-in user globally
+        System.out.println("Logged in as: " + user.getUsername() + " (" + user.getRole() + ")");
+
+        switch (user.getRole()) {
+
+            case "Customer":
+                ClientApp.getNavigator().show(UserMenuController.class);
+                break;
+
+            case "Worker":
+            case "ContentEmployee":
+                ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+                break;
+
+            case "CustomerSupport":
+                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
+                break;
+
+            case "ContentManager":
+            case "CompanyManager":
+                ClientApp.getNavigator().show(ManagerMenuController.class);
+                break;
+
+            default:
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Login Failed");
+                alert.setContentText("Unknown role: " + user.getRole());
+                alert.showAndWait();
+        }
     }
+
     @FXML
     private void handleClose() {
         client.closeConnectionSafe();
