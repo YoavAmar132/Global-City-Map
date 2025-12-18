@@ -66,7 +66,6 @@ public class AuthService {
             entity = userRepo.findByUsername(username);
 
             if (entity.isLocked() && entity.getLockedUntil() != null) {
-                // 🔒 JUST got locked — show timestamp
                 Errormsg = "Account is locked until " + entity.getLockedUntil();
             } else {
                 int attemptsLeft = MAX_ATTEMPTS - entity.getFailedAttempts();
