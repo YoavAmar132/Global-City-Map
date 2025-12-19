@@ -29,9 +29,9 @@ public class MapService {
     return mapRepository.insertPendingMap(map);
     }
     //load map
-    public MapSheet PullMap(int version)
+    public MapSheet PullMap(int version,String name)
     {
-        return  mapRepository.loadPendingMap(version);
+        return  mapRepository.loadPendingMap(version,name);
     }
 
     public int getPoiIndex() throws SQLException {

@@ -7,6 +7,7 @@ import common.model.MapSheet;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MapRepo {
@@ -57,17 +58,18 @@ public class MapRepo {
             return false;
         }
     }
-    public MapSheet loadPendingMap(int version) {
+    public MapSheet loadPendingMap(int version, String name) {
         String sql = """
         SELECT version, name, description, path, poi_array,route_array
         FROM pending_maps
-        WHERE version = ?
+        WHERE version = ? AND name = ?
         """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, version);
+            stmt.setString(2, name);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
@@ -79,12 +81,26 @@ public class MapRepo {
                     ArrayList<Route> routes= JsonUtil.jsonTorouteList(routeJson);
 
 
+                    for (Route r : routes) {
+                        var pts = r.getBasePoints(); // List<double[]>
+
+                        System.out.println("route id: " + r.getId());
+                        System.out.println("points size: " + pts.size());
+
+                        if (!pts.isEmpty()) {
+                            System.out.println("first: " + Arrays.toString(pts.get(0)));
+                            System.out.println("second: " + (pts.size() > 1 ? Arrays.toString(pts.get(1)) : "n/a"));
+                            System.out.println("last: " + Arrays.toString(pts.get(pts.size() - 1)));
+                        }
+                    }
+
+
                     return new MapSheet(
                             rs.getInt("version"),
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getString("path"),
-                            pois,routes
+                            routes,pois
 
                     );
                 }

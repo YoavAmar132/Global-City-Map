@@ -2,6 +2,7 @@ package gcm.client.utill;
 
 import gcm.client.controllers.*;
 import gcm.client.controllers.map.MapViewerController;
+import gcm.client.controllers.map.UserMapViewerController;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.controllers.menu.CustomerSupportMenuController;
 import gcm.client.controllers.menu.ManagerMenuController;
@@ -32,6 +33,8 @@ public class SceneNavigator {
         routes.put(ManagerMenuController.class, "/gcm/client/menu/ManagerMenuScreen.fxml");
         routes.put(CustomerSupportMenuController.class, "/gcm/client/menu/CustomerSupportMenuScreen.fxml");
         routes.put(MapViewerController.class, "/gcm/client/map/MapViewerRoot.fxml");
+        routes.put(UserMapViewerController.class, "/gcm/client/map/UserMapViewerRoot.fxml");
+
 
     }
 

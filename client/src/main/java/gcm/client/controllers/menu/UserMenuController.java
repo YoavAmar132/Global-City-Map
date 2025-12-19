@@ -1,4 +1,5 @@
 package gcm.client.controllers.menu;
+import gcm.client.controllers.map.UserMapViewerController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -37,6 +38,6 @@ public class UserMenuController {
     @FXML
     private void onMyMapsClicked(ActionEvent event) {
         System.out.println("My Maps clicked");
-        // TODO: show user's maps
+        ClientApp.getNavigator().show(UserMapViewerController.class);
     }
 }

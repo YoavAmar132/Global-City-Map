@@ -69,7 +69,15 @@ public class RequestHandler {
                 throw new RuntimeException("failed to register user", e);
             }
         }
-
+        if(type==RequestType.GET_MAP) {
+            System.out.println("map request proccesed");
+            try {
+                System.out.println("request detected");
+                return handleMapRequest(request);
+            }  catch (SQLException e) {
+                throw new RuntimeException("failed to register user", e);
+            }
+        }
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -116,6 +124,17 @@ public class RequestHandler {
         }
         if(!mapservice.PendMap(mapSheet)){ return GcmResponse.error("faild to pend");}
         return GcmResponse.ok(mapSheet);
+    }
+    //map request handler
+    private GcmResponse handleMapRequest(GcmRequest request) throws SQLException {
+        System.out.println("map  request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MaPayload maPayload)) {
+            return GcmResponse.error("Invalid payload for map  request");
+        }
+        MapSheet map=mapservice.PullMap(maPayload.getVersion(),maPayload.getName());
+        if(map==null){ return GcmResponse.error("faild to get map");}
+        return GcmResponse.ok(map);
     }
 
     // get poi index
