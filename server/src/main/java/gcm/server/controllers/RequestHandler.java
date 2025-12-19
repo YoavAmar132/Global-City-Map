@@ -8,6 +8,7 @@ import gcm.server.service.AuthService;
 import gcm.server.service.MapService;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public class RequestHandler {
 
@@ -78,6 +79,13 @@ public class RequestHandler {
                 throw new RuntimeException("failed to register user", e);
             }
         }
+        if (type == RequestType.GET_PENDING_MAPS) {
+            try {
+                return handleAllMapRequest(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -134,6 +142,16 @@ public class RequestHandler {
         }
         MapSheet map=mapservice.PullMap(maPayload.getVersion(),maPayload.getName());
         if(map==null){ return GcmResponse.error("faild to get map");}
+        return GcmResponse.ok(map);
+    }
+    private GcmResponse handleAllMapRequest(GcmRequest request) throws SQLException {
+        System.out.println("map  request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MaPayload maPayload)) {
+            return GcmResponse.error("Invalid payload for map  request");
+        }
+        List<MapSheet> map=mapservice.PullAllMap();
+        if(map==null){ return GcmResponse.error("faild to get all map");}
         return GcmResponse.ok(map);
     }
 

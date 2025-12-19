@@ -1,4 +1,5 @@
 package gcm.client.controllers.menu;
+import gcm.client.controllers.map.PendingMapController;
 import gcm.client.controllers.map.UserMapViewerController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
@@ -38,6 +39,6 @@ public class UserMenuController {
     @FXML
     private void onMyMapsClicked(ActionEvent event) {
         System.out.println("My Maps clicked");
-        ClientApp.getNavigator().show(UserMapViewerController.class);
+        ClientApp.getNavigator().show(PendingMapController.class);
     }
 }

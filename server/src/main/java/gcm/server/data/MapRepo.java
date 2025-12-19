@@ -112,6 +112,61 @@ public class MapRepo {
 
         return null; // not found
     }
+    public List<MapSheet> loadAllPendingMaps() {
+        List<MapSheet> maps = new ArrayList<>();
+
+        String sql = """
+        SELECT version, name, description, path, poi_array, route_array
+        FROM pending_maps
+        ORDER BY name, version
+        """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+
+                // load arrays
+                String poiJson = rs.getString("poi_array");
+                String routeJson = rs.getString("route_array");
+
+                ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
+                ArrayList<Route> routes = JsonUtil.jsonTorouteList(routeJson);
+
+                // (optional debug – same as yours)
+                for (Route r : routes) {
+                    var pts = r.getBasePoints();
+
+                    System.out.println("route id: " + r.getId());
+                    System.out.println("points size: " + pts.size());
+
+                    if (!pts.isEmpty()) {
+                        System.out.println("first: " + Arrays.toString(pts.get(0)));
+                        System.out.println("second: " + (pts.size() > 1 ? Arrays.toString(pts.get(1)) : "n/a"));
+                        System.out.println("last: " + Arrays.toString(pts.get(pts.size() - 1)));
+                    }
+                }
+
+                MapSheet map = new MapSheet(
+                        rs.getInt("version"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getString("path"),
+                        routes,
+                        pois
+                );
+
+                maps.add(map);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return maps;
+    }
+
 
 
 

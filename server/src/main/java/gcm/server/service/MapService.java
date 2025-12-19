@@ -33,6 +33,10 @@ public class MapService {
     {
         return  mapRepository.loadPendingMap(version,name);
     }
+    public List<MapSheet> PullAllMap()
+    {
+        return  mapRepository.loadAllPendingMaps();
+    }
 
     public int getPoiIndex() throws SQLException {
         PoiRepo poirepository=mapRepository.getPoirepo();

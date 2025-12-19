@@ -10,6 +10,7 @@ public enum RequestType {
     GET_CITY_DETAILS,
     LIST_MAPS_FOR_CITY,
     GET_MAP,
+    GET_PENDING_MAPS,
 
     // POIs
     LIST_POIS_FOR_CITY,
