@@ -29,7 +29,12 @@ public class UserMapViewerController {
     private List<Route> routes = new ArrayList<>();
     private boolean buildingRouteWaitingFirstPoint = false;
     private int routeId = 0;
-    private String path="C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Tiels";
+    private String path;
+    private  MaPayload mapayload;
+    private boolean initialized = false;
+    private boolean hasVals = false;
+
+
     public int getPoid()
     {
         return this.poid;
@@ -53,13 +58,9 @@ public class UserMapViewerController {
     @FXML
     private MapOverlayLayerController overlayLayerController;
     private GcmClient client;
+
     @FXML
     private void initialize() {
-        client = ClientApp.getClient();
-        client.setResponseHandler(this::handleResponse);
-        MaPayload mapayload= new MaPayload(1,"haifa");
-        GcmRequest request = new GcmRequest(RequestType.GET_MAP, mapayload);
-        client.sendRequest(request);
         baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
@@ -93,12 +94,29 @@ public class UserMapViewerController {
             showPoiPopover(poi, node);
         });
 
-
-
         baseLayerController.recenterNow();
 
 
     }
+    public void setVals(int version,String name,String path)
+    {
+        this.path=path;
+        this.mapayload=new MaPayload(version,name);
+        hasVals = true;
+        System.out.println("path used:"+path);
+        System.out.println("version,name used: "+version+name);
+        baseLayerController.setTileRoot(path);
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+        GcmRequest request = new GcmRequest(RequestType.GET_MAP, mapayload);
+        client.sendRequest(request);
+
+
+    }
+
+
+
+
 
     /* ===========================
        Toolbar zoom button handlers
@@ -146,7 +164,7 @@ public class UserMapViewerController {
                     double firstY = pts.get(0)[1];
 
                     Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory());
-                    overlayLayerController.addPoi(head);
+                  //  overlayLayerController.addPoi(head);
                 }
                  overlayLayerController.addRoute(r);
 
@@ -201,4 +219,8 @@ public class UserMapViewerController {
 
     }
 
+    public void handleClose(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(PendingMapController.class);
+
+    }
 }

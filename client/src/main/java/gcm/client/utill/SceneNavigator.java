@@ -12,7 +12,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -69,4 +70,52 @@ public class SceneNavigator {
             throw new RuntimeException("Failed to load " + fxml, e);
         }
     }
+
+
+    public static class LoadedView<T> {
+        public final Parent root;
+        public final T controller;
+
+        public LoadedView(Parent root, T controller) {
+            this.root = root;
+            this.controller = controller;
+        }
+    }
+
+    public <T> LoadedView<T> get(Class<T> controllerClass) {
+        String fxml = routes.get(controllerClass);
+        if (fxml == null) {
+            throw new IllegalArgumentException("No route for " + controllerClass.getName());
+        }
+
+        try {
+            URL url = getClass().getResource(fxml);
+            System.out.println("Loading FXML (no show): " + fxml + " → " + url);
+
+            if (url == null) {
+                throw new IllegalStateException("FXML not found on classpath at: " + fxml);
+            }
+
+            FXMLLoader loader = new FXMLLoader(url);
+            Parent root = loader.load();
+            T controller = loader.getController();
+
+            return new LoadedView<>(root, controller);
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load " + fxml, e);
+        }
+    }
+
+    public void showLoaded(Parent root) {
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(
+                getClass().getResource("/gcm/client/map/map.css").toExternalForm()
+        );
+
+        stage.setScene(scene);
+        if (!stage.isShowing()) stage.show();
+    }
+
+
 }

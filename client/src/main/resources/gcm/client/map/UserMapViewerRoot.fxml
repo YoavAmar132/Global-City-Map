@@ -1,30 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.control.ToolBar?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.fxml.FXML?>
-<?import javafx.fxml.FXMLLoader?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="gcm.client.controllers.map.UserMapViewerController">
+<BorderPane xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gcm.client.controllers.map.UserMapViewerController">
 
     <!-- Optional top toolbar -->
     <top>
         <ToolBar>
             <Label text="User Map Viewer" />
-            <Region prefWidth="20"/>
-            <Button text="Zoom +" onAction="#onZoomIn"/>
-            <Button text="Zoom -" onAction="#onZoomOut"/>
-            <Region fx:id="spacer" BorderPane.alignment="CENTER" />
+            <Region prefWidth="20" />
+            <Button onAction="#onZoomIn" text="Zoom +" />
+            <Button onAction="#onZoomOut" text="Zoom -" />
 
-            <Region prefWidth="20"/>
+            <Region fx:id="spacer" BorderPane.alignment="CENTER" />
+            <!-- Close (X) button -->
+            <Button alignment="TOP_RIGHT" onAction="#handleClose" prefHeight="39.0" prefWidth="47.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;" text="✕">
+            <opaqueInsets>
+               <Insets />
+            </opaqueInsets></Button>
+
+            <Region prefWidth="20" />
 
         </ToolBar>
     </top>
@@ -33,10 +30,10 @@
     <center>
         <StackPane fx:id="stackPane">
             <!-- Base tiles layer -->
-            <fx:include source="MapBaseLayer.fxml" fx:id="baseLayer"/>
+            <fx:include fx:id="baseLayer" source="MapBaseLayer.fxml" />
 
             <!-- Transparent overlay layer for POIs & routes -->
-            <fx:include source="MapOverlayLayer.fxml" fx:id="overlayLayer"/>
+            <fx:include fx:id="overlayLayer" source="MapOverlayLayer.fxml" />
         </StackPane>
     </center>
 
