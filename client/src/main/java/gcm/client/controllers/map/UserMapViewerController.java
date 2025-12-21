@@ -1,16 +1,19 @@
 package gcm.client.controllers.map;
 
 import common.messages.*;
-import common.model.MapSheet;
-import common.model.POI_Category;
-import common.model.Poi;
-import common.model.Route;
+import common.model.*;
+import gcm.client.controllers.menu.ContentWorkerMenuController;
+import gcm.client.controllers.menu.CustomerSupportMenuController;
+import gcm.client.controllers.menu.ManagerMenuController;
+import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Side;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 
@@ -31,8 +34,10 @@ public class UserMapViewerController {
     private int routeId = 0;
     private String path;
     private  MaPayload mapayload;
+    private MapSheet map;
     private boolean initialized = false;
     private boolean hasVals = false;
+    private boolean showDone = false;
 
 
     public int getPoid()
@@ -50,6 +55,10 @@ public class UserMapViewerController {
     public void setRoutid(int id)
     {
         this.routeId=id;
+    }
+    public void setMap(MapSheet map)
+    {
+        this.map=map;
     }
     // These are injected because of fx:id="baseLayer" / "overlayLayer" on the fx:include tags
     @FXML
@@ -93,25 +102,49 @@ public class UserMapViewerController {
         overlayLayerController.setOnPoiSelected((poi, node) -> {
             showPoiPopover(poi, node);
         });
-
+        initialized = true;
         baseLayerController.recenterNow();
+        stackPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                tryShowMap();
+            }
+        });
+        if (stackPane.getScene() != null) {
+            tryShowMap();
+        }
 
 
     }
-    public void setVals(int version,String name,String path)
+    public void setVals(MapSheet map)
     {
-        this.path=path;
-        this.mapayload=new MaPayload(version,name);
+        this.path=map.getPath();
+        setMap(map);
         hasVals = true;
-        System.out.println("path used:"+path);
-        System.out.println("version,name used: "+version+name);
         baseLayerController.setTileRoot(path);
-        client = ClientApp.getClient();
-        client.setResponseHandler(this::handleResponse);
-        GcmRequest request = new GcmRequest(RequestType.GET_MAP, mapayload);
-        client.sendRequest(request);
+        tryShowMap();
 
 
+
+    }
+    private void tryShowMap() {
+        if (showDone) return;
+        if (!initialized) return;
+        if (!hasVals) return;
+        if (map == null) return;
+
+        Scene scene = stackPane.getScene();
+        if (scene == null) return; // still not attached -> too early
+
+        // Defer to next FX pulse (prevents “too early” crashes)
+        Platform.runLater(() -> {
+            if (showDone) return;
+            if (stackPane.getScene() == null) return;
+
+            baseLayerController.setTileRoot(path);
+            showMap(map);
+
+            showDone = true;
+        });
     }
 
 
@@ -129,6 +162,7 @@ public class UserMapViewerController {
         int current = baseLayerController.getZoom();
         baseLayerController.setZoom(current + 1);
         overlayLayerController.rerender();
+
     }
 
     @FXML
@@ -200,27 +234,30 @@ public class UserMapViewerController {
     }
 
 
-    private void handleResponse(GcmResponse response) {
-        if (!response.isSuccess()) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("map fetching Failed");
-            alert.setContentText(response.getErrorMessage());
-            alert.showAndWait();
-        }else{
-            Object t =response.getData();
-            if(t instanceof MapSheet map) {
-                showMap((MapSheet)t);
-                System.out.println("loaded succsesfuly");
-            }else {
-                System.out.println("loading map failed");
-            }
-
-        }
-
-    }
 
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(PendingMapController.class);
+        User current=ClientApp.getCurrentUser();
+        switch (current.getRole())
+        {
+            case "Customer":
+                ClientApp.getNavigator().show(UserMenuController.class);
+                break;
+            case "ContentManager":
+            case "Worker":
+            case "ContentEmployee":
+                ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+                break;
+
+            case "CustomerSupport":
+                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
+                break;
+
+
+            case "CompanyManager":
+                ClientApp.getNavigator().show(ManagerMenuController.class);
+                break;
+        }
+
 
     }
 }

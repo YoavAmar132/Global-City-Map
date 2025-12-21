@@ -1,7 +1,9 @@
 package gcm.client.controllers.map;
 
 import common.messages.*;
+import common.model.City;
 import common.model.MapSheet;
+import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import gcm.client.utill.SceneNavigator;
@@ -12,6 +14,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.control.ChoiceDialog;
+import java.util.ArrayList;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
@@ -19,6 +25,8 @@ public class PendingMapController {
     private GcmClient client;
     @FXML
     private VBox pendingList;
+    private ArrayList<City> cities; // loaded earlier
+
     @FXML
     private void initialize() {
         client = ClientApp.getClient();
@@ -26,6 +34,13 @@ public class PendingMapController {
         MaPayload maPayload=new MaPayload(0,"");
         GcmRequest request = new GcmRequest(RequestType.GET_PENDING_MAPS, maPayload);
         client.sendRequest(request);
+        EmptyPayload payload=new EmptyPayload();
+         request = new GcmRequest(RequestType.LIST_CITIES, payload);
+        client.sendRequest(request);
+    }
+
+    public void setCities(ArrayList<City> cities) {
+        this.cities = cities;
     }
 
     private HBox createMapRow(MapSheet map) {
@@ -60,8 +75,40 @@ public class PendingMapController {
         return row;
     }
 
+
     private void ApproveMap(MapSheet map) {
-        System.out.println("approved");
+        if (map == null) return;
+        if (cities == null || cities.isEmpty()) {
+            System.out.println("No cities available to choose from.");
+            return;
+        }
+
+        // Build list of city names
+        List<String> cityNames = cities.stream()
+                .map(City::getName)          // <-- change if your getter is different
+                .collect(Collectors.toList());
+
+        // Show dialog (default selection is first city)
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(cityNames.get(0), cityNames);
+        dialog.setTitle("Approve Map");
+        dialog.setHeaderText("Choose a city for this map");
+        dialog.setContentText("City:");
+
+        Optional<String> result = dialog.showAndWait();
+
+        // User cancelled
+        if (result.isEmpty()) return;
+
+        String chosenCity = result.get();
+
+        System.out.println("approved for city: " + chosenCity);
+
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+
+        ApprovePayload payload = new ApprovePayload(map, chosenCity);
+        GcmRequest request = new GcmRequest(RequestType.APPROVE_MAP_VERSION, payload);
+        client.sendRequest(request);
     }
 
     public void openPendingMap(MapSheet map) {
@@ -69,7 +116,7 @@ public class PendingMapController {
                 ClientApp.getNavigator().get(UserMapViewerController.class);
 
         // set values BEFORE showing
-        view.controller.setVals(map.getVersion(), map.getName(), map.getPath());
+        view.controller.setVals(map);
 
         // now show
         ClientApp.getNavigator().showLoaded(view.root);
@@ -84,25 +131,49 @@ public class PendingMapController {
             alert.setTitle("loading all maps Failed");
             alert.setContentText(response.getErrorMessage());
             alert.showAndWait();
-        }else{
-            Object t =response.getData();
-            List<MapSheet> pendingMaps=(List<MapSheet>)t;
-            pendingList.getChildren().clear();
-            for (MapSheet map : pendingMaps) {
-                pendingList.getChildren().add(createMapRow(map));
+        }else {
+
+            Object t = response.getData();
+            if (t == null) {
+                System.out.println("map approval success");
+            }else  if(t instanceof ArrayList<?>)
+            {
+                ArrayList<?> list = (ArrayList<?>) t;
+
+                if (!list.isEmpty() && list.get(0) instanceof City) {
+                    @SuppressWarnings("unchecked")
+                    ArrayList<City> cities = (ArrayList<City>) list;
+                    setCities(cities);
+                    System.out.println("City list success");
+                }
+                if (!list.isEmpty() && list.get(0) instanceof MapSheet) {
+                    @SuppressWarnings("unchecked")
+                    List<MapSheet> pendingMaps = (List<MapSheet>) t;
+                    pendingList.getChildren().clear();
+                    for (MapSheet map : pendingMaps) {
+                        pendingList.getChildren().add(createMapRow(map));
+                    }
+                    System.out.println("loaded succsesfuly");
+
+                }
+
             }
 
-            System.out.println("loaded succsesfuly");
+
         }
 
     }
 
     public void onBackClicked(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 
     public void handleClose(ActionEvent actionEvent) {
+        client.closeConnectionSafe();
+        javafx.application.Platform.exit();
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(PendingMapController.class);
     }
 }

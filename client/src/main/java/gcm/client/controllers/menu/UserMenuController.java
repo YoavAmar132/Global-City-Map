@@ -20,8 +20,9 @@ public class UserMenuController {
     private void handleResponse(GcmResponse response) {}
 
     @FXML
-    private void handleClose(ActionEvent event) {
-
+    public void handleClose(ActionEvent actionEvent) {
+        client.closeConnectionSafe();
+        javafx.application.Platform.exit();
     }
 
     @FXML

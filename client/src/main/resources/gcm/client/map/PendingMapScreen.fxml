@@ -79,7 +79,7 @@
                                 <Insets top="10.0" right="12.0" bottom="10.0" left="12.0"/>
                             </padding>
 
-                            <Label text="Example Map Name"
+                            <Label text=""
                                    textFill="white"
                                    style="-fx-font-size: 14;"/>
 

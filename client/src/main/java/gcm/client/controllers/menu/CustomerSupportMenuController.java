@@ -16,6 +16,8 @@ public class CustomerSupportMenuController {
     }
     private void handleResponse(GcmResponse response) {}
     public void handleClose(ActionEvent actionEvent) {
+        client.closeConnectionSafe();
+        javafx.application.Platform.exit();
     }
 
     public void onSupportButton(ActionEvent actionEvent) {

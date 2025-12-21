@@ -15,26 +15,40 @@ public class MapSheet implements Serializable {
     private int LastPoi=0;
     private int FirstRoute=0;
     private int LastRoute=0;
-public MapSheet(int version, String name, String description,String path,
-                ArrayList routes,ArrayList pois) {
-    this.version = version;
-    this.name = name;
-    this.description = description;
-    this.path = path;
-    this.routes = routes;
-    this.pois = pois;
-    if (this.pois != null && this.routes != null) {
-        Poi firstp = (Poi) pois.get(0);
-        Poi lastp = (Poi) pois.get(pois.size() - 1);
-        this.FirstPoi = firstp.getId();
-        this.LastPoi = lastp.getId();
-        Route firstr = (Route) routes.get(0);
-        Route lastr = (Route) routes.get(routes.size() - 1);
-        this.FirstRoute = firstr.getId();
-        this.LastRoute = lastr.getId();
+    public MapSheet(int version, String name, String description, String path,
+                    ArrayList<Route> routes, ArrayList<Poi> pois) {
 
+        this.version = version;
+        this.name = name;
+        this.description = description;
+        this.path = path;
+
+        this.routes = (routes != null) ? routes : new ArrayList<>();
+        this.pois   = (pois != null)   ? pois   : new ArrayList<>();
+
+        // POI bounds
+        if (!this.pois.isEmpty()) {
+            Poi firstp = this.pois.get(0);
+            Poi lastp  = this.pois.get(this.pois.size() - 1);
+            this.FirstPoi = firstp.getId();
+            this.LastPoi  = lastp.getId();
+        } else {
+            this.FirstPoi = -1;
+            this.LastPoi  = -1;
+        }
+
+        // Route bounds
+        if (!this.routes.isEmpty()) {
+            Route firstr = this.routes.get(0);
+            Route lastr  = this.routes.get(this.routes.size() - 1);
+            this.FirstRoute = firstr.getId();
+            this.LastRoute  = lastr.getId();
+        } else {
+            this.FirstRoute = -1;
+            this.LastRoute  = -1;
+        }
     }
-}
+
 
     public void setDescription(String description) {
         this.description = description;

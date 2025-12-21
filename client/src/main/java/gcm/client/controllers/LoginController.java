@@ -61,7 +61,7 @@ public class LoginController {
             case "Customer":
                 ClientApp.getNavigator().show(UserMenuController.class);
                 break;
-
+            case "ContentManager":
             case "Worker":
             case "ContentEmployee":
                 ClientApp.getNavigator().show(ContentWorkerMenuController.class);
@@ -71,7 +71,7 @@ public class LoginController {
                 ClientApp.getNavigator().show(CustomerSupportMenuController.class);
                 break;
 
-            case "ContentManager":
+
             case "CompanyManager":
                 ClientApp.getNavigator().show(ManagerMenuController.class);
                 break;

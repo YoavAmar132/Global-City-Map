@@ -1,5 +1,6 @@
 package gcm.server.data;
 
+import common.messages.ApprovePayload;
 import common.model.POI_Category;
 import common.model.Poi ;
 import common.model.Route;
@@ -14,10 +15,12 @@ public class MapRepo {
 
         private final PoiRepo poirepo;
         private final RouteRepo routeRepo;
+    private final CityRepo cityRepo;
 
         public MapRepo() {
             this.poirepo = new PoiRepo();
             this.routeRepo = new RouteRepo();
+            this.cityRepo=new CityRepo();
             System.out.println("map repo created");
         }
 
@@ -49,9 +52,9 @@ public class MapRepo {
             stmt.setString(4, map.getPath());
             stmt.setString(5, JsonUtil.poiListToJson(map.getPois()));
             stmt.setString(6, JsonUtil.routeListToJson(map.getRoutes()));
-            stmt.executeUpdate();
 
-            return stmt.executeUpdate() == 1;
+            int affected = stmt.executeUpdate();   // ✅ only once
+            return affected == 1;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -112,6 +115,73 @@ public class MapRepo {
 
         return null; // not found
     }
+    //delete pending map on approval
+    public boolean deletePendingMap(int version) {
+        String sql = "DELETE FROM pending_maps WHERE version = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, version);
+
+            int affectedRows = stmt.executeUpdate();
+            return affectedRows > 0;   // true if something was deleted
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    //inserting maps to city
+    public boolean insertApprovedMap(ApprovePayload ApprovedMap) {
+            MapSheet map =ApprovedMap.getMap();
+            String CityName=ApprovedMap.getCityName();
+            boolean delete= deletePendingMap(map.getVersion());
+            if(!delete) System.out.println("faild to delete the pending map");
+        if (map == null) return false;
+
+        String sql = """
+        INSERT INTO maps (cityID, mapName, map)
+        VALUES (?, ?, ?)
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            int cityId =cityRepo.idByCityName(CityName) ;         // <-- change this if your MapSheet uses a different getter
+            String mapName = map.getName();
+
+            // Use your JsonUtil MapSheet -> JSON method
+            String mapJson = JsonUtil.mapSheetToJsonWithEmbeddedArrays(map);
+            // If you used the “real arrays” version (obj.add(...)), it’s still a string here and MySQL JSON accepts it.
+
+            stmt.setInt(1, cityId);
+            stmt.setString(2, mapName);
+            stmt.setString(3, mapJson);
+
+            int affected = stmt.executeUpdate();
+            if (affected == 0) return false;
+
+            // Optional: read generated mapID if you want it
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    int generatedMapId = rs.getInt(1);
+                    // If MapSheet has setMapId(...), you can store it:
+                    // map.setMapId(generatedMapId);
+                }
+            }
+
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
     public List<MapSheet> loadAllPendingMaps() {
         List<MapSheet> maps = new ArrayList<>();
 
@@ -166,6 +236,38 @@ public class MapRepo {
 
         return maps;
     }
+
+
+    public List<MapSheet> loadAllMapsFromCity(String cityName) {
+        List<MapSheet> maps = new ArrayList<>();
+
+        String sql = """
+        SELECT map
+        FROM maps
+        WHERE cityID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            int cityId = cityRepo.idByCityName(cityName);
+            stmt.setInt(1, cityId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String mapJson = rs.getString("map");
+                    MapSheet map = JsonUtil.jsonToMapSheetWithEmbeddedArrays(mapJson);
+                    if (map != null) maps.add(map);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return maps;
+    }
+
 
 
 

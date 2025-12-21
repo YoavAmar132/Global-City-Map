@@ -64,14 +64,14 @@
                     onAction="#onEditButton"/>
 
             <!-- Manage report button -->
-            <Button fx:id="ReportsButton" text="Manage Reports"
+            <Button fx:id="ReportsButton" text="Approve Pending Maps"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
                            -fx-font-size: 15;
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
-                    onAction="#onReportsButton"/>
+                    onAction="#onMapApproveButton"/>
             <!-- Manage report button -->
             <Button fx:id="PricingButton" text="Manage Pricing"
                     prefWidth="200.0" prefHeight="36.0"

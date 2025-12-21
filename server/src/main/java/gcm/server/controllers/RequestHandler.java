@@ -1,10 +1,11 @@
 package gcm.server.controllers;
 
 import common.messages.*;
+import common.model.City;
 import common.model.MapSheet;
 import common.model.User;
-import gcm.server.data.MapRepo;
 import gcm.server.service.AuthService;
+import gcm.server.service.CityService;
 import gcm.server.service.MapService;
 
 import java.sql.SQLException;
@@ -14,10 +15,12 @@ public class RequestHandler {
 
     private final AuthService authService;
     private final MapService mapservice;
+    private final CityService cityService;
 
-    public RequestHandler(AuthService authService, MapService mapservice) {
+    public RequestHandler(AuthService authService, MapService mapservice,CityService cityService) {
         this.authService = authService;
         this.mapservice = mapservice;
+        this.cityService=cityService;
     }
 
     /**
@@ -25,7 +28,7 @@ public class RequestHandler {
      * For now, we only support LOGIN.
      */
     public GcmResponse handle(GcmRequest request) {
-
+        System.out.println("handler");
         RequestType type = request.getType();
 
         if (type == RequestType.LOGIN) {
@@ -86,6 +89,27 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+        if (type == RequestType.APPROVE_MAP_VERSION) {
+            try {
+                return handleMapApproval(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (type == RequestType.LIST_CITIES) {
+            try {
+                return handleListCities(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (type == RequestType.LIST_MAPS_FOR_CITY) {
+            try {
+                return handleAllCityMaps(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -133,6 +157,16 @@ public class RequestHandler {
         if(!mapservice.PendMap(mapSheet)){ return GcmResponse.error("faild to pend");}
         return GcmResponse.ok(mapSheet);
     }
+    //map aprroved handler
+    private GcmResponse handleMapApproval(GcmRequest request) throws SQLException {
+        System.out.println("map addition request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof ApprovePayload approvePayload)) {
+            return GcmResponse.error("Invalid payload for map pending request");
+        }
+        if(!mapservice.sendApprovedMap(approvePayload)){ return GcmResponse.error("faild to pend");}
+        return GcmResponse.ok(null);
+    }
     //map request handler
     private GcmResponse handleMapRequest(GcmRequest request) throws SQLException {
         System.out.println("map  request received");
@@ -154,7 +188,29 @@ public class RequestHandler {
         if(map==null){ return GcmResponse.error("faild to get all map");}
         return GcmResponse.ok(map);
     }
+    //get all maps of certin city
+    private GcmResponse handleAllCityMaps(GcmRequest request) throws SQLException {
+        System.out.println("map  request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MaPayload maPayload)) {
+            return GcmResponse.error("Invalid payload for map  request");
+        }
+        List<MapSheet> maps=mapservice.PullAllCityMaps(maPayload.getName());
+        if(maps==null){ return GcmResponse.error("faild to get all map");}
+        return GcmResponse.ok(maps);
+    }
+// get list of cities handler
+private GcmResponse handleListCities(GcmRequest request) throws SQLException {
+    System.out.println("list of citis request received");
+    Object rawPayload = request.getPayload();
+    if (!(rawPayload instanceof EmptyPayload empty)) {
+        return GcmResponse.error("Invalid payload for map pending request");
+    }
+    List<City> cities = cityService.getAllCities();
+    if (cities == null) return GcmResponse.error("faild to get list");
+    return GcmResponse.ok(cities);
 
+}
     // get poi index
     private GcmResponse handlePoiIndex(GcmRequest request) throws SQLException {
         System.out.println("poi index request received");

@@ -1,10 +1,11 @@
 package gcm.client.controllers.map;
 
 import common.messages.*;
-import common.model.MapSheet;
-import common.model.POI_Category;
-import common.model.Poi;
-import common.model.Route;
+import common.model.*;
+import gcm.client.controllers.menu.ContentWorkerMenuController;
+import gcm.client.controllers.menu.CustomerSupportMenuController;
+import gcm.client.controllers.menu.ManagerMenuController;
+import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import javafx.event.ActionEvent;
@@ -24,12 +25,13 @@ public class MapViewerController {
     private int routid=0;
     @FXML
     private StackPane stackPane;
+    private boolean submitInProgress = false;
     private List<Poi> pois = new ArrayList<>();
     private Route buildingRoute = null;
     private List<Route> routes = new ArrayList<>();
     private boolean buildingRouteWaitingFirstPoint = false;
     private int routeId = 0;
-    private String path="C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Tiels";
+    private String path="C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Haifa";
 
 public int getPoid()
 {
@@ -65,7 +67,6 @@ public int getPoid()
         client.sendRequest(request);
          request = new GcmRequest(RequestType.GET_ROUTE_INDEX, index1);
         client.sendRequest(request);
-        baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
 
@@ -104,6 +105,11 @@ public int getPoid()
         baseLayerController.recenterNow();
 
 
+    }
+    public void setVals(String path)
+    {
+        this.path=path;
+        baseLayerController.setTileRoot(path);
     }
 
     /* ===========================
@@ -193,7 +199,7 @@ public int getPoid()
                 POI_Category category = askPoiCategory();
                 if (category == null) return;
 
-                Poi poi = new Poi(poid++, name, description, baseWorldX, baseWorldY, category);  this.poid++;
+                Poi poi = new Poi(poid++, name, description, baseWorldX, baseWorldY, category);
                 overlayLayerController.addPoi(poi);
                 pois.add(poi);
                 System.out.println("Created POI " + name + " at " + worldX + ", " + worldY);
@@ -427,14 +433,51 @@ public int getPoid()
     }
 
     public void onSubmitMap(ActionEvent actionEvent) {
-    int version=askVersionnum();
-    String name = askPoiName();
-    String description=askPoiDescription();
+        if (submitInProgress) {
+            System.out.println("tried to dupe");
+            return;
+        }
+        submitInProgress = true;
 
+        int version = askVersionnum();
+        if (version < 0) { submitInProgress = false; return; }
 
-        MapSheet map =new MapSheet(version,name,description,path, (ArrayList) routes, (ArrayList) pois);
+        String name = askPoiName();
+        if (name == null) { submitInProgress = false; return; }
+
+        String description = askPoiDescription();
+        if (description == null) { submitInProgress = false; return; }
+
+        MapSheet map = new MapSheet(version, name, description, path,
+                (ArrayList) routes, (ArrayList) pois);
+
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
         client.sendRequest(request);
+    }
+
+    public void handleClose(ActionEvent actionEvent) {
+        User current=ClientApp.getCurrentUser();
+        switch (current.getRole())
+        {
+            case "Customer":
+                ClientApp.getNavigator().show(UserMenuController.class);
+                break;
+            case "ContentManager":
+            case "Worker":
+            case "ContentEmployee":
+                ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+                break;
+
+            case "CustomerSupport":
+                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
+                break;
+
+
+            case "CompanyManager":
+                ClientApp.getNavigator().show(ManagerMenuController.class);
+                break;
+        }
+
 
     }
 }
