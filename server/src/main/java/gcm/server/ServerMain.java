@@ -8,8 +8,10 @@ import gcm.server.data.MapRepo;
 import gcm.server.data.UserRepo;
 import gcm.server.network.GcmServer;
 import gcm.server.service.AuthService;
+import gcm.server.service.CatalogService;
 import gcm.server.service.CityService;
 import gcm.server.service.MapService;
+import gcm.server.data.CatalogRepo;
 
 public class ServerMain {
 
@@ -25,8 +27,12 @@ public class ServerMain {
             MapService mapService=new MapService(mapRepository);
             CityRepo cityRepository =new CityRepo();
             CityService cityService=new CityService(cityRepository);
-            //authService.loadUsersFromDb(); // fills the ArrayList<User>
-            RequestHandler handler = new RequestHandler(authService,mapService,cityService);
+            CatalogRepo catalogRepo = new CatalogRepo();
+            CatalogService catalogService = new CatalogService(catalogRepo);
+
+            RequestHandler handler =
+                    new RequestHandler(authService, mapService, cityService, catalogService);
+
 
             GcmServer server = new GcmServer(5555, handler);
             server.listen(); // starts listening (blocks current thread)

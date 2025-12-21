@@ -12,12 +12,16 @@ public enum RequestType {
     GET_MAP,
     GET_PENDING_MAPS,
 
+    //guest catalog
+    GET_CITY_CATALOG,
+    GET_CITY_MAPS,
+
     // POIs
     LIST_POIS_FOR_CITY,
     SEARCH_POIS,
     CREATE_POI,      // optional
     UPDATE_POI,      // optional
-   GET_POI_INDEX,
+    GET_POI_INDEX,
     GET_ROUTE_INDEX,      // optional
 
     // Routes

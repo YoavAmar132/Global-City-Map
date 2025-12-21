@@ -63,8 +63,8 @@ public class RegistrationController {
 
     }
 
-    public void handleClose() {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+    @FXML
+    private void handleClose() {
+        ClientApp.getNavigator().show(WelcomeController.class);
     }
 }

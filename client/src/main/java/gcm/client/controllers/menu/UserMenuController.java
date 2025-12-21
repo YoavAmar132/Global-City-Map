@@ -1,11 +1,20 @@
 package gcm.client.controllers.menu;
+import gcm.client.controllers.catalogPublic.GuestCatalogController;
 import gcm.client.controllers.map.PendingMapController;
 import gcm.client.controllers.map.UserMapViewerController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
+import gcm.client.utill.SceneNavigator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+import java.io.IOException;
 
 
 public class UserMenuController {
@@ -29,6 +38,8 @@ public class UserMenuController {
     private void onViewCatalogClicked(ActionEvent event) {
         System.out.println("View Catalog clicked");
         // TODO: SceneNavigator to catalog
+
+        ClientApp.getNavigator().show(GuestCatalogController.class);
     }
 
     @FXML

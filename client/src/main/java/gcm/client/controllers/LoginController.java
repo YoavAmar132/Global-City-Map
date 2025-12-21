@@ -86,9 +86,9 @@ public class LoginController {
 
     @FXML
     private void handleClose() {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        ClientApp.getNavigator().show(WelcomeController.class);
     }
+
 
 
 }

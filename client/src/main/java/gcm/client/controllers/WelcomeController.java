@@ -1,14 +1,25 @@
 package gcm.client.controllers;
+
+import gcm.client.controllers.catalogPublic.GuestCatalogController;
+import gcm.client.utill.ClientApp;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 
 public class WelcomeController {
+
     @FXML
-    private Label welcomeText;
+    private void onViewCatalog() {
+        ClientApp.getNavigator().show(GuestCatalogController.class);
+    }
+
+    @FXML
+    private void onLogin() {
+        ClientApp.getNavigator().show(LoginController.class);
+    }
 
     @FXML
     private void handleClose() {
-        javafx.application.Platform.exit();
+        System.exit(0);
     }
+
 
 }

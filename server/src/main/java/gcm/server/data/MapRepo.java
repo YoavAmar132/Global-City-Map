@@ -36,8 +36,8 @@ public class MapRepo {
 
         String sql = """
     INSERT INTO pending_maps
-    (version, name, description, path, poi_array,route_array)
-    VALUES (?, ?, ?, ?, ?,?)
+    (version, price, name, description, path, poi_array,route_array)
+    VALUES (?, ?, ?, ?, ?, ?,?)
 """;
 
 
@@ -47,11 +47,12 @@ public class MapRepo {
             routeRepo.insertAllRoutes(map.getRoutes());
 
             stmt.setInt(1, map.getVersion());
-            stmt.setString(2, map.getName());
-            stmt.setString(3, map.getDescription());
-            stmt.setString(4, map.getPath());
-            stmt.setString(5, JsonUtil.poiListToJson(map.getPois()));
-            stmt.setString(6, JsonUtil.routeListToJson(map.getRoutes()));
+            stmt.setDouble(2, map.getPrice());
+            stmt.setString(3, map.getName());
+            stmt.setString(4, map.getDescription());
+            stmt.setString(5, map.getPath());
+            stmt.setString(6, JsonUtil.poiListToJson(map.getPois()));
+            stmt.setString(7, JsonUtil.routeListToJson(map.getRoutes()));
 
             int affected = stmt.executeUpdate();   // ✅ only once
             return affected == 1;
@@ -63,10 +64,11 @@ public class MapRepo {
     }
     public MapSheet loadPendingMap(int version, String name) {
         String sql = """
-        SELECT version, name, description, path, poi_array,route_array
+        SELECT version, price, name, description, path, poi_array, route_array
         FROM pending_maps
         WHERE version = ? AND name = ?
         """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -81,7 +83,7 @@ public class MapRepo {
                     String routeJson = rs.getString("route_array");
 
                     ArrayList<Poi> pois= JsonUtil.jsonToPoiList(poiJson);
-                    ArrayList<Route> routes= JsonUtil.jsonTorouteList(routeJson);
+                    ArrayList<Route> routes= JsonUtil.jsonToRouteList(routeJson);
 
 
                     for (Route r : routes) {
@@ -100,6 +102,7 @@ public class MapRepo {
 
                     return new MapSheet(
                             rs.getInt("version"),
+                            rs.getDouble("price"),
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getString("path"),
@@ -142,9 +145,10 @@ public class MapRepo {
         if (map == null) return false;
 
         String sql = """
-        INSERT INTO maps (cityID, mapName, map)
-        VALUES (?, ?, ?)
-    """;
+            INSERT INTO maps (price, cityID, mapName, map)
+            VALUES (?, ?, ?, ?)
+        """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -156,9 +160,11 @@ public class MapRepo {
             String mapJson = JsonUtil.mapSheetToJsonWithEmbeddedArrays(map);
             // If you used the “real arrays” version (obj.add(...)), it’s still a string here and MySQL JSON accepts it.
 
-            stmt.setInt(1, cityId);
-            stmt.setString(2, mapName);
-            stmt.setString(3, mapJson);
+            stmt.setDouble(1, map.getPrice());
+            stmt.setInt(2, cityId);
+            stmt.setString(3, mapName);
+            stmt.setString(4, mapJson);
+
 
             int affected = stmt.executeUpdate();
             if (affected == 0) return false;
@@ -186,10 +192,11 @@ public class MapRepo {
         List<MapSheet> maps = new ArrayList<>();
 
         String sql = """
-        SELECT version, name, description, path, poi_array, route_array
+        SELECT version, price, name, description, path, poi_array, route_array
         FROM pending_maps
         ORDER BY name, version
         """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -202,7 +209,7 @@ public class MapRepo {
                 String routeJson = rs.getString("route_array");
 
                 ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
-                ArrayList<Route> routes = JsonUtil.jsonTorouteList(routeJson);
+                ArrayList<Route> routes = JsonUtil.jsonToRouteList(routeJson);
 
                 // (optional debug – same as yours)
                 for (Route r : routes) {
@@ -220,6 +227,7 @@ public class MapRepo {
 
                 MapSheet map = new MapSheet(
                         rs.getInt("version"),
+                        rs.getDouble("price"),
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getString("path"),

@@ -7,6 +7,13 @@ import common.model.User;
 import gcm.server.service.AuthService;
 import gcm.server.service.CityService;
 import gcm.server.service.MapService;
+import gcm.server.service.CatalogService;
+import common.messages.CityMapsRequestPayload;
+import common.model.CityCatalogItem;
+import common.model.MapCatalogItem;
+
+
+
 
 import java.sql.SQLException;
 import java.util.List;
@@ -16,12 +23,18 @@ public class RequestHandler {
     private final AuthService authService;
     private final MapService mapservice;
     private final CityService cityService;
+    private final CatalogService catalogService;
 
-    public RequestHandler(AuthService authService, MapService mapservice,CityService cityService) {
+    public RequestHandler(AuthService authService,
+                          MapService mapservice,
+                          CityService cityService,
+                          CatalogService catalogService) {
         this.authService = authService;
         this.mapservice = mapservice;
-        this.cityService=cityService;
+        this.cityService = cityService;
+        this.catalogService = catalogService;
     }
+
 
     /**
      * Main entry point for handling a request from a client.
@@ -110,6 +123,27 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+
+        if (type == RequestType.GET_CITY_CATALOG) {
+            try {
+                return handleGetCityCatalog(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.GET_CITY_MAPS) {
+            try {
+                return handleGetCityMaps(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+
+
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -262,4 +296,44 @@ private GcmResponse handleListCities(GcmRequest request) throws SQLException {
             return GcmResponse.error("Server error during registration");
         }
     }
+
+
+    private GcmResponse handleGetCityCatalog(GcmRequest request) throws SQLException {
+        System.out.println("GET_CITY_CATALOG request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof EmptyPayload)) {
+            return GcmResponse.error("Invalid payload for city catalog");
+        }
+
+        List<CityCatalogItem> cities =
+                catalogService.loadCityCatalog();
+
+        if (cities == null) {
+            return GcmResponse.error("Failed to load city catalog");
+        }
+
+        return GcmResponse.ok(cities);
+    }
+
+    private GcmResponse handleGetCityMaps(GcmRequest request) throws SQLException {
+        System.out.println("GET_CITY_MAPS request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof CityMapsRequestPayload payload)) {
+            return GcmResponse.error("Invalid payload for city maps");
+        }
+
+        List<MapCatalogItem> maps =
+                catalogService.loadMapsForCity(payload.getCityId());
+
+        if (maps == null) {
+            return GcmResponse.error("Failed to load maps for city");
+        }
+
+        return GcmResponse.ok(maps);
+    }
+
+
+
 }

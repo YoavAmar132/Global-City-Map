@@ -5,6 +5,7 @@ import gcm.client.controllers.LoginController;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import common.model.User;
+import gcm.client.controllers.WelcomeController;
 
 
 
@@ -34,8 +35,8 @@ public class ClientApp extends Application {
         }
 
         navigator = new SceneNavigator(mainStage);
-        mainStage.setTitle("Login");
-        navigator.show(LoginController.class);  // this is where FXML must be found
+        mainStage.setTitle("Global City Map");
+        navigator.show(WelcomeController.class);// this is where FXML must be found
 
         mainStage.show();
     }
@@ -45,7 +46,7 @@ public class ClientApp extends Application {
      */
     public static void logout() {
         currentUser = null;
-        navigator.show(LoginController.class);
+        navigator.show(WelcomeController.class);
     }
 
     public static SceneNavigator getNavigator() { return navigator; }

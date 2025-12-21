@@ -214,89 +214,8 @@ public int getPoid()
         });
     }
 
-    String askPoiName() {
-        while (true) {
 
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("New POI");
-            dialog.setHeaderText("Enter POI name");
-            dialog.setContentText("Name:");
 
-            Optional<String> result = dialog.showAndWait();
-
-            // User clicked CANCEL
-            if (result.isEmpty()) {
-                return null; // or return "" if you prefer
-            }
-
-            String name = result.get().trim();
-
-            // If empty → ask again
-            if (!name.isEmpty()) {
-                return name; // valid! break the loop
-            }
-
-            // else loop again automatically
-        }
-    }
-    int askVersionnum() {
-        while (true) {
-
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("New Map Version");
-            dialog.setHeaderText("Enter Map Version");
-            dialog.setContentText("Version:");
-
-            Optional<String> result = dialog.showAndWait();
-
-            // User clicked CANCEL
-            if (result.isEmpty()) {
-                return -1;
-            }
-
-            String text = result.get().trim();
-
-            try {
-                int version = Integer.parseInt(text);
-
-                // optional validation
-                if (version >= 0) {
-                    return version;
-                }
-
-            } catch (NumberFormatException e) {
-                // not a valid integer → loop again
-            }
-
-            // If we reach here, input was invalid → show dialog again
-        }
-    }
-
-    String askPoiDescription() {
-        while (true) {
-
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("New POI");
-            dialog.setHeaderText("Enter POI Description");
-            dialog.setContentText("Description:");
-
-            Optional<String> result = dialog.showAndWait();
-
-            // User clicked CANCEL
-            if (result.isEmpty()) {
-                return null; // or return "" if you prefer
-            }
-
-            String Description = result.get().trim();
-
-            // If empty → ask again
-            if (!Description.isEmpty()) {
-                return Description; // valid! break the loop
-            }
-
-            // else loop again automatically
-        }
-    }
     private POI_Category askPoiCategory() {
 
         List<POI_Category> choices = Arrays.asList(POI_Category.values());
@@ -335,10 +254,10 @@ public int getPoid()
             try {
                 // FIRST point: ask metadata once
                 if (buildingRouteWaitingFirstPoint) {
-                    String name = askPoiName();
+                    String name = askRouteName();
                     if (name == null) return;
 
-                    String description = askPoiDescription();
+                    String description = askRouteDescription();
                     if (description == null) return;
 
                     POI_Category category = askPoiCategory();
@@ -350,7 +269,7 @@ public int getPoid()
 
                     // Add first point
                     buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                     Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER);
+                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER);
                     overlayLayerController.addPoi(start);
 
                     // Add to overlay immediately so user sees it grow
@@ -439,21 +358,132 @@ public int getPoid()
         }
         submitInProgress = true;
 
-        int version = askVersionnum();
+        int version = askVersionNum();
         if (version < 0) { submitInProgress = false; return; }
 
-        String name = askPoiName();
+        double price = askPrice();
+        if (price < 0) { submitInProgress = false; return; }
+
+        String name = askMapName();
         if (name == null) { submitInProgress = false; return; }
 
-        String description = askPoiDescription();
+        String description = askMapDescription();
         if (description == null) { submitInProgress = false; return; }
 
-        MapSheet map = new MapSheet(version, name, description, path,
+        MapSheet map = new MapSheet(version, price, name, description, path,
                 (ArrayList) routes, (ArrayList) pois);
 
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
         client.sendRequest(request);
     }
+
+
+
+
+
+
+
+
+    private int askNonNegativeInt(String title, String header, String label) {
+        while (true) {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle(title);
+            dialog.setHeaderText(header);
+            dialog.setContentText(label);
+
+            Optional<String> result = dialog.showAndWait();
+
+            if (result.isEmpty()) {
+                return -1; // CANCEL
+            }
+
+            try {
+                int value = Integer.parseInt(result.get().trim());
+                if (value >= 0) {
+                    return value;
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+    }
+
+    private double askNonNegativeDouble(String title, String header, String label) {
+        while (true) {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle(title);
+            dialog.setHeaderText(header);
+            dialog.setContentText(label);
+
+            Optional<String> result = dialog.showAndWait();
+
+            if (result.isEmpty()) {
+                return -1; // CANCEL
+            }
+
+            try {
+                double value = Double.parseDouble(result.get().trim());
+                if (value >= 0) {
+                    return value;
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+    }
+
+
+    private String askNonEmptyString(String title, String header, String label) {
+        while (true) {
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle(title);
+            dialog.setHeaderText(header);
+            dialog.setContentText(label);
+
+            Optional<String> result = dialog.showAndWait();
+
+            if (result.isEmpty()) {
+                return null; // CANCEL
+            }
+
+            String value = result.get().trim();
+            if (!value.isEmpty()) {
+                return value;
+            }
+        }
+    }
+
+    String askPoiName() {
+        return askNonEmptyString("New POI", "Enter POI name", "Name:");
+    }
+
+    String askRouteName() {
+        return askNonEmptyString("New Route", "Enter route name", "Name:");
+    }
+
+    String askMapName() {
+        return askNonEmptyString("New Map", "Enter map name", "Name:");
+    }
+
+    String askPoiDescription() {
+        return askNonEmptyString("New POI", "Enter POI description", "Description:");
+    }
+
+    String askRouteDescription() {
+        return askNonEmptyString("New Route", "Enter route description", "Description:");
+    }
+
+    String askMapDescription() {
+        return askNonEmptyString("New Map", "Enter map description", "Description:");
+    }
+
+    int askVersionNum() {
+        return askNonNegativeInt("New Map Version", "Enter Map Version", "Version:");
+    }
+
+
+    double askPrice() {
+        return askNonNegativeDouble("New Map Price", "Enter Map Price", "Price:");
+    }
+
+
+
 
     public void handleClose(ActionEvent actionEvent) {
         User current=ClientApp.getCurrentUser();
@@ -477,7 +507,5 @@ public int getPoid()
                 ClientApp.getNavigator().show(ManagerMenuController.class);
                 break;
         }
-
-
     }
 }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.catalogPublic.GuestCityMapsController"
+            prefWidth="600"
+            prefHeight="400"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+    <Button text="✕"
+            onAction="#handleClose"
+            style="-fx-background-color: transparent;
+               -fx-text-fill: white;
+               -fx-font-size: 18;
+               -fx-cursor: hand;"
+            AnchorPane.topAnchor="16"
+            AnchorPane.rightAnchor="16"/>
+
+    <VBox spacing="20"
+          AnchorPane.topAnchor="40"
+          AnchorPane.leftAnchor="40"
+          AnchorPane.rightAnchor="40"
+          AnchorPane.bottomAnchor="40">
+
+        <Label fx:id="titleLabel"
+               style="-fx-text-fill: white; -fx-font-size: 26; -fx-font-weight: bold;" />
+
+        <ScrollPane fitToWidth="true">
+            <VBox fx:id="mapList" spacing="14"/>
+        </ScrollPane>
+
+    </VBox>
+</AnchorPane>
+
