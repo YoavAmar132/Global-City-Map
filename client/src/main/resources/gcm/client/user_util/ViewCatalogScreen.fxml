@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.user_util.ViewCatalogController"
+            prefWidth="900"
+            prefHeight="600"
+            minWidth="800"
+            minHeight="400"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+    <!-- TOP: Search bar -->
+    <top>
+        <HBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+
+            <TextField fx:id="searchField"
+                       promptText="Search city maps..."
+                       HBox.hgrow="ALWAYS"/>
+        </HBox>
+    </top>
+
+    <!-- CENTER: Scrollable catalog -->
+    <center >
+        <ScrollPane fitToWidth="true" fitToHeight="true"
+                    style="-fx-background-color: linear-gradient(to bottom right, #141E30, #1b7ce7);">
+            <!-- modify the colors on the side of the scroll bar-->
+            <content>
+                <VBox fx:id="catalogContainer" spacing="15"
+                      style="-fx-background-color: #3F4E61;">
+                    <padding>
+                        <Insets top="15" right="15" bottom="15" left="15" />
+                    </padding>
+                </VBox>
+            </content>
+        </ScrollPane>
+    </center>
+
+    <!-- BOTTOM: Pagination -->
+    <bottom>
+        <Pagination fx:id="pagination"
+                    pageCount="1"
+                    maxPageIndicatorCount="5"/>
+    </bottom>
+
+</BorderPane>

@@ -6,6 +6,8 @@ import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.controllers.menu.CustomerSupportMenuController;
 import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.controllers.menu.UserMenuController;
+import gcm.client.controllers.user_util.BuyMapController;
+import gcm.client.controllers.user_util.PaymentController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -32,6 +34,8 @@ public class SceneNavigator {
         routes.put(ManagerMenuController.class, "/gcm/client/menu/ManagerMenuScreen.fxml");
         routes.put(CustomerSupportMenuController.class, "/gcm/client/menu/CustomerSupportMenuScreen.fxml");
         routes.put(MapViewerController.class, "/gcm/client/map/MapViewerRoot.fxml");
+        routes.put(BuyMapController.class, "/gcm/client/user_util/BuyMapScreen.fxml");
+        routes.put(PaymentController.class, "/gcm/client/user_util/PaymentScreen.fxml");
 
     }
 

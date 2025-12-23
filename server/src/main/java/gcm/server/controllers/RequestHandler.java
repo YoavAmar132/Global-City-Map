@@ -8,6 +8,7 @@ import gcm.server.service.AuthService;
 import gcm.server.service.MapService;
 
 import java.sql.SQLException;
+import java.util.List;
 
 public class RequestHandler {
 
@@ -67,6 +68,13 @@ public class RequestHandler {
                 return handleRouteIndex(request);
             }  catch (SQLException e) {
                 throw new RuntimeException("failed to register user", e);
+            }
+        }
+        if (type == RequestType.BUY_MAP) {
+            try {
+                return handleBuyMap(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -166,6 +174,28 @@ public class RequestHandler {
 
         } catch (SQLException e) {
             e.printStackTrace(); // server log
+            return GcmResponse.error("Server error during registration");
+        }
+    }
+
+    private GcmResponse handleBuyMap(GcmRequest request) throws SQLException {
+        System.out.println("map request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof BuyMapPayload payload)) {
+            return GcmResponse.error("Invalid payload for buy map request");
+        }
+
+        int id = payload.getUserId();
+        String cityName = payload.getCityName();
+        double price = payload.getPrice();
+        List<String> map = payload.getMapsList(); // needs to change!!!!
+
+        try{
+            return GcmResponse.error("needs to implement here"); // needs to change!!!!
+        }
+        catch (Exception e){
+            e.printStackTrace();
             return GcmResponse.error("Server error during registration");
         }
     }
