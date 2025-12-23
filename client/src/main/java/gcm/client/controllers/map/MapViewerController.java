@@ -430,9 +430,10 @@ public int getPoid()
     int version=askVersionnum();
     String name = askPoiName();
     String description=askPoiDescription();
+    double price = 19; // needs to change!!
 
 
-        MapSheet map =new MapSheet(version,name,description,path, (ArrayList) routes, (ArrayList) pois);
+        MapSheet map =new MapSheet(version, price, name, description, path, (ArrayList) routes, (ArrayList) pois);
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
         client.sendRequest(request);
 
