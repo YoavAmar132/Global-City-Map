@@ -61,7 +61,7 @@ public class LoginController {
             case "Customer":
                 ClientApp.getNavigator().show(UserMenuController.class);
                 break;
-
+            case "ContentManager":
             case "Worker":
             case "ContentEmployee":
                 ClientApp.getNavigator().show(ContentWorkerMenuController.class);
@@ -71,7 +71,7 @@ public class LoginController {
                 ClientApp.getNavigator().show(CustomerSupportMenuController.class);
                 break;
 
-            case "ContentManager":
+
             case "CompanyManager":
                 ClientApp.getNavigator().show(ManagerMenuController.class);
                 break;
@@ -86,9 +86,9 @@ public class LoginController {
 
     @FXML
     private void handleClose() {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        ClientApp.getNavigator().show(WelcomeController.class);
     }
+
 
 
 }

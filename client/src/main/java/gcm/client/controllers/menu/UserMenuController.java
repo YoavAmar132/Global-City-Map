@@ -1,6 +1,4 @@
 package gcm.client.controllers.menu;
-import gcm.client.controllers.user_util.BuyMapController;
-import gcm.client.controllers.user_util.PaymentController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -33,7 +31,7 @@ public class UserMenuController {
     @FXML
     private void onBuyMapClicked(ActionEvent event) {
         System.out.println("Buy a Map clicked");
-        ClientApp.getNavigator().show(BuyMapController.class);
+        // TODO: open purchase flow
     }
 
     @FXML

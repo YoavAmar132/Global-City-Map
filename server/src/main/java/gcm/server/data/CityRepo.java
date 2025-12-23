@@ -12,7 +12,7 @@ import java.util.List;
 public class CityRepo {
 
     public List<City> getAllCities() throws SQLException {
-        String sql = "SELECT CityID, CityName FROM Cities ORDER BY CityName";
+        String sql = "SELECT CityID, CityName,baseMap FROM Cities ORDER BY CityName";
 
         List<City> cities = new ArrayList<>();
 
@@ -23,7 +23,8 @@ public class CityRepo {
             while (rs.next()) {
                 cities.add(new City(
                         rs.getInt("CityID"),
-                        rs.getString("CityName")
+                        rs.getString("CityName"),
+                        rs.getString("baseMap")
                 ));
             }
         }
@@ -41,6 +42,25 @@ public class CityRepo {
             return stmt.executeQuery().next();
         }
     }
+    public int idByCityName(String cityName) throws SQLException {
+        String sql = "SELECT CityId FROM Cities WHERE CityName = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, cityName);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("CityId");
+                }
+            }
+        }
+
+        // City not found
+        return -1;
+    }
+
 
     public boolean insertCity(String cityName) throws SQLException {
         String sql = "INSERT INTO Cities (CityName) VALUES (?)";

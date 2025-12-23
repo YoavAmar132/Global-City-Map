@@ -1,5 +1,6 @@
 package gcm.server.service;
 
+import common.messages.ApprovePayload;
 import common.model.MapSheet;
 import common.model.Poi;
 import common.model.User;
@@ -28,10 +29,23 @@ public class MapService {
         System.out.println("map service created");
     return mapRepository.insertPendingMap(map);
     }
-    //load map
-    public MapSheet PullMap(int version)
+    public boolean sendApprovedMap(ApprovePayload approvePayload)
     {
-        return  mapRepository.loadPendingMap(version);
+        System.out.println("inserting map service created");
+        return mapRepository.insertApprovedMap(approvePayload);
+    }
+    //load map
+    public MapSheet PullMap(int version,String name)
+    {
+        return  mapRepository.loadPendingMap(version,name);
+    }
+    public List<MapSheet> PullAllMap()
+    {
+        return  mapRepository.loadAllPendingMaps();
+    }
+    public List<MapSheet> PullAllCityMaps(String CityName)
+    {
+        return  mapRepository.loadAllMapsFromCity(CityName);
     }
 
     public int getPoiIndex() throws SQLException {

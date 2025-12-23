@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.layout.Region;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -143,16 +144,25 @@ public class MapOverlayLayerController {
         }
     }
 
-
     public void addRoute(Route route) {
+        if (route == null) return;
+
         RouteView rv = new RouteView(route);
         routeViews.put(route.getId(), rv);
-        routeLayer.getChildren().add(rv);
+
+        // IMPORTANT: overlayRoot is visible
+        overlayRoot.getChildren().add(rv);
 
         if (mapper != null && zoomSupplier != null) {
             rv.rebuildGeometry(mapper, zoomSupplier.getAsInt());
         }
+        System.out.println("overlayRoot children = " + overlayRoot.getChildren().size());
+        System.out.println("routeLayer children  = " + routeLayer.getChildren().size());
+        System.out.println("routeLayer parent    = " + routeLayer.getParent());
+
     }
+
+
 
 
     public void clearAll() {

@@ -18,18 +18,29 @@ public class RouteView extends Pane {
         polyline.setStroke(Color.BLUE);   // ✅ ROUTE COLOR HERE
         polyline.setFill(null);
         getChildren().add(polyline);
+
     }
 
     public Route getRoute() {
         return route;
     }
 
-    public void rebuildGeometry(MapCoordinateMapper mapper, int zoomLevel) {
+    public Polyline getPolyline() {
+        return polyline;
+    }
+
+    public void rebuildGeometry(MapCoordinateMapper mapper, int zoom) {
         polyline.getPoints().clear();
 
-        for (double[] p : route.getPointsAtZoom(zoomLevel)) {
-            double[] xy = mapper.mapLonLatToView(p[0], p[1]); // world -> view
-            polyline.getPoints().addAll(xy[0], xy[1]);
+        double scale = Math.pow(2, Poi.BASE_ZOOM - zoom); // same logic as Poi
+
+        for (double[] basePt : route.getBasePoints()) {
+            double worldX = basePt[0] / scale;
+            double worldY = basePt[1] / scale;
+
+            double[] screen = mapper.mapLonLatToView(worldX, worldY);
+            polyline.getPoints().addAll(screen[0], screen[1]);
         }
     }
+
 }

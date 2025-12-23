@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gcm.client.controllers.map.UserMapViewerController">
+
+    <!-- Optional top toolbar -->
+    <top>
+        <ToolBar>
+            <Label text="User Map Viewer" />
+            <Region prefWidth="20" />
+            <Button onAction="#onZoomIn" text="Zoom +" />
+            <Button onAction="#onZoomOut" text="Zoom -" />
+
+            <Region fx:id="spacer" BorderPane.alignment="CENTER" />
+            <!-- Close (X) button -->
+            <Button alignment="TOP_RIGHT" onAction="#handleClose" prefHeight="39.0" prefWidth="47.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;" text="✕">
+            <opaqueInsets>
+               <Insets />
+            </opaqueInsets></Button>
+
+            <Region prefWidth="20" />
+
+        </ToolBar>
+    </top>
+
+    <!-- Center: StackPane with 2 included FXMLs -->
+    <center>
+        <StackPane fx:id="stackPane">
+            <!-- Base tiles layer -->
+            <fx:include fx:id="baseLayer" source="MapBaseLayer.fxml" />
+
+            <!-- Transparent overlay layer for POIs & routes -->
+            <fx:include fx:id="overlayLayer" source="MapOverlayLayer.fxml" />
+        </StackPane>
+    </center>
+
+</BorderPane>
