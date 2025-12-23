@@ -1,20 +1,11 @@
 package gcm.client.controllers.menu;
-import gcm.client.controllers.catalogPublic.GuestCatalogController;
-import gcm.client.controllers.map.PendingMapController;
-import gcm.client.controllers.map.UserMapViewerController;
+import gcm.client.controllers.user_util.BuyMapController;
+import gcm.client.controllers.user_util.PaymentController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
-import gcm.client.utill.SceneNavigator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-
-import java.io.IOException;
 
 
 public class UserMenuController {
@@ -29,28 +20,25 @@ public class UserMenuController {
     private void handleResponse(GcmResponse response) {}
 
     @FXML
-    public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+    private void handleClose(ActionEvent event) {
+
     }
 
     @FXML
     private void onViewCatalogClicked(ActionEvent event) {
         System.out.println("View Catalog clicked");
         // TODO: SceneNavigator to catalog
-
-        ClientApp.getNavigator().show(GuestCatalogController.class);
     }
 
     @FXML
     private void onBuyMapClicked(ActionEvent event) {
         System.out.println("Buy a Map clicked");
-        // TODO: open purchase flow
+        ClientApp.getNavigator().show(BuyMapController.class);
     }
 
     @FXML
     private void onMyMapsClicked(ActionEvent event) {
         System.out.println("My Maps clicked");
-        ClientApp.getNavigator().show(PendingMapController.class);
+        // TODO: show user's maps
     }
 }

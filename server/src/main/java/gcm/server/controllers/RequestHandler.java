@@ -1,19 +1,11 @@
 package gcm.server.controllers;
 
 import common.messages.*;
-import common.model.City;
 import common.model.MapSheet;
 import common.model.User;
+import gcm.server.data.MapRepo;
 import gcm.server.service.AuthService;
-import gcm.server.service.CityService;
 import gcm.server.service.MapService;
-import gcm.server.service.CatalogService;
-import common.messages.CityMapsRequestPayload;
-import common.model.CityCatalogItem;
-import common.model.MapCatalogItem;
-
-
-
 
 import java.sql.SQLException;
 import java.util.List;
@@ -22,26 +14,18 @@ public class RequestHandler {
 
     private final AuthService authService;
     private final MapService mapservice;
-    private final CityService cityService;
-    private final CatalogService catalogService;
 
-    public RequestHandler(AuthService authService,
-                          MapService mapservice,
-                          CityService cityService,
-                          CatalogService catalogService) {
+    public RequestHandler(AuthService authService, MapService mapservice) {
         this.authService = authService;
         this.mapservice = mapservice;
-        this.cityService = cityService;
-        this.catalogService = catalogService;
     }
-
 
     /**
      * Main entry point for handling a request from a client.
      * For now, we only support LOGIN.
      */
     public GcmResponse handle(GcmRequest request) {
-        System.out.println("handler");
+
         RequestType type = request.getType();
 
         if (type == RequestType.LOGIN) {
@@ -86,70 +70,13 @@ public class RequestHandler {
                 throw new RuntimeException("failed to register user", e);
             }
         }
-        if(type==RequestType.GET_MAP) {
-            System.out.println("map request proccesed");
+        if (type == RequestType.BUY_MAP) {
             try {
-                System.out.println("request detected");
-                return handleMapRequest(request);
-            }  catch (SQLException e) {
-                throw new RuntimeException("failed to register user", e);
-            }
-        }
-        if (type == RequestType.GET_PENDING_MAPS) {
-            try {
-                return handleAllMapRequest(request);
+                return handleBuyMap(request);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
         }
-        if (type == RequestType.APPROVE_MAP_VERSION) {
-            try {
-                return handleMapApproval(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        if (type == RequestType.LIST_CITIES) {
-            try {
-                return handleListCities(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        if (type == RequestType.GET_CITIES_COUNT) {
-            try {
-                return handleGetCitiesCount(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        if (type == RequestType.LIST_MAPS_FOR_CITY) {
-            try {
-                return handleAllCityMaps(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        if (type == RequestType.GET_CITY_CATALOG) {
-            try {
-                return handleGetCityCatalog(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        if (type == RequestType.GET_CITY_MAPS) {
-            try {
-                return handleGetCityMaps(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-
-
-
 
 
         // later you'll add more cases for other RequestTypes
@@ -197,75 +124,6 @@ public class RequestHandler {
         }
         if(!mapservice.PendMap(mapSheet)){ return GcmResponse.error("faild to pend");}
         return GcmResponse.ok(mapSheet);
-    }
-    //map aprroved handler
-    private GcmResponse handleMapApproval(GcmRequest request) throws SQLException {
-        System.out.println("map addition request received");
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof ApprovePayload approvePayload)) {
-            return GcmResponse.error("Invalid payload for map pending request");
-        }
-        if(!mapservice.sendApprovedMap(approvePayload)){ return GcmResponse.error("faild to pend");}
-        return GcmResponse.ok(null);
-    }
-    //map request handler
-    private GcmResponse handleMapRequest(GcmRequest request) throws SQLException {
-        System.out.println("map  request received");
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof MaPayload maPayload)) {
-            return GcmResponse.error("Invalid payload for map  request");
-        }
-        MapSheet map=mapservice.PullMap(maPayload.getVersion(),maPayload.getName());
-        if(map==null){ return GcmResponse.error("faild to get map");}
-        return GcmResponse.ok(map);
-    }
-    private GcmResponse handleAllMapRequest(GcmRequest request) throws SQLException {
-        System.out.println("map  request received");
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof MaPayload maPayload)) {
-            return GcmResponse.error("Invalid payload for map  request");
-        }
-        List<MapSheet> map=mapservice.PullAllMap();
-        if(map==null){ return GcmResponse.error("faild to get all map");}
-        return GcmResponse.ok(map);
-    }
-    //get all maps of certin city
-    private GcmResponse handleAllCityMaps(GcmRequest request) throws SQLException {
-        System.out.println("map  request received");
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof MaPayload maPayload)) {
-            return GcmResponse.error("Invalid payload for map  request");
-        }
-        List<MapSheet> maps=mapservice.PullAllCityMaps(maPayload.getName());
-        if(maps==null){ return GcmResponse.error("faild to get all map");}
-        return GcmResponse.ok(maps);
-    }
-
-    private GcmResponse handleListCities(GcmRequest request) throws SQLException {
-        System.out.println("list of cities request received");
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof CityListPayload cityListPayload)) {
-            return GcmResponse.error("Invalid payload for city list request");
-        }
-
-        List<City> cities = cityService.getAllCities
-                (cityListPayload.getOffset(),cityListPayload.getTotalCities(),cityListPayload.getSearchField());
-        if (cities == null) return GcmResponse.error("failed to get list");
-        return GcmResponse.ok(cities);
-
-    }
-
-    private GcmResponse handleGetCitiesCount(GcmRequest request) throws SQLException {
-        System.out.println("get cities count request received");
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof CitiesCountPayload citiesCountPayload)) {
-            return GcmResponse.error("Invalid payload for get cities count request");
-        }
-
-        int count= cityService.getCitiesCount
-                (citiesCountPayload.getSearchField());
-        return GcmResponse.ok(count);
-
     }
 
     // get poi index
@@ -320,43 +178,25 @@ public class RequestHandler {
         }
     }
 
-
-    private GcmResponse handleGetCityCatalog(GcmRequest request) throws SQLException {
-        System.out.println("GET_CITY_CATALOG request received");
-
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof EmptyPayload)) {
-            return GcmResponse.error("Invalid payload for city catalog");
-        }
-
-        List<CityCatalogItem> cities =
-                catalogService.loadCityCatalog();
-
-        if (cities == null) {
-            return GcmResponse.error("Failed to load city catalog");
-        }
-
-        return GcmResponse.ok(cities);
-    }
-
-    private GcmResponse handleGetCityMaps(GcmRequest request) throws SQLException {
-        System.out.println("GET_CITY_MAPS request received");
+    private GcmResponse handleBuyMap(GcmRequest request) throws SQLException {
+        System.out.println("map request received");
 
         Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof CityMapsRequestPayload payload)) {
-            return GcmResponse.error("Invalid payload for city maps");
+        if (!(rawPayload instanceof BuyMapPayload payload)) {
+            return GcmResponse.error("Invalid payload for buy map request");
         }
 
-        List<MapCatalogItem> maps =
-                catalogService.loadMapsForCity(payload.getCityId());
+        int id = payload.getUserId();
+        String cityName = payload.getCityName();
+        double price = payload.getPrice();
+        List<String> map = payload.getMapsList(); // needs to change!!!!
 
-        if (maps == null) {
-            return GcmResponse.error("Failed to load maps for city");
+        try{
+            return GcmResponse.error("needs to implement here"); // needs to change!!!!
         }
-
-        return GcmResponse.ok(maps);
+        catch (Exception e){
+            e.printStackTrace();
+            return GcmResponse.error("Server error during registration");
+        }
     }
-
-
-
 }
