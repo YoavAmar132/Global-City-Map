@@ -1,6 +1,7 @@
 package gcm.client.utill;
 
 import gcm.client.controllers.*;
+import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalog.ContentCatalogController;
 import gcm.client.controllers.map.*;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
@@ -9,12 +10,13 @@ import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.controllers.menu.CatalogController;
 
+import gcm.client.controllers.user_util.BuyMapScreenController;
+import gcm.client.controllers.user_util.MyMapsController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.scene.Node;
-import javafx.scene.Parent;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
@@ -46,6 +48,10 @@ public class SceneNavigator {
                 "/gcm/client/catalogPublic/GuestCatalogScreen.fxml");
         routes.put(gcm.client.controllers.catalogPublic.GuestCityMapsController.class,
                 "/gcm/client/catalogPublic/GuestCityMapsScreen.fxml");
+        routes.put(BuyMapScreenController.class, "/gcm/client/user_util/BuyMapScreen.fxml");
+        routes.put(BuyMapCatalogController.class, "/gcm/client/user_util/BuyMapCatalog.fxml");
+        routes.put(MyMapsController.class, "/gcm/client/user_util/MyMapsScreen.fxml");
+
 
 
 
