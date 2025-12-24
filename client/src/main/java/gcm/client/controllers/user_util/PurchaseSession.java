@@ -1,51 +1,71 @@
 package gcm.client.controllers.user_util;
 
-import java.util.List;
+import common.model.City;
 
 public class PurchaseSession {
     private static PurchaseSession instance;
 
-    // Data we need to keep alive across screens
-    private int userId;
-    private String cityName;
-    private List<String> mapsList;
+    // Session Data
+    private int userID;        // <--- Added this
+    private City selectedCity;
+    private PurchaseType purchaseType;
     private double price;
-    private boolean isSubscription; // Helpful to track which radio was picked
+
+    public enum PurchaseType {
+        ONE_TIME_PURCHASE,
+        SUBSCRIPTION
+    }
 
     private PurchaseSession() {}
 
-    public static PurchaseSession getInstance() {
+    public static synchronized PurchaseSession getInstance() {
         if (instance == null) {
             instance = new PurchaseSession();
         }
         return instance;
     }
 
-    // Call this when the user clicks "Buy" in the Catalog (Step 3)
-    public void startPurchase(int userId, String cityName, List<String> mapsList) {
-        this.userId = userId;
-        this.cityName = cityName;
-        this.mapsList = mapsList;
-        // Reset other fields
-        this.price = 0;
-        this.isSubscription = false;
-    }
-
-    // Call this when user clicks "Next" in BuyMapScreen (Step 5)
-    public void updatePrice(double price, boolean isSubscription) {
-        this.price = price;
-        this.isSubscription = isSubscription;
-    }
-
-    // Getters for PaymentScreen (Step 6)
-    public int getUserId() { return userId; }
-    public String getCityName() { return cityName; }
-    public List<String> getMapsList() { return mapsList; }
-    public double getPrice() { return price; }
-    public boolean isSubscription() { return isSubscription; }
-
-    // Clear data when done
+    // Reset all data after purchase or cancellation
     public void clear() {
-        instance = null;
+        this.selectedCity = null;
+        this.purchaseType = null;
+        this.price = 0.0;
+        // Note: We typically DON'T clear userID here if the user stays logged in,
+        // but if you want a clean slate for the transaction object:
+        // this.userID = 0;
+    }
+
+    // --- Getters and Setters ---
+
+    public int getUserID() {
+        return userID;
+    }
+
+    public void setUserID(int userID) {
+        this.userID = userID;
+    }
+
+    public City getSelectedCity() {
+        return selectedCity;
+    }
+
+    public void setSelectedCity(City selectedCity) {
+        this.selectedCity = selectedCity;
+    }
+
+    public PurchaseType getPurchaseType() {
+        return purchaseType;
+    }
+
+    public void setPurchaseType(PurchaseType purchaseType) {
+        this.purchaseType = purchaseType;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
     }
 }
