@@ -1,6 +1,6 @@
 package gcm.client.controllers.menu;
+
 import gcm.client.controllers.catalog.BuyMapCatalogController;
-import gcm.client.controllers.user_util.BuyMapScreenController;
 import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;

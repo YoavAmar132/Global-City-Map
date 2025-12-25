@@ -2,13 +2,11 @@ package gcm.client.controllers.catalog;
 
 import common.messages.*;
 import common.model.City;
-import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.controllers.user_util.BuyMapScreenController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import gcm.client.controllers.user_util.PurchaseSession; // Import the session
-import gcm.client.utill.SceneNavigator;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
