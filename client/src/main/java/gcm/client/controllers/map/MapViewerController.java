@@ -33,10 +33,10 @@ public class MapViewerController {
     private int routeId = 0;
     private String path="C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Haifa";
 
-public int getPoid()
-{
-    return this.poid;
-}
+    public int getPoid()
+    {
+        return this.poid;
+    }
     public int getRoutid()
     {
         return this.routeId;
@@ -47,7 +47,7 @@ public int getPoid()
     }
     public void setRoutid(int id)
     {
-         this.routeId=id;
+        this.routeId=id;
     }
     // These are injected because of fx:id="baseLayer" / "overlayLayer" on the fx:include tags
     @FXML
@@ -65,7 +65,7 @@ public int getPoid()
         System.out.println("should send requests");
         GcmRequest request = new GcmRequest(RequestType.GET_POI_INDEX, index);
         client.sendRequest(request);
-         request = new GcmRequest(RequestType.GET_ROUTE_INDEX, index1);
+        request = new GcmRequest(RequestType.GET_ROUTE_INDEX, index1);
         client.sendRequest(request);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
@@ -154,7 +154,7 @@ public int getPoid()
 
         if (routes != null) {
             for (Route r : routes) {
-              //  overlayLayerController.addRoute(r);
+                //  overlayLayerController.addRoute(r);
             }
         }
 
@@ -167,7 +167,7 @@ public int getPoid()
         System.out.println("added poi");
 
 
-          baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.ADD_POI);
+        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.ADD_POI);
 
         baseLayerController.setOnPoiClick(world -> {
             int currentZoom = baseLayerController.getZoom();
@@ -206,7 +206,7 @@ public int getPoid()
 
             }finally {
                 baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
-              //  baseLayerController.setOnPoiClick(null);
+                //  baseLayerController.setOnPoiClick(null);
             }
 
 

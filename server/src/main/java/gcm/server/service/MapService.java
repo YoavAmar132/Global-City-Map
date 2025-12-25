@@ -1,6 +1,9 @@
 package gcm.server.service;
 
 import common.messages.ApprovePayload;
+import common.messages.BuyMapPayload;
+import common.messages.GcmResponse;
+import common.model.City;
 import common.model.MapSheet;
 import common.model.Poi;
 import common.model.User;
@@ -23,11 +26,11 @@ public class MapService {
         this.mapRepository = mapRepository;
     }
 
-  //store
+    //store
     public boolean PendMap(MapSheet map)
     {
         System.out.println("map service created");
-    return mapRepository.insertPendingMap(map);
+        return mapRepository.insertPendingMap(map);
     }
     public boolean sendApprovedMap(ApprovePayload approvePayload)
     {
@@ -50,10 +53,49 @@ public class MapService {
 
     public int getPoiIndex() throws SQLException {
         PoiRepo poirepository=mapRepository.getPoirepo();
-       return poirepository.getLastPoiId();
+        return poirepository.getLastPoiId();
     }
     public int getRouteIndex() throws SQLException {
         RouteRepo routerepository=mapRepository.getRouteRepo();
         return routerepository.getLastRouteId();
+    }
+
+    public GcmResponse handleBuyMap(BuyMapPayload payload) {
+        System.out.println("Service: Processing BuyMap for user " + payload.getUserId());
+
+        // 1. Validation
+        if (payload.getCityName() == null || payload.getCityName().isEmpty()) {
+            return GcmResponse.error("Invalid City Name");
+        }
+
+        // 2. Check if already purchased (Optional, prevents double buy)
+        if (mapRepository.isCityPurchased(payload.getUserId(), payload.getCityName())) {
+            return GcmResponse.error("You already own this city!");
+        }
+
+        // 3. Perform Purchase
+        boolean success = mapRepository.addPurchase(
+                payload.getUserId(),
+                payload.getCityName(),
+                payload.getPrice()
+                // or derive from payload if you update it
+        );
+
+        if (success) {
+            // 4. Return Success
+            // (Later, you can change this to return the actual MapSheet object if you want immediate viewing)
+            return GcmResponse.ok("Purchase successful");
+        } else {
+            return GcmResponse.error("Database Error: Could not complete purchase.");
+        }
+    }
+
+    public GcmResponse handleGetPurchasedCities(int userId) {
+        try {
+            List<City> cities = mapRepository.getPurchasedCitiesByUserId(userId);
+            return GcmResponse.ok(cities); // Returns ArrayList<City>
+        } catch (Exception e) {
+            return GcmResponse.error("Server Error: " + e.getMessage());
+        }
     }
 }
