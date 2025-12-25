@@ -26,11 +26,11 @@ public class MapService {
         this.mapRepository = mapRepository;
     }
 
-  //store
+    //store
     public boolean PendMap(MapSheet map)
     {
         System.out.println("map service created");
-    return mapRepository.insertPendingMap(map);
+        return mapRepository.insertPendingMap(map);
     }
     public boolean sendApprovedMap(ApprovePayload approvePayload)
     {
@@ -53,7 +53,7 @@ public class MapService {
 
     public int getPoiIndex() throws SQLException {
         PoiRepo poirepository=mapRepository.getPoirepo();
-       return poirepository.getLastPoiId();
+        return poirepository.getLastPoiId();
     }
     public int getRouteIndex() throws SQLException {
         RouteRepo routerepository=mapRepository.getRouteRepo();
@@ -78,7 +78,7 @@ public class MapService {
                 payload.getUserId(),
                 payload.getCityName(),
                 payload.getPrice()
-              // or derive from payload if you update it
+                // or derive from payload if you update it
         );
 
         if (success) {

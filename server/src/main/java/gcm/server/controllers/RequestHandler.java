@@ -54,12 +54,12 @@ public class RequestHandler {
         }
         if(type==RequestType.PEND_MAP) {
             System.out.println("map handler created");
-        try {
-            System.out.println("request detected");
-            return handleMapPending(request);
-        }  catch (SQLException e) {
-            throw new RuntimeException("failed to register user", e);
-        }
+            try {
+                System.out.println("request detected");
+                return handleMapPending(request);
+            }  catch (SQLException e) {
+                throw new RuntimeException("failed to register user", e);
+            }
         }
 
         if(type==RequestType.GET_POI_INDEX) {

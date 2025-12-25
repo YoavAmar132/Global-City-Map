@@ -54,8 +54,6 @@ public class SceneNavigator {
 
 
 
-
-
     }
 
     public <T> void show(Class<T> controllerClass) {
