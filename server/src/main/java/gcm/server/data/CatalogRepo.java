@@ -22,12 +22,13 @@ public class CatalogRepo {
             SELECT
                 c.CityID,
                 c.CityName,
+                c.CityPrice,
                 COUNT(m.mapID) AS mapCount,
                 MIN(JSON_EXTRACT(m.map, '$.price')) AS minPrice,
                 MAX(JSON_EXTRACT(m.map, '$.price')) AS maxPrice
             FROM Cities c
             LEFT JOIN Maps m ON m.cityID = c.CityID
-            GROUP BY c.CityID, c.CityName
+            GROUP BY c.CityID, c.CityName, c.CityPrice
         """;
 
         try (Connection conn = DbManager.getConnection();
@@ -49,7 +50,8 @@ public class CatalogRepo {
                         rs.getString("CityName"),
                         rs.getInt("mapCount"),
                         minPrice,
-                        maxPrice
+                        maxPrice,
+                        rs.getDouble("CityPrice")
                 ));
             }
 
