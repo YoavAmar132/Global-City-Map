@@ -76,10 +76,15 @@ public class GuestCatalogController {
                         "-fx-font-weight: bold;"
         );
 
+        /*
         String priceText = city.getMapCount() == 0
                 ? "0 maps | No prices"
                 : city.getMapCount() + " maps | " +
                 city.getMinPrice() + " – " + city.getMaxPrice();
+        */
+        String priceText =
+                city.getMapCount() + " maps | Price: " + city.getCityPrice();
+
 
         Label info = new Label(priceText);
         info.setStyle(
