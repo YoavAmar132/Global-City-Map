@@ -1,6 +1,7 @@
 package gcm.server.service;
 
 import common.model.City;
+import common.model.CityPricingItem;
 import gcm.server.data.CityRepo;
 import gcm.server.data.DbManager;
 
@@ -17,6 +18,7 @@ public class CityService {
     public CityService(CityRepo cityRepo) {
         this.cityRepo = cityRepo;
     }
+
 
     // READ
     public List<City> getAllCities(int offset, int totalCities, String searchField) throws SQLException {
@@ -41,6 +43,16 @@ public class CityService {
 
         return cityRepo.insertCity(cityName,imagePath);
     }
+
+    public List<CityPricingItem> getAllCityPrices() throws SQLException {
+        return cityRepo.getAllCityPrices();
+    }
+
+    public boolean updateCityPrice(CityPricingItem item) throws SQLException {
+        return cityRepo.updateCityPrice(item);
+    }
+
+
 
     // DELETE (admin later)
     public boolean removeCity(int cityId) throws SQLException {

@@ -1,10 +1,7 @@
 package gcm.client.controllers.menu;
 import common.model.User;
 import gcm.client.controllers.catalog.ContentCatalogController;
-import gcm.client.controllers.map.BaseMapSelectorController;
-import gcm.client.controllers.map.MapViewerController;
-import gcm.client.controllers.map.PendingMapController;
-import gcm.client.controllers.map.UserMapViewerController;
+import gcm.client.controllers.map.*;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -54,6 +51,7 @@ public class ContentWorkerMenuController {
 
     }
     @FXML
-    public void onPricingButton(ActionEvent actionEvent) {
+    public void onEditPricesButton(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(EditPricesController.class);
     }
 }

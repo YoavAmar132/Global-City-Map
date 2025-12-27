@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.map.EditPricesController"
+            prefWidth="600"
+            prefHeight="400"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+
+    <!-- Close button -->
+    <Button text="✕"
+            onAction="#handleClose"
+            AnchorPane.topAnchor="16"
+            AnchorPane.rightAnchor="16"
+            style="
+                -fx-background-color: transparent;
+                -fx-text-fill: white;
+                -fx-font-size: 20;
+                -fx-font-weight: bold;
+                -fx-cursor: hand;
+            "/>
+
+    <!-- MAIN CONTENT -->
+    <VBox spacing="24"
+          AnchorPane.topAnchor="40"
+          AnchorPane.leftAnchor="40"
+          AnchorPane.rightAnchor="40"
+          AnchorPane.bottomAnchor="40">
+
+        <!-- Title -->
+        <Label text="Edit City Prices"
+               style="-fx-text-fill: white;">
+            <font>
+                <Font size="28"/>
+            </font>
+        </Label>
+
+        <!-- Scrollable city list -->
+        <ScrollPane fitToWidth="true"
+                    hbarPolicy="NEVER"
+                    style="-fx-background-color: transparent;">
+
+            <VBox fx:id="cityList"
+                  spacing="14"
+                  style="-fx-background-color: transparent;">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+            </VBox>
+
+        </ScrollPane>
+
+    </VBox>
+
+</AnchorPane>

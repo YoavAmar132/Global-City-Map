@@ -73,14 +73,14 @@
                            -fx-cursor: hand;"
                     onAction="#onMapApproveButton"/>
             <!-- Manage report button -->
-            <Button fx:id="PricingButton" text="Manage Pricing"
+            <Button fx:id="EditPricesButton" text="Edit Prices"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
                            -fx-font-size: 15;
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
-                    onAction="#onPricingButton"/>
+                    onAction="#onEditPricesButton"/>
 
         </VBox>
     </StackPane>

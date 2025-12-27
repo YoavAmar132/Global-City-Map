@@ -51,7 +51,8 @@ public class MapRepo {
                     City city = new City(
                             rs.getInt("CityID"),       // Changed "CityId" -> "CityID"
                             rs.getString("CityName"),  // Matches DB
-                            rs.getString("baseMap")    // Matches DB
+                            rs.getString("baseMap"),
+                            rs.getDouble("CityPrice")// Matches DB
                     );
                     cities.add(city);
                 }
