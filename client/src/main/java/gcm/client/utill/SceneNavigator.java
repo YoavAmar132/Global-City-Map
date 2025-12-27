@@ -51,7 +51,7 @@ public class SceneNavigator {
         routes.put(BuyMapScreenController.class, "/gcm/client/user_util/BuyMapScreen.fxml");
         routes.put(BuyMapCatalogController.class, "/gcm/client/user_util/BuyMapCatalog.fxml");
         routes.put(MyMapsController.class, "/gcm/client/user_util/MyMapsScreen.fxml");
-
+        routes.put(EditPricesController.class, "/gcm/client/user_util/EditPricesScreen.fxml");
 
 
     }
