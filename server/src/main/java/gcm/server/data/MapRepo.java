@@ -32,9 +32,10 @@ public class MapRepo {
     public List<City> getPurchasedCitiesByUserId(int userId) {
         List<City> cities = new ArrayList<>();
 
-        // Use table aliases (c and p) to be strictly clear which table we refer to
+        // עדכון השאילתה לשליפת עמודות ספציפיות כולל SubPrice
         String sql = """
-            SELECT * FROM Cities c
+            SELECT c.CityID, c.CityName, c.baseMap, c.CityPrice, c.SubPrice 
+            FROM Cities c
             WHERE c.CityName IN (
                 SELECT p.CityName FROM Purchases p WHERE p.UserID = ?
             )
@@ -47,12 +48,13 @@ public class MapRepo {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    // FIX: Use exact column names from your database screenshot
+                    // שימוש בבנאי החדש המקבל 5 פרמטרים
                     City city = new City(
-                            rs.getInt("CityID"),       // Changed "CityId" -> "CityID"
-                            rs.getString("CityName"),  // Matches DB
+                            rs.getInt("CityID"),
+                            rs.getString("CityName"),
                             rs.getString("baseMap"),
-                            rs.getDouble("CityPrice")// Matches DB
+                            rs.getDouble("CityPrice"),
+                            rs.getDouble("SubPrice") // **הוספה חדשה**
                     );
                     cities.add(city);
                 }
