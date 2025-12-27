@@ -17,7 +17,8 @@ public class CityRepo {
     public List<CityPricingItem> getAllCityPrices() throws SQLException {
         List<CityPricingItem> prices = new ArrayList<>();
 
-        String sql = "SELECT CityID, CityPrice FROM Cities ORDER BY CityName";
+        // הוספת SubPrice לשליפה
+        String sql = "SELECT CityID, CityPrice, SubPrice FROM Cities ORDER BY CityName";
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -26,7 +27,8 @@ public class CityRepo {
             while (rs.next()) {
                 prices.add(new CityPricingItem(
                         rs.getInt("CityID"),
-                        rs.getDouble("CityPrice")
+                        rs.getDouble("CityPrice"), // מחיר רגיל
+                        rs.getDouble("SubPrice")   // מחיר מנוי (צריך לוודא שהבנאי תומך בזה)
                 ));
             }
         }
@@ -34,20 +36,24 @@ public class CityRepo {
     }
 
     public boolean updateCityPrice(CityPricingItem item) throws SQLException {
-        String sql = "UPDATE Cities SET CityPrice = ? WHERE CityID = ?";
+        // הוספת SubPrice לשאילתת העדכון
+        String sql = "UPDATE Cities SET CityPrice = ?, SubPrice = ? WHERE CityID = ?";
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setDouble(1, item.getPrice());
-            ps.setInt(2, item.getCityId());
+            ps.setDouble(1, item.getPrice());    // מחיר חד פעמי
+            ps.setDouble(2, item.getSubPrice()); // מחיר מנוי (החדש)
+            ps.setInt(3, item.getCityId());
+
             return ps.executeUpdate() == 1;
         }
     }
 
 
     public List<City> getAllCities() throws SQLException {
-        String sql = "SELECT CityID, CityName,baseMap,CityPrice FROM Cities ORDER BY CityName";
+        // הוספנו את SubPrice לשאילתה
+        String sql = "SELECT CityID, CityName, baseMap, CityPrice, SubPrice FROM Cities ORDER BY CityName";
 
         List<City> cities = new ArrayList<>();
 
@@ -60,11 +66,11 @@ public class CityRepo {
                         rs.getInt("CityID"),
                         rs.getString("CityName"),
                         rs.getString("baseMap"),
-                        rs.getDouble("CityPrice")
+                        rs.getDouble("CityPrice"),
+                        rs.getDouble("SubPrice") // עכשיו זה יעבוד כי ביקשנו את העמודה בשאילתה
                 ));
             }
         }
-
         return cities;
     }
 

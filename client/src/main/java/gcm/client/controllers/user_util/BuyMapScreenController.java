@@ -3,10 +3,9 @@ package gcm.client.controllers.user_util;
 import common.messages.*;
 import common.model.City;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
-import gcm.client.controllers.menu.UserMenuController; // Or wherever you want to go after success
+import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
-import gcm.client.controllers.user_util.PurchaseSession;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -19,15 +18,12 @@ public class BuyMapScreenController {
 
     @FXML private Label cityNameLabel;
     @FXML private Label priceLabel;
-    @FXML private RadioButton radioOTP;
-    @FXML private RadioButton radioSub;
+    @FXML private RadioButton radioOTP; // One Time Purchase
+    @FXML private RadioButton radioSub; // Subscription
     @FXML private ToggleGroup purchaseGroup;
 
     private GcmClient client;
-
-    // Hardcoded prices (You might want to move these to the City object later)
-    private static final double OTP_PRICE = 19.99;
-    private static final double SUB_PRICE = 9.99;
+    private City selectedCity; // שומרים את העיר כשדה במחלקה לגישה נוחה
 
     @FXML
     public void initialize() {
@@ -37,16 +33,21 @@ public class BuyMapScreenController {
 
         // 2. Get data from Session
         PurchaseSession session = PurchaseSession.getInstance();
-        City city = session.getSelectedCity();
+        this.selectedCity = session.getSelectedCity();
 
-        if (city == null) {
-            cityNameLabel.setText("No City Selected");
+        if (selectedCity == null) {
+            cityNameLabel.setText("Error: No City Selected");
             return;
         }
 
-        cityNameLabel.setText(city.getName());
+        // 3. Update UI with City Data
+        cityNameLabel.setText("Purchase: " + selectedCity.getName());
 
-        // 3. Setup listeners for price updates
+        // עדכון הטקסט של הכפתורים שיראה את המחיר ליד האופציה
+        radioOTP.setText(String.format("One Time Purchase ($%.2f)", selectedCity.getPrice()));
+        radioSub.setText(String.format("Subscription (6 Months) ($%.2f)", selectedCity.getSubPrice()));
+
+        // 4. Setup listeners for price updates
         purchaseGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> updatePriceDisplay());
 
         // Initial check
@@ -54,40 +55,43 @@ public class BuyMapScreenController {
     }
 
     private void updatePriceDisplay() {
+        if (selectedCity == null) return;
+
         if (radioOTP.isSelected()) {
-            priceLabel.setText("$" + OTP_PRICE);
+            priceLabel.setText(String.format("Total: $%.2f", selectedCity.getPrice()));
         } else {
-            priceLabel.setText("$" + SUB_PRICE);
+            priceLabel.setText(String.format("Total: $%.2f", selectedCity.getSubPrice()));
         }
     }
 
     public void onConfirmPurchaseClicked(ActionEvent actionEvent) {
-        PurchaseSession session = PurchaseSession.getInstance();
-        City city = session.getSelectedCity();
+        if (selectedCity == null) return;
 
-        // 1. Update Session with final choice
+        PurchaseSession session = PurchaseSession.getInstance();
+
+        // 1. Determine final price and type based on selection
         double finalPrice;
         if (radioOTP.isSelected()) {
             session.setPurchaseType(PurchaseSession.PurchaseType.ONE_TIME_PURCHASE);
-            finalPrice = OTP_PRICE;
+            finalPrice = selectedCity.getPrice(); // מחיר רגיל מהעיר
         } else {
             session.setPurchaseType(PurchaseSession.PurchaseType.SUBSCRIPTION);
-            finalPrice = SUB_PRICE;
+            finalPrice = selectedCity.getSubPrice(); // מחיר מנוי מהעיר
         }
         session.setPrice(finalPrice);
 
         // 2. Create Payload & Send Request
-        // IMPORTANT: Ensure your BuyMapPayload constructor supports these arguments.
-        // You might need to update BuyMapPayload to accept 'PurchaseType' or a boolean for isSubscription.
+        // כרגע אנחנו שולחים את המחיר שנבחר לשרת
         BuyMapPayload payload = new BuyMapPayload(
                 session.getUserID(),
-                city.getName(),
-                null, // mapsList - assuming null is fine if we buy by City Name, or fetch from city.getMaps()
+                selectedCity.getName(),
+                null, // mapsList (לא רלוונטי ברכישת עיר מלאה)
                 finalPrice,
                 "STORED_CARD" // Payment Method
         );
 
-        // If you updated BuyMapPayload to handle subscription types, pass that here too!
+        // הערה: אם תרצה בעתיד לשמור ב-DB את סוג הרכישה (מנוי/רגיל),
+        // תצטרך להוסיף שדה ל-BuyMapPayload ולעדכן את ה-Repo בשרת.
 
         GcmRequest request = new GcmRequest(RequestType.BUY_MAP, payload);
         client.sendRequest(request);
@@ -100,7 +104,7 @@ public class BuyMapScreenController {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("Success");
                 alert.setHeaderText("Purchase Successful!");
-                alert.setContentText("Thank you for your purchase.");
+                alert.setContentText("You have successfully purchased access to " + selectedCity.getName());
                 alert.showAndWait();
 
                 // Clear session and go to Main Menu
@@ -109,6 +113,7 @@ public class BuyMapScreenController {
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Purchase Failed");
+                alert.setHeaderText("Transaction Declined");
                 alert.setContentText(response.getErrorMessage());
                 alert.showAndWait();
             }
@@ -121,6 +126,7 @@ public class BuyMapScreenController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
+        client.closeConnectionSafe();
         Platform.exit();
     }
 }
