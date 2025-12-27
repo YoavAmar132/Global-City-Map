@@ -1,16 +1,12 @@
 package gcm.server.controllers;
 
 import common.messages.*;
-import common.model.City;
-import common.model.MapSheet;
-import common.model.User;
+import common.model.*;
 import gcm.server.service.AuthService;
 import gcm.server.service.CityService;
 import gcm.server.service.MapService;
 import gcm.server.service.CatalogService;
 import common.messages.CityMapsRequestPayload;
-import common.model.CityCatalogItem;
-import common.model.MapCatalogItem;
 
 
 import java.sql.SQLException;
@@ -137,6 +133,23 @@ public class RequestHandler {
             return handleBuyMap(request);
         }
 
+        if (type == RequestType.GET_ALL_CITY_PRICES) {
+            try {
+                return handleGetAllCityPrices(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.UPDATE_CITY_PRICE) {
+            try {
+                return handleUpdateCityPrice(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
         if (type == RequestType.LIST_USER_PURCHASES) {
             try {
                 return handleGetCityPurchases(request);
@@ -181,6 +194,46 @@ public class RequestHandler {
             return GcmResponse.error("Server error during registration");
         }
     }
+
+
+
+
+
+    private GcmResponse handleGetAllCityPrices(GcmRequest request) throws SQLException {
+        System.out.println("GET_ALL_CITY_PRICES request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof EmptyPayload)) {
+            return GcmResponse.error("Invalid payload for GET_ALL_CITY_PRICES");
+        }
+
+        List<CityPricingItem> prices =
+                cityService.getAllCityPrices();
+
+        if (prices == null) {
+            return GcmResponse.error("Failed to get city prices");
+        }
+
+        return GcmResponse.ok(prices);
+    }
+
+    private GcmResponse handleUpdateCityPrice(GcmRequest request) throws SQLException {
+        System.out.println("UPDATE_CITY_PRICE request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof CityPricingItem item)) {
+            return GcmResponse.error("Invalid payload for UPDATE_CITY_PRICE");
+        }
+
+        boolean success = cityService.updateCityPrice(item);
+
+        if (!success) {
+            return GcmResponse.error("Failed to update city price");
+        }
+
+        return GcmResponse.ok(null);
+    }
+
 
     // map pending handeler
     private GcmResponse handleMapPending(GcmRequest request) throws SQLException {

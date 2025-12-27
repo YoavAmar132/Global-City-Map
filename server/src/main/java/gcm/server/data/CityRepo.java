@@ -1,6 +1,7 @@
 package gcm.server.data;
 
 import common.model.City;
+import common.model.CityPricingItem;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,8 +12,42 @@ import java.util.List;
  */
 public class CityRepo {
 
+
+
+    public List<CityPricingItem> getAllCityPrices() throws SQLException {
+        List<CityPricingItem> prices = new ArrayList<>();
+
+        String sql = "SELECT CityID, CityPrice FROM Cities ORDER BY CityName";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                prices.add(new CityPricingItem(
+                        rs.getInt("CityID"),
+                        rs.getDouble("CityPrice")
+                ));
+            }
+        }
+        return prices;
+    }
+
+    public boolean updateCityPrice(CityPricingItem item) throws SQLException {
+        String sql = "UPDATE Cities SET CityPrice = ? WHERE CityID = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDouble(1, item.getPrice());
+            ps.setInt(2, item.getCityId());
+            return ps.executeUpdate() == 1;
+        }
+    }
+
+
     public List<City> getAllCities() throws SQLException {
-        String sql = "SELECT CityID, CityName,baseMap FROM Cities ORDER BY CityName";
+        String sql = "SELECT CityID, CityName,baseMap,CityPrice FROM Cities ORDER BY CityName";
 
         List<City> cities = new ArrayList<>();
 
@@ -24,7 +59,8 @@ public class CityRepo {
                 cities.add(new City(
                         rs.getInt("CityID"),
                         rs.getString("CityName"),
-                        rs.getString("baseMap")
+                        rs.getString("baseMap"),
+                        rs.getDouble("CityPrice")
                 ));
             }
         }
