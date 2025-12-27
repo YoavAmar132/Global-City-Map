@@ -36,7 +36,7 @@ public class ContentCatalogController {
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
 
-        EmptyPayload payload=new EmptyPayload();
+        EmptyPayload payload = new EmptyPayload();
         GcmRequest request = new GcmRequest(RequestType.LIST_CITIES, payload);
         client.sendRequest(request);
     }
@@ -69,7 +69,6 @@ public class ContentCatalogController {
 
         return row;
     }
-
 
 
     public void openCity(City city) {

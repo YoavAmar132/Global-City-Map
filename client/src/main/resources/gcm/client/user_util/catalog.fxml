@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.user_util.CatalogController"
+            prefWidth="900"
+            prefHeight="600"
+            minWidth="800"
+            minHeight="400"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+    <!-- TOP: Search bar -->
+    <top>
+        <HBox spacing="10"
+              alignment="CENTER_LEFT"
+              style="-fx-padding: 10;-fx-background-color: transparent;">
+
+            <!-- Search field -->
+            <TextField fx:id="searchField"
+                       promptText="Search city maps..."
+                       HBox.hgrow="ALWAYS"/>
+
+            <!-- Close button -->
+            <Button text="✕"
+                    onAction="#handleClose"
+                    style="
+                        -fx-background-color: transparent;
+                        -fx-text-fill: white;
+                        -fx-font-size: 18;
+                        -fx-font-weight: bold;
+                        -fx-cursor: hand;
+                    "/>
+        </HBox>
+    </top>
+
+
+    <!-- CENTER: Scrollable catalog -->
+    <center >
+
+        <ScrollPane fitToWidth="true" fitToHeight="true" style="-fx-background-color: transparent; -fx-background: transparent;">
+            <content>
+                <HBox alignment="TOP_CENTER">
+                    <VBox fx:id="catalogContainer"
+                          alignment="TOP_CENTER"
+                          spacing="16">
+
+                    <padding>
+                            <Insets top="20" bottom="20"/>
+                        </padding>
+                    </VBox>
+                </HBox>
+            </content>
+        </ScrollPane>
+
+    </center>
+
+    <!-- BOTTOM: Pagination -->
+    <bottom>
+        <HBox alignment="CENTER"
+              style="-fx-padding: 10;-fx-background: transparent;">
+        <Pagination fx:id="pagination"
+                        pageCount="1"
+                        maxPageIndicatorCount="5"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

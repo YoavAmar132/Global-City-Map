@@ -2,6 +2,9 @@ package gcm.server.data;
 
 import common.model.City;
 
+import javafx.scene.image.Image;
+import java.io.InputStream;
+
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,26 +14,60 @@ import java.util.List;
  */
 public class CityRepo {
 
-    public List<City> getAllCities() throws SQLException {
-        String sql = "SELECT CityID, CityName,baseMap FROM Cities ORDER BY CityName";
+    //add to mysql: CREATE INDEX idx_city_name ON maps(CityName);
+    public List<City> getAllCities(int offset , int count,String searchText) throws SQLException {
+        String sql = """
+        SELECT CityID, CityName
+        FROM Cities
+        WHERE LOWER(CityName) LIKE LOWER(CONCAT('%', ?, '%'))
+        ORDER BY CityName
+        LIMIT ? OFFSET ?
+        """;
 
         List<City> cities = new ArrayList<>();
 
         try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement stmt = conn.prepareStatement(sql);)
+        {
+            stmt.setString(1, searchText);
+            stmt.setInt(2, count);
+            stmt.setInt(3, offset);
+
+            ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
+
                 cities.add(new City(
                         rs.getInt("CityID"),
                         rs.getString("CityName"),
-                        rs.getString("baseMap")
+                        "",
+                        null
                 ));
             }
+            return cities;
         }
-
-        return cities;
     }
+
+    public int getCitiesCount(String searchText) throws SQLException {
+        String sql = """
+        SELECT count(*) AS Count
+        FROM Cities
+        WHERE (? IS NULL OR LOWER(CityName) LIKE LOWER(CONCAT('%', ?, '%')));
+        """;
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);)
+        {
+            stmt.setString(1, searchText);
+            stmt.setString(2, searchText);
+
+            ResultSet rs = stmt.executeQuery();
+            rs.next();
+
+            return rs.getInt(1);
+
+        }
+    }
+
 
     public boolean existsByCityName(String cityName) throws SQLException {
         String sql = "SELECT 1 FROM Cities WHERE CityName = ?";
@@ -62,13 +99,15 @@ public class CityRepo {
     }
 
 
-    public boolean insertCity(String cityName) throws SQLException {
-        String sql = "INSERT INTO Cities (CityName) VALUES (?)";
+    public boolean insertCity(String cityName,String imagePath) throws SQLException {
+        String sql = "INSERT INTO Cities (CityName,ImagePath) VALUES (?,?)";
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, cityName);
+            stmt.setString(2, imagePath);
+
             return stmt.executeUpdate() == 1;
         }
     }
@@ -83,6 +122,7 @@ public class CityRepo {
 
             stmt.setInt(1, cityId);
             return stmt.executeUpdate() == 1;
+
         }
     }
 }

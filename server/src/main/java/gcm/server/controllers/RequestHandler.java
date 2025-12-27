@@ -116,6 +116,13 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+        if (type == RequestType.GET_CITIES_COUNT) {
+            try {
+                return handleGetCitiesCount(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
         if (type == RequestType.LIST_MAPS_FOR_CITY) {
             try {
                 return handleAllCityMaps(request);
@@ -233,18 +240,34 @@ public class RequestHandler {
         if(maps==null){ return GcmResponse.error("faild to get all map");}
         return GcmResponse.ok(maps);
     }
-// get list of cities handler
-private GcmResponse handleListCities(GcmRequest request) throws SQLException {
-    System.out.println("list of citis request received");
-    Object rawPayload = request.getPayload();
-    if (!(rawPayload instanceof EmptyPayload empty)) {
-        return GcmResponse.error("Invalid payload for map pending request");
-    }
-    List<City> cities = cityService.getAllCities();
-    if (cities == null) return GcmResponse.error("faild to get list");
-    return GcmResponse.ok(cities);
 
-}
+    private GcmResponse handleListCities(GcmRequest request) throws SQLException {
+        System.out.println("list of cities request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof CityListPayload cityListPayload)) {
+            return GcmResponse.error("Invalid payload for city list request");
+        }
+
+        List<City> cities = cityService.getAllCities
+                (cityListPayload.getOffset(),cityListPayload.getTotalCities(),cityListPayload.getSearchField());
+        if (cities == null) return GcmResponse.error("failed to get list");
+        return GcmResponse.ok(cities);
+
+    }
+
+    private GcmResponse handleGetCitiesCount(GcmRequest request) throws SQLException {
+        System.out.println("get cities count request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof CitiesCountPayload citiesCountPayload)) {
+            return GcmResponse.error("Invalid payload for get cities count request");
+        }
+
+        int count= cityService.getCitiesCount
+                (citiesCountPayload.getSearchField());
+        return GcmResponse.ok(count);
+
+    }
+
     // get poi index
     private GcmResponse handlePoiIndex(GcmRequest request) throws SQLException {
         System.out.println("poi index request received");

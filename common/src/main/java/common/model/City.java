@@ -1,5 +1,6 @@
 package common.model;
 
+
 import java.io.Serializable;
 
 /**
@@ -9,12 +10,14 @@ public class City implements Serializable {
 
     private final int id;
     private final String name;
-    private final String   basemap;
+    private final String basemap;
+    private final String CityImageKey;
 
-    public City(int id, String name,String BaseMap) {
+    public City(int id, String name,String basemap,String CityImageKey) {
         this.id = id;
         this.name = name;
-        this.basemap=BaseMap;
+        this.basemap=basemap;
+        this.CityImageKey=CityImageKey;
     }
 
     public int getId() {
@@ -27,5 +30,9 @@ public class City implements Serializable {
 
     public String getBasemap() {
         return basemap;
+    }
+
+    public String getCityImageKey() {
+        return CityImageKey;
     }
 }

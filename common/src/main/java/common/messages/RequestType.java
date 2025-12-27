@@ -7,6 +7,7 @@ public enum RequestType {
 
     // Catalog
     LIST_CITIES,
+    GET_CITIES_COUNT,
     GET_CITY_DETAILS,
     LIST_MAPS_FOR_CITY,
     GET_MAP,
