@@ -1,6 +1,5 @@
 package gcm.client.controllers.map;
 
-
 import common.model.Poi;
 import common.model.Route;
 import javafx.fxml.FXML;
@@ -8,18 +7,18 @@ import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.layout.Region;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 public class MapOverlayLayerController {
 
-    @FXML
-    private Pane routeLayer;
     @FXML private AnchorPane overlayRoot;
+
+    // We will put all POIs and Routes inside this pane.
+    // We will set it to 'unmanaged' so it doesn't force the window to explode.
+    private Pane contentPane;
+
     private java.util.function.IntSupplier zoomSupplier;
     private Map<Integer, PoiView> poiViews = new HashMap<>();
     private Map<Integer, RouteView> routeViews = new HashMap<>();
@@ -28,63 +27,41 @@ public class MapOverlayLayerController {
     private java.util.function.BiConsumer<Double, Double> onEmptyPress;
     private java.util.function.BiConsumer<Double, Double> onEmptyDrag;
     private java.util.function.DoubleConsumer onScroll;
+    private MapCoordinateMapper mapper;
 
+    // Callbacks setters
     public void setOnEmptyPress(java.util.function.BiConsumer<Double, Double> h) { onEmptyPress = h; }
     public void setOnEmptyDrag(java.util.function.BiConsumer<Double, Double> h)  { onEmptyDrag = h; }
     public void setOnScroll(java.util.function.DoubleConsumer h)                 { onScroll = h; }
+    public void setOnEmptyMapClick(BiConsumer<Double, Double> handler) { this.onEmptyMapClick = handler; }
 
-
-    public void setOnEmptyMapClick(BiConsumer<Double, Double> handler) {
-        this.onEmptyMapClick = handler;
-    }
     private Runnable onEmptyRightClick;
+    public void setOnEmptyRightClick(Runnable r) { this.onEmptyRightClick = r; }
+    public void setOnPoiSelected(BiConsumer<Poi, Node> handler) { this.onPoiSelected = handler; }
+    public void setZoomSupplier(java.util.function.IntSupplier zoomSupplier) { this.zoomSupplier = zoomSupplier; }
 
-    public void setOnEmptyRightClick(Runnable r) {
-        this.onEmptyRightClick = r;
-    }
-
-
-
-    public void setOnPoiSelected(BiConsumer<Poi, Node> handler) {
-        this.onPoiSelected = handler;
-    }
-
-
-    public void setZoomSupplier(java.util.function.IntSupplier zoomSupplier) {
-        this.zoomSupplier = zoomSupplier;
-    }
-    private MapCoordinateMapper mapper;
     @FXML
     private void initialize() {
+        // 1. Create the container for map objects
+        contentPane = new Pane();
+        // CRITICAL: This tells the layout engine to IGNORE the size of this pane.
+        // This prevents the Canvas from trying to grow to 2.5 million pixels.
+        contentPane.setManaged(false);
+        contentPane.setPickOnBounds(false); // Let clicks pass through empty areas
+        overlayRoot.getChildren().add(contentPane);
 
-        // --- CRITICAL FIX ---
-        // Overlay layers must NOT affect layout bounds
+        // 2. Clip the overlayRoot just to be safe (visual clipping)
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(overlayRoot.widthProperty());
+        clip.heightProperty().bind(overlayRoot.heightProperty());
+        overlayRoot.setClip(clip);
 
-        routeLayer.setManaged(false);
-
-        // Overlay should not block mouse events to base map
-        routeLayer.setMouseTransparent(true);
-        routeLayer.setPickOnBounds(false);
-
-        // --- CLIP OVERLAY TO VIEWPORT ---
+        // --- Event Filters ---
         overlayRoot.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, e -> {
-            // If the click was on a PoiView, let the PoiView handle it
-            if (isClickOnPoi(e.getTarget()))
-            {
-                System.out.println(isClickOnPoi(e.getTarget()));
+            if (isClickOnPoi(e.getTarget())) {
                 ShowInfo(e.getTarget());
                 return;
             }
-
-            // Otherwise forward to base-layer logic
-            if (onEmptyMapClick != null) {
-                onEmptyMapClick.accept(e.getSceneX(), e.getSceneY());
-                // consume so it doesn't accidentally trigger something else on the overlay
-                e.consume();
-            }
-        });
-        overlayRoot.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, e -> {
-            if (isClickOnPoi(e.getTarget())) return;
             if (e.getButton() == javafx.scene.input.MouseButton.SECONDARY) {
                 if (onEmptyRightClick != null) onEmptyRightClick.run();
                 e.consume();
@@ -96,7 +73,6 @@ public class MapOverlayLayerController {
 
         overlayRoot.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_DRAGGED, e -> {
             if (isClickOnPoi(e.getTarget())) return;
-
             if (onEmptyDrag != null) onEmptyDrag.accept(e.getSceneX(), e.getSceneY());
             e.consume();
         });
@@ -106,38 +82,35 @@ public class MapOverlayLayerController {
             e.consume();
         });
 
+        overlayRoot.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_CLICKED, e -> {
+            if (e.isStillSincePress() && !isClickOnPoi(e.getTarget())) {
+                if (onEmptyMapClick != null) {
+                    onEmptyMapClick.accept(e.getSceneX(), e.getSceneY());
+                }
+            }
+        });
     }
-
-
 
     public void setMapper(MapCoordinateMapper mapper) {
         this.mapper = mapper;
-        // when mapper changes (zoom/pan), rebuild geometry
         rerender();
     }
 
     public void addPoi(Poi poi) {
         if (poi == null) return;
-
-        // Create the clickable widget
         PoiView view = new PoiView(poi);
-
-        // Put in map + scene graph
         poiViews.put(poi.getId(), view);
-        overlayRoot.getChildren().add(view);
 
-        // Position it immediately (so it appears without needing a pan/zoom)
+        // Add to contentPane, NOT overlayRoot
+        contentPane.getChildren().add(view);
+
         if (mapper != null && zoomSupplier != null) {
             int z = zoomSupplier.getAsInt();
-
             double wx = poi.getWorldX(z);
             double wy = poi.getWorldY(z);
-
             double[] xy = mapper.mapLonLatToView(wx, wy);
 
             if (xy != null && xy.length >= 2) {
-                // If you want the marker centered on the point, offset by half width/height:
-                // Note: width/height may be 0 until CSS/layout runs, so keep it simple for now
                 view.setLayoutX(xy[0]);
                 view.setLayoutY(xy[1]);
             }
@@ -146,38 +119,28 @@ public class MapOverlayLayerController {
 
     public void addRoute(Route route) {
         if (route == null) return;
-
         RouteView rv = new RouteView(route);
         routeViews.put(route.getId(), rv);
 
-        // IMPORTANT: overlayRoot is visible
-        overlayRoot.getChildren().add(rv);
+        // Add to contentPane, NOT overlayRoot
+        contentPane.getChildren().add(rv);
 
         if (mapper != null && zoomSupplier != null) {
             rv.rebuildGeometry(mapper, zoomSupplier.getAsInt());
         }
-        System.out.println("overlayRoot children = " + overlayRoot.getChildren().size());
-        System.out.println("routeLayer children  = " + routeLayer.getChildren().size());
-        System.out.println("routeLayer parent    = " + routeLayer.getParent());
-
     }
-
-
-
 
     public void clearAll() {
         poiViews.clear();
-        //routeViews.clear();
-        overlayRoot.getChildren().clear();
-        routeLayer.getChildren().clear();
+        routeViews.clear();
+        // Clear children from the contentPane
+        contentPane.getChildren().clear();
     }
 
     public void rerender() {
         if (mapper == null || zoomSupplier == null) return;
-
         int z = zoomSupplier.getAsInt();
 
-        // POIs
         for (PoiView view : poiViews.values()) {
             if (view == null) continue;
             Poi p = view.getPoi();
@@ -191,50 +154,35 @@ public class MapOverlayLayerController {
             view.setLayoutY(xy[1]);
         }
 
-        // Routes
         for (RouteView rv : routeViews.values()) {
             if (rv == null) continue;
             rv.rebuildGeometry(mapper, z);
         }
     }
 
-
     private boolean isClickOnPoi(Object target) {
         if (!(target instanceof javafx.scene.Node node)) return false;
         javafx.scene.Node cur = node;
         while (cur != null) {
-            if (cur instanceof PoiView)
-            {
-                if (onPoiSelected != null) return true;
-            }
+            if (cur instanceof PoiView) return true;
+            if (cur == contentPane || cur == overlayRoot) break;
             cur = cur.getParent();
         }
         return false;
     }
+
     private void ShowInfo(Object target) {
-        if (!(target instanceof javafx.scene.Node node)) return ;
+        if (!(target instanceof javafx.scene.Node node)) return;
         javafx.scene.Node cur = node;
         while (cur != null) {
-            if (cur instanceof PoiView)
-            {
+            if (cur instanceof PoiView) {
                 if (onPoiSelected != null) {
                     onPoiSelected.accept(((PoiView) cur).getPoi(), ((PoiView) cur));
-                    System.out.println("should lunch");
                 }
-                return ;
+                return;
             }
+            if (cur == contentPane || cur == overlayRoot) break;
             cur = cur.getParent();
         }
     }
-    private void forwardClickToBaseLayer(javafx.scene.input.MouseEvent e) {
-        if (onEmptyMapClick == null) return;
-
-        // Screen → scene → map-local coords
-        double sceneX = e.getSceneX();
-        double sceneY = e.getSceneY();
-
-        onEmptyMapClick.accept(sceneX, sceneY);
-    }
-
-
 }

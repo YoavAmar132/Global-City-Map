@@ -12,6 +12,8 @@ import gcm.client.controllers.menu.CatalogController;
 
 import gcm.client.controllers.user_util.BuyMapScreenController;
 import gcm.client.controllers.user_util.MyMapsController;
+import gcm.client.controllers.user_util.SubscriptionMapsController;
+import gcm.client.controllers.user_util.UserSubscriptionsController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -52,6 +54,8 @@ public class SceneNavigator {
         routes.put(BuyMapCatalogController.class, "/gcm/client/user_util/BuyMapCatalog.fxml");
         routes.put(MyMapsController.class, "/gcm/client/user_util/MyMapsScreen.fxml");
         routes.put(EditPricesController.class, "/gcm/client/user_util/EditPricesScreen.fxml");
+        routes.put(UserSubscriptionsController.class, "/gcm/client/user_util/UserSubscriptions.fxml");
+        routes.put(SubscriptionMapsController.class, "/gcm/client/user_util/SubscriptionMaps.fxml");
 
 
     }

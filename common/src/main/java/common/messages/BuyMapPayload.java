@@ -1,26 +1,26 @@
 package common.messages;
 
 import java.io.Serializable;
-import java.util.List;
 
 public class BuyMapPayload implements Serializable {
     private int userId;
     private String cityName;
-    private List<String> mapsList; // <--- Added as requested
     private double price;
-    private String paymentDetails;
+    private boolean isSubscription;
+    private int version; // <--- NEW FIELD
 
-    public BuyMapPayload(int userId, String cityName, List<String> mapsList, double price, String paymentDetails) {
+    // Updated Constructor
+    public BuyMapPayload(int userId, String cityName, double price, boolean isSubscription, int version) {
         this.userId = userId;
         this.cityName = cityName;
-        this.mapsList = mapsList;
         this.price = price;
-        this.paymentDetails = paymentDetails;
+        this.isSubscription = isSubscription;
+        this.version = version;
     }
 
     public int getUserId() { return userId; }
     public String getCityName() { return cityName; }
-    public List<String> getMapsList() { return mapsList; } // Getter
     public double getPrice() { return price; }
-    public String getPaymentDetails() { return paymentDetails; }
+    public boolean isSubscription() { return isSubscription; }
+    public int getVersion() { return version; } // <--- NEW GETTER
 }

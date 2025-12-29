@@ -60,34 +60,41 @@ public class MapService {
         return routerepository.getLastRouteId();
     }
 
-    public GcmResponse handleBuyMap(BuyMapPayload payload) {
-        System.out.println("Service: Processing BuyMap for user " + payload.getUserId());
+    // --- MapService.java ---
 
-        // 1. Validation
-        if (payload.getCityName() == null || payload.getCityName().isEmpty()) {
-            return GcmResponse.error("Invalid City Name");
-        }
+    // 1. Check if user already owns it (OTP)
+    public boolean isCityPurchased(int userId, String cityName) {
+        return mapRepository.isCityPurchased(userId, cityName);
+    }
 
-        // 2. Check if already purchased (Optional, prevents double buy)
-        if (mapRepository.isCityPurchased(payload.getUserId(), payload.getCityName())) {
-            return GcmResponse.error("You already own this city!");
-        }
+    // 2. Check if user is already subscribed (Subscription)
+    public boolean isUserSubscribed(int userId, String cityName) throws SQLException {
+        return mapRepository.isUserSubscribed(userId, cityName);
+    }
 
-        // 3. Perform Purchase
-        boolean success = mapRepository.addPurchase(
-                payload.getUserId(),
-                payload.getCityName(),
-                payload.getPrice()
-                // or derive from payload if you update it
-        );
+    public boolean isMapVersionPurchased(int userId, String cityName, int version) {
+        return mapRepository.isMapVersionPurchased(userId, cityName, version);
+    }
 
-        if (success) {
-            // 4. Return Success
-            // (Later, you can change this to return the actual MapSheet object if you want immediate viewing)
-            return GcmResponse.ok("Purchase successful");
-        } else {
-            return GcmResponse.error("Database Error: Could not complete purchase.");
-        }
+    public int getLatestVersion(String cityName) {
+        // You might need to add a helper in MapRepo to get ID from Name, then get Latest Version
+        // Or just return 0 and let Repo handle it inside addPurchase
+        return 0;
+    }
+
+    public boolean addPurchase(int userId, String cityName, double price, boolean isSubscription, int version) throws SQLException {
+        return mapRepository.addPurchase(userId, cityName, price, isSubscription, version);
+    }
+
+    public List<City> getSubscribedCities(int userId) {
+        return mapRepository.getSubscribedCities(userId);
+    }
+
+    // In MapService.java
+    public List<MapSheet> getPurchasedMaps(int userId) {
+        // OLD: return mapRepository.getPurchasedCitiesByUserId(userId);
+        // NEW:
+        return mapRepository.getPurchasedMapsByUserId(userId);
     }
 
     public GcmResponse handleGetPurchasedCities(int userId) {

@@ -34,6 +34,7 @@ public enum RequestType {
     BUY_SUBSCRIPTION,
     LIST_USER_PURCHASES,
     LIST_USER_SUBSCRIPTIONS,
+    LIST_USER_MAPS,
 
     // Admin / Manager
     LIST_PENDING_MAP_VERSIONS,

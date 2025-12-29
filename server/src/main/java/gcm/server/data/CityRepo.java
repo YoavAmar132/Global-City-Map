@@ -127,4 +127,8 @@ public class CityRepo {
             return stmt.executeUpdate() == 1;
         }
     }
+
+    public String cityNameById(int cityId) {
+        return null;
+    }
 }
