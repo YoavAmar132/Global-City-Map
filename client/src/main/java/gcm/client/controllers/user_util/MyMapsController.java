@@ -1,9 +1,8 @@
 package gcm.client.controllers.user_util;
 
-import gcm.client.controllers.map.MapLoaderController;
 import common.messages.*;
-import common.model.City;
-import gcm.client.controllers.map.MapViewerController;
+import common.model.MapSheet;
+import gcm.client.controllers.map.UserMapViewerController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -15,40 +14,62 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import java.util.ArrayList;
 
 public class MyMapsController {
     private GcmClient client;
 
-    @FXML
-    private VBox Citylist;
-    @FXML
-    private Label CstatusLabel;
+    @FXML private VBox Citylist;
+    @FXML private Label CstatusLabel;
 
     @FXML
     private void initialize() {
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
-
         loadMyMaps();
     }
 
     private void loadMyMaps() {
         int userId = ClientApp.getCurrentUser().getId();
-        // Send request with just the User ID
-        GcmRequest request = new GcmRequest(RequestType.LIST_USER_PURCHASES, userId);
+        // RequestType.LIST_USER_PURCHASES must be handled in RequestHandler
+        // to return List<MapSheet> (OTP maps + active subscription maps)
+        // In MyMapsController.java
+        GcmRequest request = new GcmRequest(RequestType.LIST_USER_MAPS, userId);
         client.sendRequest(request);
         CstatusLabel.setText("Fetching your maps...");
     }
 
-    private HBox createMapRow(City city) {
-        // 1. Name Label
-        Label name = new Label(city.getName());
+    /**
+     * Creates the "View Subscriptions" button dynamically.
+     * We add this to the top of the list every time we reload.
+     */
+    private Button createSubscriptionButton() {
+        Button subBtn = new Button("View My Subscriptions");
+        subBtn.setMaxWidth(Double.MAX_VALUE);
+        subBtn.setPrefHeight(40);
+        subBtn.setStyle(
+                "-fx-background-color: #ff9800; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-font-size: 14; " +
+                        "-fx-background-radius: 8; " +
+                        "-fx-cursor: hand;"
+        );
+
+        // Navigate to the Subscriptions Controller (Ensure you created this class!)
+        subBtn.setOnAction(e -> ClientApp.getNavigator().show(UserSubscriptionsController.class));
+        return subBtn;
+    }
+
+    private HBox createMapRow(MapSheet map) {
+        // 1. Map Name
+        Label name = new Label(map.getName());
         name.setStyle("-fx-text-fill: white; -fx-font-size: 16; -fx-font-weight: bold;");
 
-        // 2. BaseMap/Info Label (Since we don't have description, we show BaseMap or ID)
-        Label subInfo = new Label("BaseMap: " + city.getBasemap());
+        // 2. Version Info
+        Label subInfo = new Label("Version: " + map.getVersion());
         subInfo.setStyle("-fx-text-fill: #b0b5bd; -fx-font-size: 12;");
 
         VBox textBox = new VBox(2, name, subInfo);
@@ -58,13 +79,16 @@ public class MyMapsController {
         open.setPrefSize(100, 30);
         open.setStyle(
                 "-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); " +
-                        "-fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 20; -fx-cursor: hand;"
+                        "-fx-text-fill: white; " +
+                        "-fx-font-size: 13; " +
+                        "-fx-background-radius: 20; " +
+                        "-fx-cursor: hand;"
         );
-        open.setOnAction(e -> openCity(city));
+        open.setOnAction(e -> openMap(map));
 
         // 4. Layout
         HBox spacer = new HBox();
-        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
         HBox row = new HBox(12, textBox, spacer, open);
         row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
@@ -74,17 +98,15 @@ public class MyMapsController {
         return row;
     }
 
-    public void openCity(City city) {
-        System.out.println("gets list of cities");
-        SceneNavigator.LoadedView<MapViewerController> view =
-                ClientApp.getNavigator().get(MapViewerController.class);
-        // set values BEFORE showing
-        view.controller.setVals(city.getBasemap());
+    public void openMap(MapSheet map) {
+        SceneNavigator.LoadedView<UserMapViewerController> view =
+                ClientApp.getNavigator().get(UserMapViewerController.class);
 
-        // now show
+        // Pass the MapSheet object to the viewer
+        view.controller.setVals(map);
+
         ClientApp.getNavigator().showLoaded(view.root);
-
-        System.out.println("opened: " + city.getBasemap());
+        System.out.println("Opened map: " + map.getName() + " v" + map.getVersion());
     }
 
     private void handleResponse(GcmResponse response) {
@@ -102,14 +124,21 @@ public class MyMapsController {
 
                     Citylist.getChildren().clear();
 
+                    // 1. ALWAYS Add the Subscription Button at the top
+                    Citylist.getChildren().add(createSubscriptionButton());
+                    // Add a small spacer after the button
+                    Label spacer = new Label("");
+                    spacer.setMinHeight(10);
+                    Citylist.getChildren().add(spacer);
+
+                    // 2. Add the maps
                     if (list.isEmpty()) {
-                        CstatusLabel.setText("You haven't purchased any maps yet.");
+                        CstatusLabel.setText("You don't have any maps yet.");
                     } else {
-                        CstatusLabel.setText(""); // Clear loading text
-                        // Safe casting
+                        CstatusLabel.setText("");
                         for (Object obj : list) {
-                            if (obj instanceof City) {
-                                Citylist.getChildren().add(createMapRow((City) obj));
+                            if (obj instanceof MapSheet) {
+                                Citylist.getChildren().add(createMapRow((MapSheet) obj));
                             }
                         }
                     }

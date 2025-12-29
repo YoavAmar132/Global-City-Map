@@ -158,6 +158,22 @@ public class RequestHandler {
             }
         }
 
+        if (type == RequestType.LIST_USER_SUBSCRIPTIONS) {
+            try {
+                return handleGetUserSubscriptions(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.LIST_USER_MAPS) {
+            try {
+                return handleGetUserMaps(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -388,17 +404,57 @@ public class RequestHandler {
         return GcmResponse.ok(maps);
     }
 
+    // --- RequestHandler.java ---
+
     private GcmResponse handleBuyMap(GcmRequest request) {
         Object rawPayload = request.getPayload();
         if (!(rawPayload instanceof BuyMapPayload payload)) {
-            return GcmResponse.error("Invalid payload for BUY_MAP");
+            return GcmResponse.error("Invalid payload");
         }
 
         try {
-            // Call the service method we just wrote
-            return mapService.handleBuyMap(payload); // Note: using 'mapservice' as defined in your class
+            boolean alreadyOwns = false;
+
+            if (payload.isSubscription()) {
+                // Check for active subscription
+                alreadyOwns = mapService.isUserSubscribed(payload.getUserId(), payload.getCityName());
+            } else {
+                // OTP: Check specific version
+                int versionToCheck = payload.getVersion();
+
+                // If client sent 0 (standard buy), we need to check against the LATEST version
+                // (Assuming standard buy always targets the latest)
+                if (versionToCheck == 0) {
+                    // We need to resolve the version to check ownership correctly
+                    // Ideally, MapService should expose getLatestVersionForCity(cityName)
+                    // For now, let's assume if they send 0, we rely on the repo's internal check or assume they want the latest.
+                    // A safer way:
+                    // alreadyOwns = mapService.isCityPurchased(...); // BLOCKS DUPLICATES
+
+                    // BUT, since we want to allow V1 and V2, we should ideally resolve the version here.
+                    // Simplified Logic: If version is 0, we fall back to "Do you own the city?" to prevent accidental double buys of the "main" map.
+                    alreadyOwns = mapService.isCityPurchased(payload.getUserId(), payload.getCityName());
+                } else {
+                    // Client requested a specific version (e.g. from Subscription Claim)
+                    alreadyOwns = mapService.isMapVersionPurchased(payload.getUserId(), payload.getCityName(), versionToCheck);
+                }
+            }
+
+            if (alreadyOwns) {
+                return GcmResponse.error("You already own this specific map version!");
+            }
+
+            boolean success = mapService.addPurchase(
+                    payload.getUserId(),
+                    payload.getCityName(),
+                    payload.getPrice(),
+                    payload.isSubscription(),
+                    payload.getVersion() // Pass the version
+            );
+
+            return success ? GcmResponse.ok("Success") : GcmResponse.error("Database Error");
+
         } catch (Exception e) {
-            e.printStackTrace();
             return GcmResponse.error("Server Error: " + e.getMessage());
         }
     }
@@ -410,4 +466,33 @@ public class RequestHandler {
         }
         return GcmResponse.error("Invalid Payload for LIST_USER_PURCHASES");
     }
+
+    private GcmResponse handleGetUserSubscriptions(GcmRequest request) throws SQLException {
+        int userId = (int) request.getPayload();
+        List<City> cities = mapService.getSubscribedCities(userId);
+        return GcmResponse.ok(cities);
+    }
+    // In RequestHandler.java
+    private GcmResponse handleGetUserMaps(GcmRequest request) throws SQLException {
+        try {
+            // 1. Extract User ID from the payload
+            if (!(request.getPayload() instanceof Integer)) {
+                return GcmResponse.error("Invalid payload. Expected User ID (int).");
+            }
+            int userId = (int) request.getPayload();
+
+            // 2. Fetch maps using the service method we created
+            // (This gets both OTP maps and Subscription maps)
+            List<MapSheet> maps = mapService.getPurchasedMaps(userId);
+
+            // 3. Return the list
+            return GcmResponse.ok(maps);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return GcmResponse.error("Server Error fetching user maps: " + e.getMessage());
+        }
+    }
+
+
 }

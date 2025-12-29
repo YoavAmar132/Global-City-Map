@@ -70,24 +70,26 @@ public class BuyMapScreenController {
         PurchaseSession session = PurchaseSession.getInstance();
 
         // 1. Determine final price and type based on selection
-        double finalPrice;
+        double price;
         if (radioOTP.isSelected()) {
             session.setPurchaseType(PurchaseSession.PurchaseType.ONE_TIME_PURCHASE);
-            finalPrice = selectedCity.getPrice(); // מחיר רגיל מהעיר
+            price = selectedCity.getPrice(); // מחיר רגיל מהעיר
         } else {
             session.setPurchaseType(PurchaseSession.PurchaseType.SUBSCRIPTION);
-            finalPrice = selectedCity.getSubPrice(); // מחיר מנוי מהעיר
+            price = selectedCity.getSubPrice(); // מחיר מנוי מהעיר
         }
-        session.setPrice(finalPrice);
+        session.setPrice(price);
+        boolean isSub = radioSub.isSelected();
+
 
         // 2. Create Payload & Send Request
         // כרגע אנחנו שולחים את המחיר שנבחר לשרת
         BuyMapPayload payload = new BuyMapPayload(
-                session.getUserID(),
+                PurchaseSession.getInstance().getUserID(),
                 selectedCity.getName(),
-                null, // mapsList (לא רלוונטי ברכישת עיר מלאה)
-                finalPrice,
-                "STORED_CARD" // Payment Method
+                price,
+                isSub, // <--- Send the choice
+                0 // treat as Latest version = 0
         );
 
         // הערה: אם תרצה בעתיד לשמור ב-DB את סוג הרכישה (מנוי/רגיל),

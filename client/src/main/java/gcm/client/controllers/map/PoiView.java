@@ -36,6 +36,15 @@ public class PoiView extends Button {
             case null, default:getStyleClass().addAll("poi", "poi-other");
             break;
         }
+
+
+        setMinWidth(30);
+        setMinHeight(30);
+        setPrefSize(30, 30);
+        // Optional: Add a temporary border to ensure you see it even without images
+        setStyle("-fx-border-color: red; -fx-border-width: 2px;");
+
+
         setFocusTraversable(false);
         setPickOnBounds(true);
 

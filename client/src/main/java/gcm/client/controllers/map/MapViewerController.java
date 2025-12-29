@@ -31,7 +31,7 @@ public class MapViewerController {
     private List<Route> routes = new ArrayList<>();
     private boolean buildingRouteWaitingFirstPoint = false;
     private int routeId = 0;
-    private String path="C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Haifa";
+    private String path="/Users/yahlio/IdeaProjects/Global-City-Map/client/src/main/resources/gcm/client/map/Haifa";
 
     public int getPoid()
     {
@@ -154,7 +154,7 @@ public class MapViewerController {
 
         if (routes != null) {
             for (Route r : routes) {
-                //  overlayLayerController.addRoute(r);
+                  overlayLayerController.addRoute(r);
             }
         }
 
