@@ -6,10 +6,9 @@ import java.sql.SQLException;
 
 public class DbManager {
 
-    // TODO: the sql we will use(adam)
-    private static final String URL  = "jdbc:mysql://localhost:3306/GCM_DB";
-    private static final String USER = "root";
-    private static final String PASS = "Yoavamar132!";
+    private static String url;
+    private static String user;
+    private static String pass;
 
     static {
         try {
@@ -19,7 +18,17 @@ public class DbManager {
         }
     }
 
+    //we will get those values from user (default will be root and jdbc:mysql://localhost:3306/GCM_DB)
+    public static void init(String jdbcURL, String username, String password) {
+        url = jdbcURL;
+        user = username;
+        pass = password;
+    }
+
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASS);
+        if (pass == null || pass.isBlank()) {
+            throw new IllegalStateException("Database password not set");
+        }
+        return DriverManager.getConnection(url, user, pass);
     }
 }
