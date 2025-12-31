@@ -9,7 +9,7 @@ public class City implements Serializable {
     private String basemap;
     private double price;      // תואם ל-CityPrice
     private double subPrice;
-    private String description;// **חדש: תואם ל-SubPrice**
+    private String description = "";//
 
     // עדכון הבנאי (Constructor) לקבלת המחיר החדש
     public City(int id, String name, String baseMap, double price, double subPrice) {

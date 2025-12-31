@@ -105,6 +105,11 @@ public class MyMapsController {
         // Pass the MapSheet object to the viewer
         view.controller.setVals(map);
 
+        //
+        if (view.root instanceof javafx.scene.layout.Region) {
+            ((javafx.scene.layout.Region) view.root).setPrefSize(500, 350);
+        }
+
         ClientApp.getNavigator().showLoaded(view.root);
         System.out.println("Opened map: " + map.getName() + " v" + map.getVersion());
     }
