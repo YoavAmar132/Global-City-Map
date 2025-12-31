@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox
+        xmlns="http://javafx.com/javafx/21.0.9"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="gcm.server.UI.DatabaseConfigController"
+        spacing="12"
+        alignment="CENTER">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label
+            text="GCM Server Database Configuration"
+            style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+    <TextField
+            fx:id="urlField"
+            promptText="JDBC URL"/>
+
+    <TextField
+            fx:id="userField"
+            promptText="Username"/>
+
+    <PasswordField
+            fx:id="passField"
+            promptText="MySQL Password"/>
+
+    <Button
+            fx:id="startButton"
+            text="Connect &amp; Start Server"
+            onAction="#startServer"
+            maxWidth="Infinity"/>
+
+    <Label
+            fx:id="statusLabel"
+            wrapText="true"/>
+
+</VBox>
