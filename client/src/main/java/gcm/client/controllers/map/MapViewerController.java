@@ -31,7 +31,7 @@ public class MapViewerController {
     private List<Route> routes = new ArrayList<>();
     private boolean buildingRouteWaitingFirstPoint = false;
     private int routeId = 0;
-    private String path="/Users/yahlio/IdeaProjects/Global-City-Map/client/src/main/resources/gcm/client/map/Haifa";
+    private String path = "/Users/yahlio/IdeaProjects/Global-City-Map/client/src/main/resources/gcm/client/map/Haifa";
 
     public int getPoid()
     {
@@ -184,7 +184,7 @@ public class MapViewerController {
             try {
                 String name = askPoiName();
                 if (name == null) {
-                    // user cancelled or closed
+                    // user canceled or closed
                     baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
                     return;
                 }

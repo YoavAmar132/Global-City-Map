@@ -122,10 +122,8 @@ public class UserMapViewerController {
         hasVals = true;
         baseLayerController.setTileRoot(path);
         tryShowMap();
-
-
-
     }
+
     private void tryShowMap() {
         if (showDone) return;
         if (!initialized) return;
