@@ -6,7 +6,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
-
+import javafx.application.Platform;
 import java.sql.Connection;
 
 import gcm.server.ServerBootstrap;
@@ -31,6 +31,10 @@ public class DatabaseConfigController {
         passField.textProperty().addListener((obs, oldVal, newVal) ->
                 startButton.setDisable(newVal == null || newVal.isBlank())
         );
+
+        // Focus password since we change this only 99% of the times
+        Platform.runLater(() -> passField.requestFocus());
+
     }
 
     @FXML
