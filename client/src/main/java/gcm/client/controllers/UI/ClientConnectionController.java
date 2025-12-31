@@ -27,7 +27,7 @@ public class ClientConnectionController {
             ip = "localhost";
         }
 
-        // UI feedback
+        // UI feedback for connecting
         connectButton.setDisable(true);
         statusLabel.setText("Connecting...");
 
