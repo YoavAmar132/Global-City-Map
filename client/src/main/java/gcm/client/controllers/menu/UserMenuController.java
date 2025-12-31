@@ -1,6 +1,8 @@
 package gcm.client.controllers.menu;
 
+import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
+import gcm.client.controllers.catalogPublic.GuestCatalogController;
 import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
@@ -22,13 +24,14 @@ public class UserMenuController {
 
     @FXML
     private void handleClose(ActionEvent event) {
+        ClientApp.getNavigator().show(WelcomeController.class);
 
     }
 
     @FXML
     private void onViewCatalogClicked(ActionEvent event) {
-        System.out.println("View Catalog clicked");
-        // TODO: SceneNavigator to catalog
+        ClientApp.getNavigator().show(GuestCatalogController.class);
+
     }
 
     @FXML
