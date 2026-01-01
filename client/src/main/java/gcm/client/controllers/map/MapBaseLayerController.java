@@ -89,7 +89,7 @@ public class MapBaseLayerController {
         gc = mapCanvas.getGraphicsContext2D();
 
         File testTile = new File(
-               "C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
+               "client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
        );
         System.out.println("DEBUG testTile: " + testTile.getAbsolutePath()
                 + " exists=" + testTile.exists());
@@ -306,8 +306,15 @@ public class MapBaseLayerController {
     /** copied from your test app, adapted to use tileRoot + mapCanvas */
     private void centerOnAvailableTiles() {
         if (mapCanvas.getWidth() <= 0 || mapCanvas.getHeight() <= 0) return;
+        File test = new File(tileRoot);
+        String pathh =  test.getAbsolutePath();
 
-        File zoomDir = new File(tileRoot + File.separator + zoom);
+        System.out.println("pathh=" + pathh);
+
+        File zoomDir = new File(pathh + File.separator + zoom);
+
+        System.out.println("pathh=" + zoomDir.getAbsolutePath());
+
         File[] xDirs = zoomDir.listFiles(File::isDirectory);
         if (xDirs == null || xDirs.length == 0) return;
 
