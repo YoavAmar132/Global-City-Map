@@ -40,10 +40,8 @@ public class GuestCityMapsController {
         Label desc = new Label(map.getDescription());
         desc.setStyle("-fx-text-fill: #4B5563;");
 
-        Label price = new Label("Price: " + map.getPrice());
-        price.setStyle("-fx-text-fill: #2563EB; -fx-font-weight: bold;");
 
-        VBox box = new VBox(6, name, desc, price);
+        VBox box = new VBox(6, name, desc);
         box.setStyle(
                 "-fx-background-color: #F9FAFB;" +
                         "-fx-padding: 14;" +
