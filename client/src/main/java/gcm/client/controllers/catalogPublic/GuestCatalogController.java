@@ -122,6 +122,10 @@ public class GuestCatalogController {
     }
 
 
+    public static void forcedRefresh(){
+        ClientApp.getNavigator().show(GuestCatalogController.class);
+
+    }
 
     private void openCity(CityCatalogItem city) {
 
