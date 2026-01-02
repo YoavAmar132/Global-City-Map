@@ -183,6 +183,6 @@ public class PendingMapController {
 
     public void onRefreshClicked(ActionEvent actionEvent) {
         // Re-initialize to fetch fresh data
-        initialize();
+        ClientApp.getNavigator().show(PendingMapController.class);
     }
 }
