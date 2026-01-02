@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox
+        xmlns="http://javafx.com/javafx/21.0.9"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="gcm.client.controllers.ui.ClientConnectionController"
+        spacing="12"
+        alignment="CENTER">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label
+            text="Connect to GCM Server"
+            style="-fx-font-size: 16px; -fx-font-weight: bold;"/>
+
+    <TextField
+            fx:id="ipField"
+            promptText="Server IP"/>
+
+    <Button
+            fx:id="connectButton"
+            text="Connect"
+            onAction="#connect"
+            maxWidth="Infinity"/>
+
+    <Label
+            fx:id="statusLabel"
+            wrapText="true"/>
+
+</VBox>
