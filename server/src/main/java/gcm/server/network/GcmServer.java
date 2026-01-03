@@ -2,6 +2,7 @@ package gcm.server.network;
 
 import common.messages.GcmRequest;
 import common.messages.GcmResponse;
+import common.messages.Reload;
 import gcm.server.controllers.RequestHandler;
 import ocsf.server.AbstractServer;
 import ocsf.server.ConnectionToClient;
@@ -26,7 +27,12 @@ public class GcmServer extends AbstractServer {
 
             // 2. Delegate to RequestHandler (for now: only LOGIN)
             GcmResponse response = requestHandler.handle(request);
-
+            if(response.getRefresh()==1)
+            {
+                Reload reload =new Reload();
+                response.setRefresh(0);
+                sendToAllClients(GcmResponse.ok(reload));
+            }
             // 3. Send response back to this client
             client.sendToClient(response);
 

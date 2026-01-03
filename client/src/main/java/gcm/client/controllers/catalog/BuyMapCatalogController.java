@@ -114,6 +114,7 @@ public class BuyMapCatalogController {
                         statusLabel.setText("No cities available.");
                     }
                 }
+
             }
         });
     }

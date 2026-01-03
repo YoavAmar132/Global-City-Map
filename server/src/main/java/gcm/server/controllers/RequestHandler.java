@@ -2,6 +2,7 @@ package gcm.server.controllers;
 
 import common.messages.*;
 import common.model.*;
+import gcm.server.network.GcmServer;
 import gcm.server.service.AuthService;
 import gcm.server.service.CityService;
 import gcm.server.service.MapService;
@@ -10,6 +11,7 @@ import common.messages.CityMapsRequestPayload;
 
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RequestHandler {
@@ -18,12 +20,13 @@ public class RequestHandler {
     private final MapService mapService;
     private final CityService cityService;
     private final CatalogService catalogService;
-
+private final ArrayList<User> online_users;
     public RequestHandler(AuthService authService, MapService mapservice, CityService cityService, CatalogService catalogService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
+        this.online_users=new ArrayList<>();
     }
 
     /**
@@ -40,6 +43,10 @@ public class RequestHandler {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+        }
+        if (type == RequestType.LOGOUT) {
+           User user=(User)request.getPayload();
+           online_users.remove(user);
         }
         if (type == RequestType.LIST_ROUTES) {
             try {
@@ -157,7 +164,11 @@ public class RequestHandler {
 
         if (type == RequestType.UPDATE_CITY_PRICE) {
             try {
-                return handleUpdateCityPrice(request);
+                GcmResponse r =handleUpdateCityPrice(request);
+                if(r.isSuccess()){
+                    r.setRefresh(1);
+                }
+                return r;
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -215,7 +226,11 @@ public class RequestHandler {
             // 3. Handle failure
             if (user == null) {
                 return GcmResponse.error(authService.getErrormsg());   // we have error function so use it :D
+            }else if(online_users.contains(user))
+            {
+                return GcmResponse.error("user is already logged in");
             }
+            online_users.add(user);
             // 4. Success → return the User directly
             return GcmResponse.ok(user);
 
