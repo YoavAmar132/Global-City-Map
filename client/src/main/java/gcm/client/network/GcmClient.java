@@ -2,6 +2,8 @@ package gcm.client.network;
 
 import common.messages.GcmRequest;
 import common.messages.GcmResponse;
+import common.messages.RequestType;
+import gcm.client.utill.ClientApp;
 import javafx.application.Platform;
 import ocsf.client.AbstractClient;
 
@@ -83,6 +85,8 @@ public class GcmClient extends AbstractClient {
     public void closeConnectionSafe() {
         try {
             closeConnection();
+            GcmRequest request = new GcmRequest(RequestType.LOGOUT, ClientApp.getCurrentUser());
+            sendRequest(request);
             System.out.println("GCM Client: connection closed.");
         } catch (Exception e) {
             System.err.println("GCM Client: error closing connection: " + e.getMessage());
