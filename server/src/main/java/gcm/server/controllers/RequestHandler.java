@@ -34,6 +34,20 @@ public class RequestHandler {
 
         RequestType type = request.getType();
 
+        if (type == RequestType.LIST_POIS) {
+            try {
+                return handlePoi(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (type == RequestType.LIST_ROUTES) {
+            try {
+                return handleRoute(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
         if (type == RequestType.LOGIN) {
             try {
                 return handleLogin(request);
@@ -212,7 +226,14 @@ public class RequestHandler {
     }
 
 
-
+    private GcmResponse handlePoi(GcmRequest request) throws SQLException {
+        System.out.println("get all poi request");
+        return GcmResponse.ok(mapService.getpois());
+    }
+    private GcmResponse handleRoute(GcmRequest request) throws SQLException {
+        System.out.println("get all route request");
+        return GcmResponse.ok(mapService.getroutes());
+    }
 
 
     private GcmResponse handleGetAllCityPrices(GcmRequest request) throws SQLException {

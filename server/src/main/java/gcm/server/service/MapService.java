@@ -3,10 +3,7 @@ package gcm.server.service;
 import common.messages.ApprovePayload;
 import common.messages.BuyMapPayload;
 import common.messages.GcmResponse;
-import common.model.City;
-import common.model.MapSheet;
-import common.model.Poi;
-import common.model.User;
+import common.model.*;
 import gcm.server.data.MapRepo;
 import gcm.server.data.PoiRepo;
 import gcm.server.data.RouteRepo;
@@ -27,6 +24,13 @@ public class MapService {
     }
 
     //store
+    public List<Poi> getpois() {
+      return mapRepository.getAllPoi();
+    }
+    public List<Route> getroutes() {
+        return mapRepository.getAllRoute();
+    }
+
     public boolean PendMap(MapSheet map)
     {
         System.out.println("map service created");

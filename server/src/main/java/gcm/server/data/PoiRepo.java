@@ -32,8 +32,8 @@ public class PoiRepo {
             stmt.setString(1, poi.getName());
             stmt.setString(2, poi.getDescription());
             stmt.setString(3, poi.getCategory().name());
-            stmt.setDouble(4, poi.getWorldX(13));
-            stmt.setDouble(5, poi.getWorldX(13));
+            stmt.setDouble(4, poi.getNWorldX());
+            stmt.setDouble(5, poi.getNWorldY());
 
             int rows = stmt.executeUpdate();
             return rows > 0;

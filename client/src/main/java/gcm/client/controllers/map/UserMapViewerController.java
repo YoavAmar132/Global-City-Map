@@ -140,7 +140,7 @@ public class UserMapViewerController {
 
             baseLayerController.setTileRoot(path);
             showMap(map);
-
+            System.out.println("stackPane size=" + stackPane.getWidth() + "x" + stackPane.getHeight());
             showDone = true;
         });
     }
@@ -182,6 +182,7 @@ public class UserMapViewerController {
          List<Route> routes=map.getRoutes();
         if (pois != null) {
             for (Poi p : pois) {
+                System.out.println(p.getName()+" x:"+p.getWorldX(13));
                 overlayLayerController.addPoi(p);
             }
         }
