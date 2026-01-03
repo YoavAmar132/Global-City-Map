@@ -45,8 +45,15 @@ private final ArrayList<User> online_users;
             }
         }
         if (type == RequestType.LOGOUT) {
-           User user=(User)request.getPayload();
-           online_users.remove(user);
+            if(request.getPayload()!=null) {
+                User user = (User) request.getPayload();
+                for (User u : online_users) {
+                    if (u.getUsername().equals(user.getUsername())) {
+                        online_users.remove(u);
+                    }
+                }
+            }
+         return GcmResponse.ok(null);
         }
         if (type == RequestType.LIST_ROUTES) {
             try {
@@ -226,9 +233,15 @@ private final ArrayList<User> online_users;
             // 3. Handle failure
             if (user == null) {
                 return GcmResponse.error(authService.getErrormsg());   // we have error function so use it :D
-            }else if(online_users.contains(user))
+            }
+            for(User u:online_users)
             {
-                return GcmResponse.error("user is already logged in");
+                System.out.println(u.getUsername());
+                if(u.getUsername().equals(user.getUsername()))
+                {
+                    return GcmResponse.error("user is already logged in");
+                }
+
             }
             online_users.add(user);
             // 4. Success → return the User directly
