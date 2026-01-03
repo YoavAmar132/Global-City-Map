@@ -17,7 +17,8 @@ public enum RequestType {
     GET_CITY_MAPS,
 
     // POIs
-    LIST_POIS_FOR_CITY,
+    LIST_POIS,
+    LIST_ROUTES,
     SEARCH_POIS,
     CREATE_POI,      // optional
     UPDATE_POI,      // optional
