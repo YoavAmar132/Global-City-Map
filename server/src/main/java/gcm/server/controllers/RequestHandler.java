@@ -47,11 +47,9 @@ private final ArrayList<User> online_users;
         if (type == RequestType.LOGOUT) {
             if(request.getPayload()!=null) {
                 User user = (User) request.getPayload();
-                for (User u : online_users) {
-                    if (u.getUsername().equals(user.getUsername())) {
-                        online_users.remove(u);
-                    }
-                }
+                online_users.removeIf(u ->
+                        u.getUsername().equals(user.getUsername())
+                );
             }
          return GcmResponse.ok(null);
         }
