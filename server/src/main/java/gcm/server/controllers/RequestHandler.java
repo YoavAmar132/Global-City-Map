@@ -53,6 +53,7 @@ private final ArrayList<User> online_users;
             }
          return GcmResponse.ok(null);
         }
+
         if (type == RequestType.LIST_ROUTES) {
             try {
                 return handleRoute(request);
