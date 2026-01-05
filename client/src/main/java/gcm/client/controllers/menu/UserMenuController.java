@@ -29,8 +29,6 @@ public class UserMenuController {
     private void handleClose(ActionEvent event) {
         GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
         client.sendRequest(request);
-
-
     }
 
     @FXML
