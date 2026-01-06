@@ -2,6 +2,7 @@ package gcm.server.controllers;
 
 import common.messages.*;
 import common.model.*;
+import gcm.server.data.CatalogRepo;
 import gcm.server.network.GcmServer;
 import gcm.server.service.AuthService;
 import gcm.server.service.CityService;
@@ -424,6 +425,8 @@ private final ArrayList<User> online_users;
             return GcmResponse.error("Invalid payload for city catalog");
         }
 
+
+
         List<CityCatalogItem> cities =
                 catalogService.loadCityCatalog();
 
@@ -441,6 +444,14 @@ private final ArrayList<User> online_users;
         if (!(rawPayload instanceof CityMapsRequestPayload payload)) {
             return GcmResponse.error("Invalid payload for city maps");
         }
+        CityMapsRequestPayload rawPayload1=(CityMapsRequestPayload) rawPayload;
+        //get user id
+        int userId = 0;
+        if (rawPayload1.getUserId() != 0) {
+            userId = rawPayload1.getUserId();
+        }
+
+        catalogService.newLogCityView(payload.getCityId(), userId);
 
         List<MapCatalogItem> maps =
                 catalogService.loadMapsForCity(payload.getCityId());

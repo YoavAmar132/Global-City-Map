@@ -130,9 +130,12 @@ public class GuestCatalogController {
 
 
     private void openCity(CityCatalogItem city) {
-
+        int userID = 0;
+        if (ClientApp.getCurrentUser() != null) {
+            userID = ClientApp.getCurrentUser().getId();
+        }
         CityMapsRequestPayload payload =
-                new CityMapsRequestPayload(city.getCityId());
+                new CityMapsRequestPayload(city.getCityId(), userID);
 
         GcmRequest request =
                 new GcmRequest(RequestType.GET_CITY_MAPS, payload);
