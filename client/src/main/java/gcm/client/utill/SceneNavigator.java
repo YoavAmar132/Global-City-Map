@@ -3,6 +3,8 @@ package gcm.client.utill;
 import gcm.client.controllers.*;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalog.ContentCatalogController;
+import gcm.client.controllers.manager_util.ReportResultController;
+import gcm.client.controllers.manager_util.ReportsInputController;
 import gcm.client.controllers.map.*;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.controllers.menu.CustomerSupportMenuController;
@@ -56,6 +58,8 @@ public class SceneNavigator {
         routes.put(EditPricesController.class, "/gcm/client/user_util/EditPricesScreen.fxml");
         routes.put(UserSubscriptionsController.class, "/gcm/client/user_util/UserSubscriptions.fxml");
         routes.put(SubscriptionMapsController.class, "/gcm/client/user_util/SubscriptionMaps.fxml");
+        routes.put(ReportsInputController.class, "/gcm/client/manager_util/ReportsInputScreen.fxml");
+        routes.put(ReportResultController.class, "/gcm/client/manager_util/ReportResultView.fxml");
 
 
     }

@@ -4,10 +4,7 @@ import common.messages.*;
 import common.model.*;
 import gcm.server.data.CatalogRepo;
 import gcm.server.network.GcmServer;
-import gcm.server.service.AuthService;
-import gcm.server.service.CityService;
-import gcm.server.service.MapService;
-import gcm.server.service.CatalogService;
+import gcm.server.service.*;
 import common.messages.CityMapsRequestPayload;
 
 
@@ -21,12 +18,14 @@ public class RequestHandler {
     private final MapService mapService;
     private final CityService cityService;
     private final CatalogService catalogService;
+    private final StatsService statsService;
 private final ArrayList<User> online_users;
-    public RequestHandler(AuthService authService, MapService mapservice, CityService cityService, CatalogService catalogService) {
+    public RequestHandler(AuthService authService, MapService mapservice, CityService cityService, CatalogService catalogService, StatsService statsService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
+        this.statsService = statsService;
         this.online_users=new ArrayList<>();
     }
 
@@ -206,10 +205,38 @@ private final ArrayList<User> online_users;
             }
         }
 
+        if (type == RequestType.GET_REPORT) {
+            try {
+                return handleGetReport(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
     }
+
+    private GcmResponse handleGetReport(GcmRequest request) throws SQLException {
+        System.out.println("GET_REPORT request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof ReportPayload payload)) {
+            return GcmResponse.error("Invalid payload for reports");
+        }
+
+        // Delegate to CatalogService (which calls CatalogRepo)
+        List<CityReportData> reports =
+                statsService.generateReport(payload.getFromDate(), payload.getToDate(), payload.getCityId());
+
+        if (reports == null) {
+            return GcmResponse.error("Failed to generate report");
+        }
+
+        return GcmResponse.ok(reports);
+    }
+
     /**
      * Handles LOGIN requests.
      * Expects payload = LoginPayload

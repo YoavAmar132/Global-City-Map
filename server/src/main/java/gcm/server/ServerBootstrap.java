@@ -21,8 +21,11 @@ public class ServerBootstrap {
         CatalogRepo catalogRepo = new CatalogRepo();
         CatalogService catalogService = new CatalogService(catalogRepo);
 
+        StatsRepo statsRepo = new StatsRepo();
+        StatsService statsService = new StatsService(statsRepo);
+
         RequestHandler handler =
-                new RequestHandler(authService, mapService, cityService, catalogService);
+                new RequestHandler(authService, mapService, cityService, catalogService, statsService);
 
         GcmServer server = new GcmServer(5555, handler);
 
