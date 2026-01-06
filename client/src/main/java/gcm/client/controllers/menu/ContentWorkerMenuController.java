@@ -24,8 +24,7 @@ public class ContentWorkerMenuController {
     }
     @FXML
     public void handleClose(ActionEvent actionEvent) {
-        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
-        client.sendRequest(request);
+        ClientApp.getNavigator().show(ManagerMenuController.class);
     }
     @FXML
     public void onViewCatalogClicked(ActionEvent actionEvent) {

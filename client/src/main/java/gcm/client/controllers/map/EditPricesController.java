@@ -4,6 +4,7 @@ import common.messages.*;
 import common.model.City;
 import common.model.CityPricingItem;
 import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import javafx.application.Platform;
@@ -180,6 +181,6 @@ public class EditPricesController {
 
     @FXML
     private void handleClose() {
-        ClientApp.getNavigator().show(WelcomeController.class);
+        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 }

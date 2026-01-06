@@ -20,8 +20,7 @@ public class CustomerSupportMenuController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
-        client.sendRequest(request);
+        ClientApp.getNavigator().show(ManagerMenuController.class);
     }
 
     public void onSupportButton(ActionEvent actionEvent) {
