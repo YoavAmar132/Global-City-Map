@@ -16,20 +16,14 @@ public class UserMenuController {
 
     public void initialize() {
         client = ClientApp.getClient();
-
-        // for now: handle all responses here (only LOGIN exists)
-        client.setResponseHandler(this::handleResponse);
     }
-    private void handleResponse(GcmResponse response) {
-            ClientApp.getNavigator().show(WelcomeController.class);
-
-    }
+    
 
     @FXML
     private void handleClose(ActionEvent event) {
-        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
-        client.sendRequest(request);
+        ClientApp.logout();
     }
+
 
     @FXML
     private void onViewCatalogClicked(ActionEvent event) {

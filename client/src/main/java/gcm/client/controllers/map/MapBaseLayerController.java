@@ -304,7 +304,6 @@ public class MapBaseLayerController {
             }
         }
 
-        System.out.println("drawTiles: zoom=" + z + " tilesDrawn=" + drawn);
     }
 
 

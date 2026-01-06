@@ -51,7 +51,6 @@ public class JsonUtil {
 
         JsonObject obj = new JsonObject();
         obj.addProperty("version", map.getVersion());
-        obj.addProperty("price", map.getPrice());
         obj.addProperty("name", map.getName());
         obj.addProperty("description", map.getDescription());
         obj.addProperty("path", map.getPath());
@@ -68,7 +67,6 @@ public class JsonUtil {
         JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
 
         int version = obj.get("version").getAsInt();
-        double price = obj.get("price").getAsDouble();
         String name = obj.get("name").getAsString();
         String description = obj.has("description") && !obj.get("description").isJsonNull()
                 ? obj.get("description").getAsString()
@@ -88,8 +86,15 @@ public class JsonUtil {
         ArrayList<Poi> pois = jsonToPoiList(poiJson);
         ArrayList<Route> routes = jsonToRouteList(routeJson);
 
-        // 🔴 ADAPT these lines to your MapSheet constructor/setters
-        MapSheet map = new MapSheet(version, price, name, description, path,routes,pois);
+        MapSheet map = new MapSheet(
+                version,
+                name,
+                description,
+                path,
+                routes,
+                pois
+        );
+
 
         return map;
     }
