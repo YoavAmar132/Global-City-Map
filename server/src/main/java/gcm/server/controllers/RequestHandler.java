@@ -344,7 +344,7 @@ public class RequestHandler {
         System.out.println("registration request received");
         // 1. Validate and cast payload
         Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof LoginPayload payload)) {
+        if (!(rawPayload instanceof RegisterPayload payload)) {
             return GcmResponse.error("Invalid payload for register request");
         }
 
