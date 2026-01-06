@@ -26,4 +26,9 @@ public class CatalogService {
     public List<MapCatalogItem> loadMapsForCity(int cityId) throws SQLException {
         return catalogRepo.loadMapsForCity(cityId);
     }
+
+    public void newLogCityView(int cityId, int userId) throws SQLException {
+        catalogRepo.logCityView(cityId, userId);
+        return;
+    }
 }

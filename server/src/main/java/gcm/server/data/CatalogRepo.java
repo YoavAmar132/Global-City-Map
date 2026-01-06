@@ -102,4 +102,28 @@ public class CatalogRepo {
 
         return result;
     }
+
+    /**
+     * Logs a user view for a specific city.
+     * If the user is a Guest, userId should be 0.
+     */
+    public void logCityView(int cityId, int userId) {
+
+        String sql = "INSERT INTO ViewLogs (userID, CityID, viewDate) VALUES (?, ?, NOW())";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, cityId);
+
+            stmt.executeUpdate();
+            System.out.println("Logged view for CityID: " + cityId + ", UserID: " + userId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
