@@ -1,10 +1,12 @@
 package gcm.server.service;
 
 import common.model.CityCatalogItem;
+import common.model.CityReportData;
 import common.model.MapCatalogItem;
 import gcm.server.data.CatalogRepo;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 public class CatalogService {
