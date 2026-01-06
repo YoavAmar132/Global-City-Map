@@ -57,6 +57,7 @@ public class ClientApp extends Application {
 
     /** for logout */
     public static void logout() {
+
         currentUser = null;
         navigator.show(WelcomeController.class);
     }

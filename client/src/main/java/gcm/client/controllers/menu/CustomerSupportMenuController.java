@@ -1,5 +1,6 @@
 package gcm.client.controllers.menu;
 
+import gcm.client.controllers.WelcomeController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -14,10 +15,13 @@ public class CustomerSupportMenuController {
         // for now: handle all responses here (only LOGIN exists)
         client.setResponseHandler(this::handleResponse);
     }
-    private void handleResponse(GcmResponse response) {}
+    private void handleResponse(GcmResponse response) {
+        ClientApp.getNavigator().show(WelcomeController.class);
+    }
+
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
+        client.sendRequest(request);
     }
 
     public void onSupportButton(ActionEvent actionEvent) {

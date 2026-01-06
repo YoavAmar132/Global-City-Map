@@ -114,6 +114,7 @@ public class BuyMapCatalogController {
                         statusLabel.setText("No cities available.");
                     }
                 }
+
             }
         });
     }
@@ -127,7 +128,7 @@ public class BuyMapCatalogController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        Platform.exit();
+        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
+        client.sendRequest(request);
     }
 }

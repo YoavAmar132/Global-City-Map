@@ -1,5 +1,6 @@
 package gcm.client.controllers.menu;
 import common.model.User;
+import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.catalog.ContentCatalogController;
 import gcm.client.controllers.map.*;
 import gcm.client.network.GcmClient ;
@@ -18,11 +19,13 @@ public class ContentWorkerMenuController {
         // for now: handle all responses here (only LOGIN exists)
         client.setResponseHandler(this::handleResponse);
     }
-    private void handleResponse(GcmResponse response) {}
+    private void handleResponse(GcmResponse response) {
+        ClientApp.getNavigator().show(WelcomeController.class);
+    }
     @FXML
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
+        client.sendRequest(request);
     }
     @FXML
     public void onViewCatalogClicked(ActionEvent actionEvent) {

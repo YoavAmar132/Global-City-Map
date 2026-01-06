@@ -113,6 +113,7 @@ public class MapOverlayLayerController {
             if (xy != null && xy.length >= 2) {
                 view.setLayoutX(xy[0]);
                 view.setLayoutY(xy[1]);
+                System.out.println("added poi"+ poi.getName());
             }
         }
     }
@@ -138,7 +139,8 @@ public class MapOverlayLayerController {
     }
 
     public void rerender() {
-        if (mapper == null || zoomSupplier == null) return;
+        if (mapper == null || zoomSupplier == null) {
+          ;return;}
         int z = zoomSupplier.getAsInt();
 
         for (PoiView view : poiViews.values()) {
@@ -149,7 +151,7 @@ public class MapOverlayLayerController {
             double wx = p.getWorldX(z);
             double wy = p.getWorldY(z);
             double[] xy = mapper.mapLonLatToView(wx, wy);
-
+            System.out.println("drawn succcesfuly");
             view.setLayoutX(xy[0]);
             view.setLayoutY(xy[1]);
         }

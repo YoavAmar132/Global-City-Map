@@ -2,6 +2,7 @@ package gcm.server.controllers;
 
 import common.messages.*;
 import common.model.*;
+import gcm.server.network.GcmServer;
 import gcm.server.service.AuthService;
 import gcm.server.service.CityService;
 import gcm.server.service.MapService;
@@ -10,6 +11,7 @@ import common.messages.CityMapsRequestPayload;
 
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class RequestHandler {
@@ -18,12 +20,13 @@ public class RequestHandler {
     private final MapService mapService;
     private final CityService cityService;
     private final CatalogService catalogService;
-
+private final ArrayList<User> online_users;
     public RequestHandler(AuthService authService, MapService mapservice, CityService cityService, CatalogService catalogService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
+        this.online_users=new ArrayList<>();
     }
 
     /**
@@ -34,6 +37,30 @@ public class RequestHandler {
 
         RequestType type = request.getType();
 
+        if (type == RequestType.LIST_POIS) {
+            try {
+                return handlePoi(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (type == RequestType.LOGOUT) {
+            if(request.getPayload()!=null) {
+                User user = (User) request.getPayload();
+                online_users.removeIf(u ->
+                        u.getUsername().equals(user.getUsername())
+                );
+            }
+         return GcmResponse.ok(null);
+        }
+
+        if (type == RequestType.LIST_ROUTES) {
+            try {
+                return handleRoute(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
         if (type == RequestType.LOGIN) {
             try {
                 return handleLogin(request);
@@ -143,7 +170,11 @@ public class RequestHandler {
 
         if (type == RequestType.UPDATE_CITY_PRICE) {
             try {
-                return handleUpdateCityPrice(request);
+                GcmResponse r =handleUpdateCityPrice(request);
+                if(r.isSuccess()){
+                    r.setRefresh(1);
+                }
+                return r;
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -202,6 +233,16 @@ public class RequestHandler {
             if (user == null) {
                 return GcmResponse.error(authService.getErrormsg());   // we have error function so use it :D
             }
+            for(User u:online_users)
+            {
+                System.out.println(u.getUsername());
+                if(u.getUsername().equals(user.getUsername()))
+                {
+                    return GcmResponse.error("user is already logged in");
+                }
+
+            }
+            online_users.add(user);
             // 4. Success → return the User directly
             return GcmResponse.ok(user);
 
@@ -212,7 +253,14 @@ public class RequestHandler {
     }
 
 
-
+    private GcmResponse handlePoi(GcmRequest request) throws SQLException {
+        System.out.println("get all poi request");
+        return GcmResponse.ok(mapService.getpois());
+    }
+    private GcmResponse handleRoute(GcmRequest request) throws SQLException {
+        System.out.println("get all route request");
+        return GcmResponse.ok(mapService.getroutes());
+    }
 
 
     private GcmResponse handleGetAllCityPrices(GcmRequest request) throws SQLException {
