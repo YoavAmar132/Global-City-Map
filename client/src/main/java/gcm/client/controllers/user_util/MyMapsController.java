@@ -2,6 +2,7 @@ package gcm.client.controllers.user_util;
 
 import common.messages.*;
 import common.model.MapSheet;
+import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.map.UserMapViewerController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
@@ -152,7 +153,7 @@ public class MyMapsController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        Platform.exit();
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

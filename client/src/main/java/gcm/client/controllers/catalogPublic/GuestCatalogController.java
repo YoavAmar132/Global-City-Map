@@ -4,9 +4,11 @@ import common.messages.*;
 import common.model.CityCatalogItem;
 import common.model.MapCatalogItem;
 import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import gcm.client.utill.SceneNavigator;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -52,6 +54,10 @@ public class GuestCatalogController {
         }
 
         Object data = response.getData();
+        if(data instanceof Reload)
+        {
+            Platform.runLater(() -> ClientApp.getNavigator().show(GuestCatalogController.class));
+        }
         if (!(data instanceof List<?> list) || list.isEmpty()) {
             return;
         }

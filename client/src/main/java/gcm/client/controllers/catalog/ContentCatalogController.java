@@ -123,8 +123,7 @@ public class ContentCatalogController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

@@ -66,6 +66,17 @@ public class MapRepo {
         return cities;
     }
 
+    public List<Poi> getAllPoi() {
+
+          return poirepo.loadAllPois(0,10000);
+
+        }
+    public List<Route> getAllRoute() {
+
+        return routeRepo.loadAllRoutes(0,10000);
+
+    }
+
     // COPY THIS ENTIRE METHOD INTO MapRepo.java
 
     public List<MapSheet> getPurchasedMapsByUserId(int userId) {

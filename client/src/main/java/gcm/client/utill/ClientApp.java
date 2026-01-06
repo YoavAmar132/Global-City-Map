@@ -1,5 +1,8 @@
 package gcm.client.utill;
 
+import common.messages.GcmRequest;
+import common.messages.GcmResponse;
+import common.messages.RequestType;
 import gcm.client.controllers.WelcomeController;
 import gcm.client.network.GcmClient;
 import javafx.application.Application;
@@ -13,6 +16,8 @@ public class ClientApp extends Application {
     private static SceneNavigator navigator;
     private static GcmClient gcmClient;
     private static Stage primaryStage;
+
+    private static boolean shuttingDown = false;
 
     private static User currentUser;
 
@@ -35,8 +40,30 @@ public class ClientApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         primaryStage = stage;
+
+        primaryStage.setOnCloseRequest(event -> {
+            shuttingDown = true;
+
+            if (gcmClient != null) {
+                try {
+                    if (currentUser != null) {
+                        GcmRequest request =
+                                new GcmRequest(RequestType.LOGOUT, currentUser);
+                        gcmClient.sendRequest(request);
+                    }
+
+                    //close the socket AFTER sending LOGOUT
+                    gcmClient.closeConnection();
+
+                } catch (Exception e) {
+                    System.err.println("Error during shutdown: " + e.getMessage());
+                }
+            }
+        });
+
         showConnectionWindow();
     }
+
 
     private void showConnectionWindow() throws Exception {
         FXMLLoader loader = new FXMLLoader(
@@ -57,9 +84,21 @@ public class ClientApp extends Application {
 
     /** for logout */
     public static void logout() {
+        if (gcmClient != null && currentUser != null) {
+            GcmRequest request =
+                    new GcmRequest(RequestType.LOGOUT, currentUser);
+            gcmClient.sendRequest(request);
+        }
+
         currentUser = null;
-        navigator.show(WelcomeController.class);
+
+        if (!shuttingDown && navigator != null) {
+            navigator.show(WelcomeController.class);
+        }
     }
+
+
+
 
     public static SceneNavigator getNavigator() {
         return navigator;

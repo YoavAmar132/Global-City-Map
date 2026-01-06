@@ -114,12 +114,15 @@ public class BuyMapCatalogController {
                         statusLabel.setText("No cities available.");
                     }
                 }
+
             }
         });
     }
 
     public void onBackClicked(ActionEvent actionEvent) {
+
         ClientApp.getNavigator().show(UserMenuController.class);
+
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
@@ -127,7 +130,6 @@ public class BuyMapCatalogController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        Platform.exit();
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
 }

@@ -8,10 +8,12 @@ import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Side;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 
@@ -31,7 +33,11 @@ public class MapViewerController {
     private List<Route> routes = new ArrayList<>();
     private boolean buildingRouteWaitingFirstPoint = false;
     private int routeId = 0;
-    private String path="C:/Users/Ayoav/IdeaProjects/Global_City_Map/Global_City_Map/client/src/main/resources/gcm/client/map/Akko";
+    private String path;
+    private MapSheet map;
+    private boolean initialized = false;
+    private boolean hasVals = false;
+    private boolean showDone = false;
 
     public int getPoid()
     {
@@ -49,6 +55,10 @@ public class MapViewerController {
     {
         this.routeId=id;
     }
+    public void setMap(MapSheet map)
+    {
+        this.map=map;
+    }
     // These are injected because of fx:id="baseLayer" / "overlayLayer" on the fx:include tags
     @FXML
     private MapBaseLayerController baseLayerController;
@@ -58,15 +68,7 @@ public class MapViewerController {
     private GcmClient client;
     @FXML
     private void initialize() {
-        client = ClientApp.getClient();
-        client.setResponseHandler(this::handleResponse);
-        IndexPayload index=new IndexPayload(0);
-        RouteIndexPayload index1= new RouteIndexPayload(0);
-        System.out.println("should send requests");
-        GcmRequest request = new GcmRequest(RequestType.GET_POI_INDEX, index);
-        client.sendRequest(request);
-        request = new GcmRequest(RequestType.GET_ROUTE_INDEX, index1);
-        client.sendRequest(request);
+        baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
 
@@ -97,20 +99,71 @@ public class MapViewerController {
         overlayLayerController.setOnEmptyRightClick(this::finishRouteMode);
 
         overlayLayerController.setOnPoiSelected((poi, node) -> {
+            if (!pois.contains(poi)) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Add");
+                alert.setContentText("selected poi");
+                alert.showAndWait();
+                pois.add(poi);
+            }else if(pois.contains(poi))
+            {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("remove");
+                alert.setContentText("deselected poi");
+                alert.showAndWait();
+                pois.remove(poi);
+            }
             showPoiPopover(poi, node);
         });
 
-
-
+        initialized = true;
         baseLayerController.recenterNow();
-
+        stackPane.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                tryShowMap();
+            }
+        });
+        if (stackPane.getScene() != null) {
+            tryShowMap();
+        }
 
     }
-    public void setVals(String path)
-    {
-        this.path=path;
+
+public void setVals(MapSheet map)
+{
+    this.path=map.getPath();
+    setMap(map);
+    hasVals = true;
+    baseLayerController.setTileRoot(path);
+    tryShowMap();
+
+
+
+}
+private void tryShowMap() {
+    if (showDone) return;
+    if (!initialized) return;
+    if (!hasVals) return;
+    if (map == null) return;
+
+    Scene scene = stackPane.getScene();
+    if (scene == null) return; // still not attached -> too early
+
+    // Defer to next FX pulse (prevents “too early” crashes)
+    Platform.runLater(() -> {
+        if (showDone) return;
+        if (stackPane.getScene() == null) return;
+
         baseLayerController.setTileRoot(path);
-    }
+        System.out.println("should show map");
+        showMap(map);
+        overlayLayerController.rerender();
+        showDone = true;
+
+        System.out.println("stackPane size=" + stackPane.getWidth() + "x" + stackPane.getHeight());
+
+    });
+}
 
     /* ===========================
        Toolbar zoom button handlers
@@ -143,24 +196,7 @@ public class MapViewerController {
      * Assumes POI coordinates are in the same "world" coordinate system
      * that the base layer uses (e.g. tile pixels at current zoom).
      */
-    public void showCityMap(List<Poi> pois, List<Route> routes) {
-        overlayLayerController.clearAll();
 
-        if (pois != null) {
-            for (Poi p : pois) {
-                overlayLayerController.addPoi(p);
-            }
-        }
-
-        if (routes != null) {
-            for (Route r : routes) {
-                  overlayLayerController.addRoute(r);
-            }
-        }
-
-        // Once all objects are added, ensure positions are correct
-        overlayLayerController.rerender();
-    }
 
     @FXML
     private void onAddPoiMode() {
@@ -372,7 +408,7 @@ public class MapViewerController {
 
         MapSheet map = new MapSheet(version, price, name, description, path,
                 (ArrayList) routes, (ArrayList) pois);
-
+ client=ClientApp.getClient();
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
         client.sendRequest(request);
     }
@@ -482,7 +518,39 @@ public class MapViewerController {
         return askNonNegativeDouble("New Map Price", "Enter Map Price", "Price:");
     }
 
+    public void showMap(MapSheet map) {
+        overlayLayerController.clearAll();
+        List<Poi> pois=map.getPois();
+        List<Route> routes=map.getRoutes();
+        if (pois != null) {
+            for (Poi p : pois) {
+                System.out.println(p.getName()+" x:"+p.getWorldX(13));
+                overlayLayerController.addPoi(p);
+            }
+        }
 
+        if (routes != null) {
+            for (Route r : routes) {
+                System.out.println("route id :"+r.getBasePoints());
+                List<double[]> pts = r.getBasePoints();
+
+                if (pts != null && !pts.isEmpty() && pts.get(0).length >= 2) {
+                    double firstX = pts.get(0)[0];
+                    double firstY = pts.get(0)[1];
+
+                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory());
+                    //  overlayLayerController.addPoi(head);
+                }
+                overlayLayerController.addRoute(r);
+
+                overlayLayerController.rerender();
+            }
+        }
+
+        // Once all objects are added, ensure positions are correct
+        overlayLayerController.rerender();
+        System.out.println("rerenderddd");
+    }
 
 
     public void handleClose(ActionEvent actionEvent) {
@@ -499,13 +567,15 @@ public class MapViewerController {
                 break;
 
             case "CustomerSupport":
-                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
+                ClientApp.getNavigator().show(BaseMapSelectorController.class);
                 break;
 
 
             case "CompanyManager":
-                ClientApp.getNavigator().show(ManagerMenuController.class);
+                ClientApp.getNavigator().show(BaseMapSelectorController.class);
                 break;
         }
     }
+
+
 }

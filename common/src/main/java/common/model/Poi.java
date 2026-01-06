@@ -40,7 +40,15 @@ public class Poi implements Serializable {
 
     public double getWorldY(int zoomLevel) {
         double scale = Math.pow(2, BASE_ZOOM - zoomLevel);
-        return baseWorldY / scale;
+        return baseWorldY/ scale;
+    }
+    // Convert BASE_ZOOM world-pixels -> requested zoom world-pixels
+    public double getNWorldX() {
+        return baseWorldX ;
+    }
+
+    public double getNWorldY() {
+        return baseWorldY;
     }
 
     // Optional: if you ever need raw base coords
