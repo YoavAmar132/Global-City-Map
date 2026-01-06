@@ -13,11 +13,6 @@ public class ManagerMenuController {
     public void initialize() {
         client = ClientApp.getClient();
 
-        // for now: handle all responses here (only LOGIN exists)
-        client.setResponseHandler(this::handleResponse);
-    }
-    private void handleResponse(GcmResponse response) {
-        ClientApp.getNavigator().show(WelcomeController.class);
     }
 
     @FXML
@@ -36,7 +31,7 @@ public class ManagerMenuController {
     }
     @FXML
     private void handleClose() {
-        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
-        client.sendRequest(request);
+        ClientApp.logout();
     }
+
 }

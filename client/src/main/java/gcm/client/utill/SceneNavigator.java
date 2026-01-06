@@ -8,7 +8,6 @@ import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.controllers.menu.CustomerSupportMenuController;
 import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.controllers.menu.UserMenuController;
-import gcm.client.controllers.menu.CatalogController;
 
 import gcm.client.controllers.user_util.BuyMapScreenController;
 import gcm.client.controllers.user_util.MyMapsController;
@@ -45,7 +44,6 @@ public class SceneNavigator {
         routes.put(ContentCatalogController.class, "/gcm/client/catalog/ContentCatalogScreen.fxml");
         routes.put(MapLoaderController.class, "/gcm/client/map/MapLoaderScreen.fxml");
         routes.put(BaseMapSelectorController.class, "/gcm/client/map/BaseMapSelectorScreen.fxml");
-        routes.put(CatalogController.class, "/gcm/client/menu/CatalogScreen.fxml");
         routes.put(gcm.client.controllers.catalogPublic.GuestCatalogController.class,
                 "/gcm/client/catalogPublic/GuestCatalogScreen.fxml");
         routes.put(gcm.client.controllers.catalogPublic.GuestCityMapsController.class,

@@ -20,13 +20,15 @@ public class RequestHandler {
     private final MapService mapService;
     private final CityService cityService;
     private final CatalogService catalogService;
-private final ArrayList<User> online_users;
-    public RequestHandler(AuthService authService, MapService mapservice, CityService cityService, CatalogService catalogService) {
+    private static final List<User> online_users = new ArrayList<>();
+    private User loggedInUser = null;
+
+    public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
+                          CatalogService catalogService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
-        this.online_users=new ArrayList<>();
     }
 
     /**
@@ -51,8 +53,9 @@ private final ArrayList<User> online_users;
                         u.getUsername().equals(user.getUsername())
                 );
             }
-         return GcmResponse.ok(null);
+            return GcmResponse.ok(null);
         }
+
 
         if (type == RequestType.LIST_ROUTES) {
             try {
@@ -243,13 +246,19 @@ private final ArrayList<User> online_users;
 
             }
             online_users.add(user);
-            // 4. Success → return the User directly
             return GcmResponse.ok(user);
+
 
         } catch (SQLException e) {
             e.printStackTrace(); // server log don't really care :D
             return GcmResponse.error("Server error during registration");
         }
+    }
+
+    public static synchronized void removeOnlineUser(User user) {
+        online_users.removeIf(u ->
+                u.getUsername().equals(user.getUsername())
+        );
     }
 
 
@@ -539,6 +548,18 @@ private final ArrayList<User> online_users;
         } catch (Exception e) {
             e.printStackTrace();
             return GcmResponse.error("Server Error fetching user maps: " + e.getMessage());
+        }
+    }
+
+    public void cleanupOnDisconnect() {
+        if (loggedInUser != null) {
+            online_users.removeIf(u ->
+                    u.getUsername().equals(loggedInUser.getUsername())
+            );
+            System.out.println(
+                    "User removed due to disconnect: " + loggedInUser.getUsername()
+            );
+            loggedInUser = null;
         }
     }
 

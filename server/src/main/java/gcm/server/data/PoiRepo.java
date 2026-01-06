@@ -22,9 +22,10 @@ public class PoiRepo {
     }
     public boolean insertPoi(Poi poi) throws SQLException {
         String sql = """
-        INSERT INTO pois (name, description, category, x, y)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO pois (name, description, category, x, y, is_accessible)
+        VALUES (?, ?, ?, ?, ?, ?)
         """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -34,6 +35,8 @@ public class PoiRepo {
             stmt.setString(3, poi.getCategory().name());
             stmt.setDouble(4, poi.getNWorldX());
             stmt.setDouble(5, poi.getNWorldY());
+            stmt.setBoolean(6, poi.isAccessible());
+
 
             int rows = stmt.executeUpdate();
             return rows > 0;
@@ -61,11 +64,12 @@ public class PoiRepo {
         ArrayList<Poi> pois = new ArrayList<>();
 
         String sql = """
-        SELECT id, name, description, category, x, y
+        SELECT id, name, description, category, x, y, is_accessible
         FROM pois
         WHERE id BETWEEN ? AND ?
         ORDER BY id
         """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -82,8 +86,10 @@ public class PoiRepo {
                             rs.getString("description"),
                             rs.getDouble("x"),
                             rs.getDouble("y"),
-                            category
+                            category,
+                            rs.getBoolean("is_accessible")
                     );
+
 
 
                     pois.add(poi);
