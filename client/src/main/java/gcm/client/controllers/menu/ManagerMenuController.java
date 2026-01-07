@@ -1,6 +1,7 @@
 package gcm.client.controllers.menu;
 
 import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.manager_util.ReportsInputController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -13,11 +14,6 @@ public class ManagerMenuController {
     public void initialize() {
         client = ClientApp.getClient();
 
-        // for now: handle all responses here (only LOGIN exists)
-        client.setResponseHandler(this::handleResponse);
-    }
-    private void handleResponse(GcmResponse response) {
-        ClientApp.getNavigator().show(WelcomeController.class);
     }
 
     @FXML
@@ -35,8 +31,12 @@ public class ManagerMenuController {
         ClientApp.getNavigator().show(CustomerSupportMenuController.class);
     }
     @FXML
-    private void handleClose() {
-        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
-        client.sendRequest(request);
+    public void onReportsButton(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(ReportsInputController.class);
     }
+    @FXML
+    private void handleClose() {
+        ClientApp.logout();
+    }
+
 }

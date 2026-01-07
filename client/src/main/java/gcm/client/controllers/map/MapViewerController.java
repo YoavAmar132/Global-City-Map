@@ -235,7 +235,18 @@ private void tryShowMap() {
                 POI_Category category = askPoiCategory();
                 if (category == null) return;
 
-                Poi poi = new Poi(poid++, name, description, baseWorldX, baseWorldY, category);
+                boolean isAccessible = askPoiAccessibility();
+
+                Poi poi = new Poi(
+                        poid++,
+                        name,
+                        description,
+                        baseWorldX,
+                        baseWorldY,
+                        category,
+                        isAccessible
+                );
+
                 overlayLayerController.addPoi(poi);
                 pois.add(poi);
                 System.out.println("Created POI " + name + " at " + worldX + ", " + worldY);
@@ -305,7 +316,7 @@ private void tryShowMap() {
 
                     // Add first point
                     buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER);
+                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER,false);
                     overlayLayerController.addPoi(start);
 
                     // Add to overlay immediately so user sees it grow
@@ -397,8 +408,6 @@ private void tryShowMap() {
         int version = askVersionNum();
         if (version < 0) { submitInProgress = false; return; }
 
-        double price = askPrice();
-        if (price < 0) { submitInProgress = false; return; }
 
         String name = askMapName();
         if (name == null) { submitInProgress = false; return; }
@@ -406,7 +415,7 @@ private void tryShowMap() {
         String description = askMapDescription();
         if (description == null) { submitInProgress = false; return; }
 
-        MapSheet map = new MapSheet(version, price, name, description, path,
+        MapSheet map = new MapSheet(version, name, description, path,
                 (ArrayList) routes, (ArrayList) pois);
  client=ClientApp.getClient();
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
@@ -485,6 +494,22 @@ private void tryShowMap() {
         }
     }
 
+    private boolean askPoiAccessibility() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("POI Accessibility");
+        alert.setHeaderText("Accessibility");
+        alert.setContentText("Is this POI accessible for people with special needs?");
+
+        ButtonType yes = new ButtonType("Yes");
+        ButtonType no = new ButtonType("No", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(yes, no);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == yes;
+    }
+
+
     String askPoiName() {
         return askNonEmptyString("New POI", "Enter POI name", "Name:");
     }
@@ -514,10 +539,6 @@ private void tryShowMap() {
     }
 
 
-    double askPrice() {
-        return askNonNegativeDouble("New Map Price", "Enter Map Price", "Price:");
-    }
-
     public void showMap(MapSheet map) {
         overlayLayerController.clearAll();
         List<Poi> pois=map.getPois();
@@ -538,7 +559,7 @@ private void tryShowMap() {
                     double firstX = pts.get(0)[0];
                     double firstY = pts.get(0)[1];
 
-                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory());
+                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false);
                     //  overlayLayerController.addPoi(head);
                 }
                 overlayLayerController.addRoute(r);

@@ -122,10 +122,8 @@ public class UserMapViewerController {
         hasVals = true;
         baseLayerController.setTileRoot(path);
         tryShowMap();
-
-
-
     }
+
     private void tryShowMap() {
         if (showDone) return;
         if (!initialized) return;
@@ -198,7 +196,7 @@ public class UserMapViewerController {
                     double firstX = pts.get(0)[0];
                     double firstY = pts.get(0)[1];
 
-                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory());
+                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false);
                   //  overlayLayerController.addPoi(head);
                 }
                  overlayLayerController.addRoute(r);

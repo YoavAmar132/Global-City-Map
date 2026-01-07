@@ -221,9 +221,10 @@ public class MapRepo {
     public boolean insertPendingMap(MapSheet map) {
         String sql = """
             INSERT INTO pending_maps
-            (version, price, name, description, path, poi_array, route_array)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (version, name, description, path, poi_array, route_array)
+            VALUES (?, ?, ?, ?, ?, ?)
         """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -231,12 +232,12 @@ public class MapRepo {
             routeRepo.insertAllRoutes(map.getRoutes());
 
             stmt.setInt(1, map.getVersion());
-            stmt.setDouble(2, map.getPrice());
-            stmt.setString(3, map.getName());
-            stmt.setString(4, map.getDescription());
-            stmt.setString(5, map.getPath());
-            stmt.setString(6, JsonUtil.poiListToJson(map.getPois()));
-            stmt.setString(7, JsonUtil.routeListToJson(map.getRoutes()));
+            stmt.setString(2, map.getName());
+            stmt.setString(3, map.getDescription());
+            stmt.setString(4, map.getPath());
+            stmt.setString(5, JsonUtil.poiListToJson(map.getPois()));
+            stmt.setString(6, JsonUtil.routeListToJson(map.getRoutes()));
+
 
             int affected = stmt.executeUpdate();
             return affected == 1;
@@ -249,10 +250,11 @@ public class MapRepo {
 
     public MapSheet loadPendingMap(int version, String name) {
         String sql = """
-            SELECT version, price, name, description, path, poi_array, route_array
+            SELECT version, name, description, path, poi_array, route_array
             FROM pending_maps
             WHERE version = ? AND name = ?
-        """;
+            """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -268,14 +270,15 @@ public class MapRepo {
                     ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
                     ArrayList<Route> routes = JsonUtil.jsonToRouteList(routeJson);
 
-                    return new MapSheet(
+                    new MapSheet(
                             rs.getInt("version"),
-                            rs.getDouble("price"),
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getString("path"),
-                            routes, pois
+                            routes,
+                            pois
                     );
+
                 }
             }
 
@@ -308,8 +311,11 @@ public class MapRepo {
 
         if (map == null) return false;
 
-        // --- FIX IS HERE: Added 'version' to the SQL ---
-        String sql = "INSERT INTO Maps (price, cityID, mapName, map, version) VALUES (?, ?, ?, ?, ?)";
+        String sql = """
+            INSERT INTO Maps (cityID, mapName, map, version)
+            VALUES (?, ?, ?, ?)
+        """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -318,12 +324,11 @@ public class MapRepo {
             String mapName = map.getName();
             String mapJson = JsonUtil.mapSheetToJsonWithEmbeddedArrays(map);
 
-            stmt.setDouble(1, map.getPrice());
-            stmt.setInt(2, cityId);
-            stmt.setString(3, mapName);
-            stmt.setString(4, mapJson);
-            // Set the 5th parameter: VERSION
-            stmt.setInt(5, map.getVersion());
+            stmt.setInt(1, cityId);
+            stmt.setString(2, mapName);
+            stmt.setString(3, mapJson);
+            stmt.setInt(4, map.getVersion());
+
 
             return stmt.executeUpdate() > 0;
 
@@ -335,7 +340,12 @@ public class MapRepo {
 
     public List<MapSheet> loadAllPendingMaps() {
         List<MapSheet> maps = new ArrayList<>();
-        String sql = "SELECT version, price, name, description, path, poi_array, route_array FROM pending_maps ORDER BY name, version";
+        String sql = """
+            SELECT version, name, description, path, poi_array, route_array
+            FROM pending_maps
+            ORDER BY name, version
+        """;
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -349,12 +359,13 @@ public class MapRepo {
 
                 MapSheet map = new MapSheet(
                         rs.getInt("version"),
-                        rs.getDouble("price"),
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getString("path"),
-                        routes, pois
+                        routes,
+                        pois
                 );
+
                 maps.add(map);
             }
         } catch (SQLException e) {

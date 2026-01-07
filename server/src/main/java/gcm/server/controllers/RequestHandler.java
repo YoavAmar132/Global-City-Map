@@ -3,10 +3,7 @@ package gcm.server.controllers;
 import common.messages.*;
 import common.model.*;
 import gcm.server.network.GcmServer;
-import gcm.server.service.AuthService;
-import gcm.server.service.CityService;
-import gcm.server.service.MapService;
-import gcm.server.service.CatalogService;
+import gcm.server.service.*;
 import common.messages.CityMapsRequestPayload;
 
 
@@ -20,13 +17,17 @@ public class RequestHandler {
     private final MapService mapService;
     private final CityService cityService;
     private final CatalogService catalogService;
-private final ArrayList<User> online_users;
-    public RequestHandler(AuthService authService, MapService mapservice, CityService cityService, CatalogService catalogService) {
+    private final StatsService statsService;
+    private static final List<User> online_users = new ArrayList<>();
+    private User loggedInUser = null;
+
+    public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
+                          CatalogService catalogService, StatsService statsService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
-        this.online_users=new ArrayList<>();
+        this.statsService = statsService;
     }
 
     /**
@@ -51,8 +52,9 @@ private final ArrayList<User> online_users;
                         u.getUsername().equals(user.getUsername())
                 );
             }
-         return GcmResponse.ok(null);
+            return GcmResponse.ok(null);
         }
+
 
         if (type == RequestType.LIST_ROUTES) {
             try {
@@ -205,6 +207,15 @@ private final ArrayList<User> online_users;
             }
         }
 
+        if (type == RequestType.GET_REPORT) {
+            try {
+                return handleGetReport(request);
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -243,13 +254,19 @@ private final ArrayList<User> online_users;
 
             }
             online_users.add(user);
-            // 4. Success → return the User directly
             return GcmResponse.ok(user);
+
 
         } catch (SQLException e) {
             e.printStackTrace(); // server log don't really care :D
             return GcmResponse.error("Server error during registration");
         }
+    }
+
+    public static synchronized void removeOnlineUser(User user) {
+        online_users.removeIf(u ->
+                u.getUsername().equals(user.getUsername())
+        );
     }
 
 
@@ -540,6 +557,42 @@ private final ArrayList<User> online_users;
             e.printStackTrace();
             return GcmResponse.error("Server Error fetching user maps: " + e.getMessage());
         }
+    }
+
+    public void cleanupOnDisconnect() {
+        if (loggedInUser != null) {
+            online_users.removeIf(u ->
+                    u.getUsername().equals(loggedInUser.getUsername())
+            );
+            System.out.println(
+                    "User removed due to disconnect: " + loggedInUser.getUsername()
+            );
+            loggedInUser = null;
+        }
+    }
+
+    private GcmResponse handleGetReport(GcmRequest request) throws SQLException {
+        System.out.println("GET_REPORT request received");
+
+        Object rawPayload = request.getPayload();
+
+        // 1. Validate Payload
+        if (!(rawPayload instanceof ReportPayload payload)) {
+            return GcmResponse.error("Invalid payload for reports");
+        }
+
+        // 2. Delegate to StatsService (which calls StatsRepo)
+        // Make sure you use 'statsService', not 'catalogService'
+        List<CityReportData> reports =
+                statsService.generateReport(payload.getFromDate(), payload.getToDate(), payload.getCityId());
+
+        // 3. Handle Errors
+        if (reports == null) {
+            return GcmResponse.error("Failed to generate report");
+        }
+
+        // 4. Return Success
+        return GcmResponse.ok(reports);
     }
 
 

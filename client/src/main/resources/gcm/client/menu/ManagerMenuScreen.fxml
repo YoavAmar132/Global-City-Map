@@ -13,37 +13,32 @@
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="gcm.client.controllers.menu.ManagerMenuController"
-            prefHeight="400.0" prefWidth="600.0"
+            prefHeight="550.0" prefWidth="600.0"
             style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
 
-    <!-- Close (X) button -->
     <Button text="✕"
-            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;"
+            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18; -fx-cursor: hand;"
             onAction="#handleClose"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
 
-    <!-- Center card -->
-    <StackPane prefWidth="400.0" prefHeight="260.0"
-               layoutX="100.0" layoutY="70.0"
+    <StackPane prefWidth="400.0" prefHeight="420.0"
+               layoutX="100.0" layoutY="65.0"
                style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
         <effect>
             <DropShadow radius="10.0" color="#00000055"/>
         </effect>
 
         <VBox alignment="CENTER" spacing="15.0" prefWidth="300.0">
-            <!-- Headline -->
             <Text text="Global City Map" fill="white">
                 <font>
                     <Font name="Segoe UI Semibold" size="30.0" />
                 </font>
             </Text>
 
-            <!-- Subtitle -->
             <Label text="Manager Menu"
                    textFill="white"
                    style="-fx-font-size: 16;"/>
 
-            <!-- View Catalog button -->
             <Button fx:id="PricingButton" text="Manage Pricing"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
@@ -53,8 +48,7 @@
                            -fx-cursor: hand;"
                     onAction="#onPricingButton"/>
 
-            <!-- Edit a Map button -->
-            <Button fx:id="ManageClientsButton" text="Manage clients"
+            <Button fx:id="ManageClientsButton" text="Manage Clients"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
@@ -63,7 +57,6 @@
                            -fx-cursor: hand;"
                     onAction="#onManageClientsButton"/>
 
-            <!-- Manage report button -->
             <Button fx:id="ContentMenuButton" text="Manage Content"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
@@ -72,8 +65,17 @@
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
                     onAction="#onContentMenuButton"/>
-            <!-- Manage report button -->
-            <Button fx:id="CustomerSupportMenuButton" text="Manage Customer Support"
+
+            <Button fx:id="ReportsButton" text="View Reports"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onReportsButton"/>
+
+            <Button fx:id="CustomerSupportMenuButton" text="Customer Support"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;

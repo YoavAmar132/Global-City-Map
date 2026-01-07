@@ -19,7 +19,7 @@ public class ClientApp extends Application {
 
     private static boolean shuttingDown = false;
 
-    private static User currentUser;
+    private static User currentUser = null;
 
     public static void setCurrentUser(User user) {
         currentUser = user;
@@ -81,6 +81,12 @@ public class ClientApp extends Application {
         primaryStage.setTitle("Global City Map");
         navigator.show(WelcomeController.class);
     }
+
+
+    public static boolean isLoggedIn() {
+        return currentUser != null;
+    }
+
 
     /** for logout */
     public static void logout() {
