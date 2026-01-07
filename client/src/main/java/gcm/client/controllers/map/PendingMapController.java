@@ -3,6 +3,7 @@ package gcm.client.controllers.map;
 import common.messages.*;
 import common.model.City;
 import common.model.MapSheet;
+import gcm.client.controllers.catalogPublic.GuestCatalogController;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -104,6 +105,8 @@ public class PendingMapController {
         ApprovePayload payload = new ApprovePayload(map, chosenCity);
         GcmRequest request = new GcmRequest(RequestType.APPROVE_MAP_VERSION, payload);
         client.sendRequest(request);
+        GuestCatalogController.forcedRefresh();
+
     }
 
     public void openPendingMap(MapSheet map) {

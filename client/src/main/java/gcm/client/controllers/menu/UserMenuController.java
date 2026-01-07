@@ -7,8 +7,10 @@ import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 
 
 public class UserMenuController {
@@ -16,8 +18,19 @@ public class UserMenuController {
 
     public void initialize() {
         client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
     }
-    
+    private void handleResponse(GcmResponse response) {
+        Object data = response.getData();
+        if(data instanceof Reload)
+        {    Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("new map");
+            alert.setContentText("new map just dropped!!!");
+            alert.showAndWait();
+            Platform.runLater(() -> ClientApp.getNavigator().show(GuestCatalogController.class));
+        }
+    }
+
 
     @FXML
     private void handleClose(ActionEvent event) {

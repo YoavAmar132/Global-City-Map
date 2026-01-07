@@ -34,6 +34,7 @@ public class SceneNavigator {
 
         // NOTE: leading "/" and matching src/main/resources structure
         routes.put(LoginController.class, "/gcm/client/Login/LoginScreen.fxml");
+        routes.put(FillFormController.class, "/gcm/client/Login/FillFormScreen.fxml");
         routes.put(WelcomeController.class, "/gcm/client/Login/WelcomeScreen.fxml");
         routes.put(RegistrationController.class, "/gcm/client/Login/RegistrationScreen.fxml");
         routes.put(UserMenuController.class, "/gcm/client/menu/UserMenuScreen.fxml");

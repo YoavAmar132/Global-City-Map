@@ -307,7 +307,6 @@ public class RequestHandler {
         if (!(rawPayload instanceof CityPricingItem item)) {
             return GcmResponse.error("Invalid payload for UPDATE_CITY_PRICE");
         }
-
         boolean success = cityService.updateCityPrice(item);
 
         if (!success) {
@@ -315,6 +314,7 @@ public class RequestHandler {
         }
 
         return GcmResponse.ok(null);
+
     }
 
 
@@ -412,7 +412,7 @@ public class RequestHandler {
         System.out.println("registration request received");
         // 1. Validate and cast payload
         Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof LoginPayload payload)) {
+        if (!(rawPayload instanceof RegisterPayload payload)) {
             return GcmResponse.error("Invalid payload for register request");
         }
 
@@ -421,7 +421,7 @@ public class RequestHandler {
 
         try {
             // 2. Delegate to AuthService to check DB / users list
-            User user = authService.register(username, password);
+            User user = authService.register(payload);
             // 3. Handle failure
             if (user == null) {
                 return GcmResponse.error(authService.getErrormsg());

@@ -56,7 +56,10 @@ public class GuestCatalogController {
 
         Object data = response.getData();
         if(data instanceof Reload)
-        {
+        {    Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("new map");
+            alert.setContentText("new map just dropped!!!");
+            alert.showAndWait();
             Platform.runLater(() -> ClientApp.getNavigator().show(GuestCatalogController.class));
         }
         if (!(data instanceof List<?> list) || list.isEmpty()) {
@@ -134,6 +137,10 @@ public class GuestCatalogController {
     }
 
 
+    public static void forcedRefresh(){
+        ClientApp.getNavigator().show(GuestCatalogController.class);
+
+    }
 
     private void openCity(CityCatalogItem city) {
         int userID = 0;
