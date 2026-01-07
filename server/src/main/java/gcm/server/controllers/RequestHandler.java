@@ -3,10 +3,7 @@ package gcm.server.controllers;
 import common.messages.*;
 import common.model.*;
 import gcm.server.network.GcmServer;
-import gcm.server.service.AuthService;
-import gcm.server.service.CityService;
-import gcm.server.service.MapService;
-import gcm.server.service.CatalogService;
+import gcm.server.service.*;
 import common.messages.CityMapsRequestPayload;
 
 
@@ -20,15 +17,17 @@ public class RequestHandler {
     private final MapService mapService;
     private final CityService cityService;
     private final CatalogService catalogService;
+    private final StatsService statsService;
     private static final List<User> online_users = new ArrayList<>();
     private User loggedInUser = null;
 
     public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
-                          CatalogService catalogService) {
+                          CatalogService catalogService, StatsService statsService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
+        this.statsService = statsService;
     }
 
     /**
