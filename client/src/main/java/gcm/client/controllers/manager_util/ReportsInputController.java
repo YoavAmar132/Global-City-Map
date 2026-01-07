@@ -115,7 +115,7 @@ public class ReportsInputController {
         // Create a dummy "All Cities" item with ID 0
         // Adjust the constructor arguments (0, 0.0, etc) based on your CityCatalogItem constructor
         CityCatalogItem allCities = new CityCatalogItem(
-                0, "All Cities", 0, 0, 0, 0
+                0, "All Cities", 0, 0, 0
         );
 
         cityCombo.getItems().add(allCities);

@@ -1,6 +1,7 @@
 package gcm.client.controllers.menu;
 
 import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.manager_util.ReportsInputController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -28,6 +29,10 @@ public class ManagerMenuController {
     @FXML
     public void onCustomerSupportMenuButton(ActionEvent actionEvent) {
         ClientApp.getNavigator().show(CustomerSupportMenuController.class);
+    }
+    @FXML
+    public void onReportsButton(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(ReportsInputController.class);
     }
     @FXML
     private void handleClose() {

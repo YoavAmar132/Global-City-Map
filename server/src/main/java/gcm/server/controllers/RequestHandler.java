@@ -208,6 +208,15 @@ public class RequestHandler {
             }
         }
 
+        if (type == RequestType.GET_REPORT) {
+            try {
+                return handleGetReport(request);
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -561,6 +570,30 @@ public class RequestHandler {
             );
             loggedInUser = null;
         }
+    }
+
+    private GcmResponse handleGetReport(GcmRequest request) throws SQLException {
+        System.out.println("GET_REPORT request received");
+
+        Object rawPayload = request.getPayload();
+
+        // 1. Validate Payload
+        if (!(rawPayload instanceof ReportPayload payload)) {
+            return GcmResponse.error("Invalid payload for reports");
+        }
+
+        // 2. Delegate to StatsService (which calls StatsRepo)
+        // Make sure you use 'statsService', not 'catalogService'
+        List<CityReportData> reports =
+                statsService.generateReport(payload.getFromDate(), payload.getToDate(), payload.getCityId());
+
+        // 3. Handle Errors
+        if (reports == null) {
+            return GcmResponse.error("Failed to generate report");
+        }
+
+        // 4. Return Success
+        return GcmResponse.ok(reports);
     }
 
 
