@@ -1,5 +1,6 @@
 package gcm.server.data;
 
+import common.messages.RegisterPayload;
 import gcm.server.model.UserEntity;
 
 import java.sql.*;
@@ -59,24 +60,30 @@ public class UserRepo {
     }
 
     // Insert new user (REGISTER)
-    public boolean insertUser(String username, String passwordHash, String role)
+    public boolean insertUser(RegisterPayload payload, String role)
             throws SQLException {
 
         String sql = """
-            INSERT INTO Users (UserName, Password, Role)
-            VALUES (?, ?, ?)
-        """;
+        INSERT INTO Users (UserName, Password, Role, name, surname, phoneNum)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, username);
-            stmt.setString(2, passwordHash);
+            stmt.setString(1, payload.getUsername());
+            stmt.setString(2, payload.getPassword());
             stmt.setString(3, role);
+            stmt.setString(4, payload.getFirstname());
+            stmt.setString(5, payload.getLastname());
+
+            // phoneNum is INT in DB
+            stmt.setInt(6, Integer.parseInt(payload.getPhonenum()));
 
             return stmt.executeUpdate() == 1;
         }
     }
+
 
     // Login SUCCESS
     public void recordLoginSuccess(int userId) throws SQLException {

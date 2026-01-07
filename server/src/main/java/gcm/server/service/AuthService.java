@@ -1,5 +1,6 @@
 package gcm.server.service;
 
+import common.messages.RegisterPayload;
 import common.model.User;
 import gcm.server.data.UserRepo;
 import gcm.server.model.UserEntity;
@@ -83,26 +84,26 @@ public class AuthService {
 
 
     //  REGISTER
-    public User register(String username, String password) throws SQLException {
+    public User register(RegisterPayload payload) throws SQLException {
 
-        if (userRepo.existsByUsername(username)) {
+        if (userRepo.existsByUsername(payload.getUsername())) {
             Errormsg = "Username is already in use";
             return null;
         }
 
-        if (!validUsername(username) || !validPassword(password)) {
+        if (!validUsername(payload.getUsername()) || !validPassword(payload.getPassword())) {
             return null;
         }
 
         // TEMP: store plaintext, later hash
-        boolean inserted = userRepo.insertUser(username, password, "Customer");
+        boolean inserted = userRepo.insertUser(payload, "Customer");
 
         if (!inserted) {
             Errormsg = "Failed to create user";
             return null;
         }
 
-        UserEntity entity = userRepo.findByUsername(username);
+        UserEntity entity = userRepo.findByUsername(payload.getUsername());
         return new User(entity.getId(), entity.getUsername(), entity.getRole());
     }
 
