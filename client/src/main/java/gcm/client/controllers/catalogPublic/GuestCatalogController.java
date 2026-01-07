@@ -26,6 +26,7 @@ import javafx.geometry.Pos;
 import javafx.scene.layout.Region;
 
 import java.util.List;
+import java.util.Objects;
 
 
 public class GuestCatalogController {
@@ -88,8 +89,13 @@ public class GuestCatalogController {
                 : city.getMapCount() + " maps | " +
                 city.getMinPrice() + " – " + city.getMaxPrice();
         */
-        String priceText =
-                city.getMapCount() + " maps | Price: " + city.getCityPrice();
+        String priceText = String.format(
+                "%d maps | One-time: %.2f | Subscription: %.2f",
+                city.getMapCount(),
+                city.getCityPrice(),
+                city.getSubPrice()
+        );
+
 
 
         Label info = new Label(priceText);
@@ -171,8 +177,15 @@ public class GuestCatalogController {
 
     @FXML
     private void handleClose() {
-        ClientApp.getNavigator().show(WelcomeController.class);
+        if (ClientApp.getCurrentUser() != null && Objects.equals(ClientApp.getCurrentUser().getRole(), "Customer")) {
+            // user is logged in then go back to customer menu
+            ClientApp.getNavigator().show(UserMenuController.class);
+        } else {
+            // guest then go back to welcome
+            ClientApp.getNavigator().show(WelcomeController.class);
+        }
     }
+
 
 
 }

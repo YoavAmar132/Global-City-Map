@@ -16,17 +16,12 @@ public class ContentWorkerMenuController {
     public void initialize() {
         client = ClientApp.getClient();
 
-        // for now: handle all responses here (only LOGIN exists)
-        client.setResponseHandler(this::handleResponse);
-    }
-    private void handleResponse(GcmResponse response) {
-        ClientApp.getNavigator().show(WelcomeController.class);
     }
     @FXML
     public void handleClose(ActionEvent actionEvent) {
-        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
-        client.sendRequest(request);
+        ClientApp.logout();
     }
+
     @FXML
     public void onViewCatalogClicked(ActionEvent actionEvent) {
         ClientApp.getNavigator().show(ContentCatalogController.class);

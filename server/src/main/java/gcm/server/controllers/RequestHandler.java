@@ -2,7 +2,6 @@ package gcm.server.controllers;
 
 import common.messages.*;
 import common.model.*;
-import gcm.server.data.CatalogRepo;
 import gcm.server.network.GcmServer;
 import gcm.server.service.*;
 import common.messages.CityMapsRequestPayload;
@@ -19,14 +18,16 @@ public class RequestHandler {
     private final CityService cityService;
     private final CatalogService catalogService;
     private final StatsService statsService;
-private final ArrayList<User> online_users;
-    public RequestHandler(AuthService authService, MapService mapservice, CityService cityService, CatalogService catalogService, StatsService statsService) {
+    private static final List<User> online_users = new ArrayList<>();
+    private User loggedInUser = null;
+
+    public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
+                          CatalogService catalogService, StatsService statsService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
         this.statsService = statsService;
-        this.online_users=new ArrayList<>();
     }
 
     /**
@@ -51,8 +52,9 @@ private final ArrayList<User> online_users;
                         u.getUsername().equals(user.getUsername())
                 );
             }
-         return GcmResponse.ok(null);
+            return GcmResponse.ok(null);
         }
+
 
         if (type == RequestType.LIST_ROUTES) {
             try {
@@ -205,38 +207,10 @@ private final ArrayList<User> online_users;
             }
         }
 
-        if (type == RequestType.GET_REPORT) {
-            try {
-                return handleGetReport(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
     }
-
-    private GcmResponse handleGetReport(GcmRequest request) throws SQLException {
-        System.out.println("GET_REPORT request received");
-
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof ReportPayload payload)) {
-            return GcmResponse.error("Invalid payload for reports");
-        }
-
-        // Delegate to CatalogService (which calls CatalogRepo)
-        List<CityReportData> reports =
-                statsService.generateReport(payload.getFromDate(), payload.getToDate(), payload.getCityId());
-
-        if (reports == null) {
-            return GcmResponse.error("Failed to generate report");
-        }
-
-        return GcmResponse.ok(reports);
-    }
-
     /**
      * Handles LOGIN requests.
      * Expects payload = LoginPayload
@@ -271,13 +245,19 @@ private final ArrayList<User> online_users;
 
             }
             online_users.add(user);
-            // 4. Success → return the User directly
             return GcmResponse.ok(user);
+
 
         } catch (SQLException e) {
             e.printStackTrace(); // server log don't really care :D
             return GcmResponse.error("Server error during registration");
         }
+    }
+
+    public static synchronized void removeOnlineUser(User user) {
+        online_users.removeIf(u ->
+                u.getUsername().equals(user.getUsername())
+        );
     }
 
 
@@ -452,8 +432,6 @@ private final ArrayList<User> online_users;
             return GcmResponse.error("Invalid payload for city catalog");
         }
 
-
-
         List<CityCatalogItem> cities =
                 catalogService.loadCityCatalog();
 
@@ -471,14 +449,6 @@ private final ArrayList<User> online_users;
         if (!(rawPayload instanceof CityMapsRequestPayload payload)) {
             return GcmResponse.error("Invalid payload for city maps");
         }
-        CityMapsRequestPayload rawPayload1=(CityMapsRequestPayload) rawPayload;
-        //get user id
-        int userId = 0;
-        if (rawPayload1.getUserId() != 0) {
-            userId = rawPayload1.getUserId();
-        }
-
-        catalogService.newLogCityView(payload.getCityId(), userId);
 
         List<MapCatalogItem> maps =
                 catalogService.loadMapsForCity(payload.getCityId());
@@ -577,6 +547,18 @@ private final ArrayList<User> online_users;
         } catch (Exception e) {
             e.printStackTrace();
             return GcmResponse.error("Server Error fetching user maps: " + e.getMessage());
+        }
+    }
+
+    public void cleanupOnDisconnect() {
+        if (loggedInUser != null) {
+            online_users.removeIf(u ->
+                    u.getUsername().equals(loggedInUser.getUsername())
+            );
+            System.out.println(
+                    "User removed due to disconnect: " + loggedInUser.getUsername()
+            );
+            loggedInUser = null;
         }
     }
 

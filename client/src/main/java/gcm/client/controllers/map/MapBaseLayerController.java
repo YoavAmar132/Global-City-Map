@@ -13,7 +13,9 @@ import javafx.scene.image.Image;
 
 
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.function.Consumer;
 
 public class MapBaseLayerController {
@@ -21,6 +23,9 @@ public class MapBaseLayerController {
         VIEW,
         ADD_POI
     }
+
+    private URI tileRootUri;
+
 
     private InteractionMode mode = InteractionMode.VIEW;
     // make tiles cache to load smoother
@@ -88,9 +93,10 @@ public class MapBaseLayerController {
     private void initialize() {
         gc = mapCanvas.getGraphicsContext2D();
 
-        File testTile = new File(
-               "client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
-       );
+        tileRootUri = Paths.get(
+                "C:/Users/PCS/IdeaProjects/Global-City-Map/client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
+        ).toUri();
+        File testTile = new File(tileRootUri);
         System.out.println("DEBUG testTile: " + testTile.getAbsolutePath()
                 + " exists=" + testTile.exists());
 
@@ -298,7 +304,6 @@ public class MapBaseLayerController {
             }
         }
 
-        System.out.println("drawTiles: zoom=" + z + " tilesDrawn=" + drawn);
     }
 
 
@@ -306,12 +311,15 @@ public class MapBaseLayerController {
     /** copied from your test app, adapted to use tileRoot + mapCanvas */
     private void centerOnAvailableTiles() {
         if (mapCanvas.getWidth() <= 0 || mapCanvas.getHeight() <= 0) return;
-        File test = new File(tileRoot);
+        File test = new File(tileRoot+ File.separator + zoom);
         String pathh =  test.getAbsolutePath();
+        tileRootUri = Paths.get(pathh).toUri();
+
+
 
         System.out.println("pathh=" + pathh);
 
-        File zoomDir = new File(pathh + File.separator + zoom);
+        File zoomDir = new File(tileRootUri );
 
         System.out.println("pathh=" + zoomDir.getAbsolutePath());
 
