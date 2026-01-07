@@ -120,7 +120,9 @@ public class BuyMapCatalogController {
     }
 
     public void onBackClicked(ActionEvent actionEvent) {
+
         ClientApp.getNavigator().show(UserMenuController.class);
+
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
@@ -128,7 +130,6 @@ public class BuyMapCatalogController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
-        client.sendRequest(request);
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
 }

@@ -567,13 +567,15 @@ private void tryShowMap() {
                 break;
 
             case "CustomerSupport":
-                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
+                ClientApp.getNavigator().show(BaseMapSelectorController.class);
                 break;
 
 
             case "CompanyManager":
-                ClientApp.getNavigator().show(ManagerMenuController.class);
+                ClientApp.getNavigator().show(BaseMapSelectorController.class);
                 break;
         }
     }
+
+
 }

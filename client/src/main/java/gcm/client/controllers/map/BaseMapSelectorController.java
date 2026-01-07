@@ -145,8 +145,7 @@ public class BaseMapSelectorController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
-        client.sendRequest(request);
+        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

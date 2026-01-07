@@ -84,13 +84,19 @@ public class GcmClient extends AbstractClient {
 
     public void closeConnectionSafe() {
         try {
-            closeConnection();
-            GcmRequest request = new GcmRequest(RequestType.LOGOUT, ClientApp.getCurrentUser());
-            sendRequest(request);
+            if (ClientApp.getCurrentUser() != null) {
+                GcmRequest request =
+                        new GcmRequest(RequestType.LOGOUT, ClientApp.getCurrentUser());
+                sendRequest(request);
+            }
+
+            closeConnection();   // CLOSE LAST
             System.out.println("GCM Client: connection closed.");
+
         } catch (Exception e) {
             System.err.println("GCM Client: error closing connection: " + e.getMessage());
         }
     }
+
 
 }
