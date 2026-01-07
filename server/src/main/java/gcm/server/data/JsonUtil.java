@@ -47,7 +47,6 @@ public class JsonUtil {
         if (map == null) return null;
 
         String poiJson = poiListToJson(new ArrayList<>(map.getPois()));
-        String routeJson = routeListToJson(new ArrayList<>(map.getRoutes()));
 
         JsonObject obj = new JsonObject();
         obj.addProperty("version", map.getVersion());
@@ -57,7 +56,6 @@ public class JsonUtil {
 
         // Embedded JSON as STRING fields:
         obj.addProperty("poi_array", poiJson);
-        obj.addProperty("route_array", routeJson);
 
         return gson.toJson(obj);
     }
@@ -67,6 +65,7 @@ public class JsonUtil {
         JsonObject obj = JsonParser.parseString(json).getAsJsonObject();
 
         int version = obj.get("version").getAsInt();
+        int cityID = obj.get("cityID").getAsInt();
         String name = obj.get("name").getAsString();
         String description = obj.has("description") && !obj.get("description").isJsonNull()
                 ? obj.get("description").getAsString()
@@ -79,19 +78,15 @@ public class JsonUtil {
                 ? obj.get("poi_array").getAsString()
                 : "[]";
 
-        String routeJson = obj.has("route_array") && !obj.get("route_array").isJsonNull()
-                ? obj.get("route_array").getAsString()
-                : "[]";
 
         ArrayList<Poi> pois = jsonToPoiList(poiJson);
-        ArrayList<Route> routes = jsonToRouteList(routeJson);
 
         MapSheet map = new MapSheet(
                 version,
+                cityID,
                 name,
                 description,
                 path,
-                routes,
                 pois
         );
 

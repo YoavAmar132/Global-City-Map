@@ -27,9 +27,6 @@ public class MapService {
     public List<Poi> getpois() {
       return mapRepository.getAllPoi();
     }
-    public List<Route> getroutes() {
-        return mapRepository.getAllRoute();
-    }
 
     public boolean PendMap(MapSheet map)
     {
@@ -59,10 +56,7 @@ public class MapService {
         PoiRepo poirepository=mapRepository.getPoirepo();
         return poirepository.getLastPoiId();
     }
-    public int getRouteIndex() throws SQLException {
-        RouteRepo routerepository=mapRepository.getRouteRepo();
-        return routerepository.getLastRouteId();
-    }
+
 
     // --- MapService.java ---
 

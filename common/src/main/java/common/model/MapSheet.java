@@ -6,24 +6,24 @@ import java.util.List;
 
 public class MapSheet implements Serializable {
     private  int version;
+    private  int cityID;
+    private  int x;
+    private  int y;
     private  String name;
     private  String description;
     private  String path;
-    private ArrayList<Route> routes = new ArrayList<>();
     private ArrayList<Poi> pois = new ArrayList<>();
     private int FirstPoi=0;
     private int LastPoi=0;
-    private int FirstRoute=0;
-    private int LastRoute=0;
-    public MapSheet(int version, String name, String description, String path,
-                    ArrayList<Route> routes, ArrayList<Poi> pois) {
+    public MapSheet(int version,int cityID ,String name, String description, String path,
+                    ArrayList<Poi> pois) {
 
         this.version = version;
+        this.cityID = cityID;
         this.name = name;
         this.description = description;
         this.path = path;
 
-        this.routes = (routes != null) ? routes : new ArrayList<>();
         this.pois   = (pois != null)   ? pois   : new ArrayList<>();
 
         // POI bounds
@@ -37,16 +37,6 @@ public class MapSheet implements Serializable {
             this.LastPoi  = -1;
         }
 
-        // Route bounds
-        if (!this.routes.isEmpty()) {
-            Route firstr = this.routes.get(0);
-            Route lastr  = this.routes.get(this.routes.size() - 1);
-            this.FirstRoute = firstr.getId();
-            this.LastRoute  = lastr.getId();
-        } else {
-            this.FirstRoute = -1;
-            this.LastRoute  = -1;
-        }
     }
 
 
@@ -66,12 +56,12 @@ public class MapSheet implements Serializable {
         this.pois = pois;
     }
 
-    public void setRoutes(ArrayList<Route> routes) {
-        this.routes = routes;
-    }
-
     public void setVersion(int version) {
         this.version = version;
+    }
+
+    public void setCityID(int cityID) {
+        this.cityID = cityID;
     }
 
 
@@ -82,16 +72,8 @@ public class MapSheet implements Serializable {
         return FirstPoi;
     }
 
-    public int getFirstRoute() {
-        return FirstRoute;
-    }
-
     public int getLastPoi() {
         return LastPoi;
-    }
-
-    public int getLastRoute() {
-        return LastRoute;
     }
 
     public String getPath() {
@@ -110,12 +92,9 @@ public class MapSheet implements Serializable {
         return version;
     }
 
-
+    public int getCityID() {return cityID;}
     public ArrayList<Poi> getPois() {
         return pois;
     }
 
-    public ArrayList<Route> getRoutes() {
-        return routes;
-    }
 }

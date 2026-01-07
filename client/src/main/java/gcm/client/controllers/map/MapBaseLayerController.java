@@ -226,7 +226,6 @@ public class MapBaseLayerController {
     /* ================= drawing ================= */
 
     private void redraw() {
-        System.out.println("redraw: start");
         if (gc == null)
         {
             System.out.println("gc was null");
@@ -239,9 +238,7 @@ public class MapBaseLayerController {
         drawTiles(gc, mapCanvas);
 
         if (onViewChanged != null) {
-            System.out.println("redraw: calling onViewChanged");
             onViewChanged.run();
-            System.out.println("redraw: returned from onViewChanged");
         }
     }
 
@@ -268,14 +265,8 @@ public class MapBaseLayerController {
 
         // ✅ if view is outside the world (or overflow happened), nothing to draw
         if (clampedMaxX < clampedMinX || clampedMaxY < clampedMinY) {
-            System.out.println("drawTiles: nothing in range (clamped)");
             return;
         }
-
-        // ✅ Debug (TEMP): print ranges so we can confirm it’s sane
-        System.out.println("drawTiles range: z=" + z +
-                " X=" + clampedMinX + ".." + clampedMaxX +
-                " Y=" + clampedMinY + ".." + clampedMaxY);
 
         int drawn = 0;
 

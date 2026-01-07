@@ -55,14 +55,14 @@ public class RequestHandler {
             return GcmResponse.ok(null);
         }
 
-
+        /*
         if (type == RequestType.LIST_ROUTES) {
             try {
                 return handleRoute(request);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        }
+        }*/
         if (type == RequestType.LOGIN) {
             try {
                 return handleLogin(request);
@@ -96,6 +96,7 @@ public class RequestHandler {
                 throw new RuntimeException("failed to register user", e);
             }
         }
+        /*
         if(type==RequestType.GET_ROUTE_INDEX) {
             System.out.println("route index created");
             try {
@@ -104,7 +105,7 @@ public class RequestHandler {
             }  catch (SQLException e) {
                 throw new RuntimeException("failed to register user", e);
             }
-        }
+        }*/
         if(type==RequestType.GET_MAP) {
             System.out.println("map request proccesed");
             try {
@@ -274,10 +275,11 @@ public class RequestHandler {
         System.out.println("get all poi request");
         return GcmResponse.ok(mapService.getpois());
     }
+    /*
     private GcmResponse handleRoute(GcmRequest request) throws SQLException {
         System.out.println("get all route request");
         return GcmResponse.ok(mapService.getroutes());
-    }
+    }*/
 
 
     private GcmResponse handleGetAllCityPrices(GcmRequest request) throws SQLException {
@@ -392,6 +394,7 @@ public class RequestHandler {
         return GcmResponse.error("faild to pend");
 
     }
+    /*
     private GcmResponse handleRouteIndex(GcmRequest request) throws SQLException {
         System.out.println("route index request received");
         Object rawPayload = request.getPayload();
@@ -402,7 +405,7 @@ public class RequestHandler {
         if(index!=null) {return GcmResponse.ok(index);}
         return GcmResponse.error("faild to pend");
 
-    }
+    }*/
 
     //registration handler (perfect from yoav just added try-catch)
     private GcmResponse handleRegistration(GcmRequest request) throws SQLException {

@@ -24,15 +24,10 @@ import java.util.List;
 
 public class MapViewerController {
     private int poid=0;
-    private int routid=0;
     @FXML
     private StackPane stackPane;
     private boolean submitInProgress = false;
     private List<Poi> pois = new ArrayList<>();
-    private Route buildingRoute = null;
-    private List<Route> routes = new ArrayList<>();
-    private boolean buildingRouteWaitingFirstPoint = false;
-    private int routeId = 0;
     private String path;
     private MapSheet map;
     private boolean initialized = false;
@@ -43,17 +38,9 @@ public class MapViewerController {
     {
         return this.poid;
     }
-    public int getRoutid()
-    {
-        return this.routeId;
-    }
     public void setPoid(int id)
     {
         this.poid=id;
-    }
-    public void setRoutid(int id)
-    {
-        this.routeId=id;
     }
     public void setMap(MapSheet map)
     {
@@ -96,7 +83,6 @@ public class MapViewerController {
         overlayLayerController.setOnScroll(dy ->
                 baseLayerController.handleExternalScroll(dy)
         );
-        overlayLayerController.setOnEmptyRightClick(this::finishRouteMode);
 
         overlayLayerController.setOnPoiSelected((poi, node) -> {
             if (!pois.contains(poi)) {
@@ -199,6 +185,11 @@ private void tryShowMap() {
 
 
     @FXML
+    private void onAddRouteMode() {
+
+    }
+
+    @FXML
     private void onAddPoiMode() {
         System.out.println("added poi");
 
@@ -244,7 +235,11 @@ private void tryShowMap() {
                         baseWorldX,
                         baseWorldY,
                         category,
-                        isAccessible
+                        isAccessible,
+                        map.getCityID(),
+                        false
+
+
                 );
 
                 overlayLayerController.addPoi(poi);
@@ -278,85 +273,6 @@ private void tryShowMap() {
     }
 
 
-    @FXML
-    public void onAddRouteMode(ActionEvent actionEvent) {
-        System.out.println("Add Route mode");
-
-        // start a new route
-        buildingRoute = null;
-        buildingRouteWaitingFirstPoint = true;
-
-        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.ADD_POI);
-
-        baseLayerController.setOnPoiClick(world -> {
-            double worldX = world[0];
-            double worldY = world[1];
-
-            int currentZoom = baseLayerController.getZoom();
-            double scaleUp = Math.pow(2, Poi.BASE_ZOOM - currentZoom);
-
-            double baseWorldX = worldX * scaleUp;
-            double baseWorldY = worldY * scaleUp;
-
-            try {
-                // FIRST point: ask metadata once
-                if (buildingRouteWaitingFirstPoint) {
-                    String name = askRouteName();
-                    if (name == null) return;
-
-                    String description = askRouteDescription();
-                    if (description == null) return;
-
-                    POI_Category category = askPoiCategory();
-                    if (category == null) return;
-
-                    // Create route object (adjust ctor to your Route model)
-                    buildingRoute = new Route(routeId++, name, description, category,null);
-                    buildingRouteWaitingFirstPoint = false;
-
-                    // Add first point
-                    buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER,false);
-                    overlayLayerController.addPoi(start);
-
-                    // Add to overlay immediately so user sees it grow
-                    overlayLayerController.addRoute(buildingRoute);
-                    routes.add(buildingRoute);
-                    overlayLayerController.rerender();
-
-                    System.out.println("Started route: " + name);
-                    return;
-                }
-
-                // NEXT points: only coords
-                if (buildingRoute != null) {
-                    buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                    overlayLayerController.rerender();
-                    System.out.println("Added route point: " + baseWorldX + "," + baseWorldY);
-                }
-
-            } finally {
-                // We do NOT exit route mode after each click.
-                // We stay in ADD_POI mode so user can keep clicking points.
-                // So: no reset here.
-            }
-        });
-
-        // Optional: add a right-click to finish route
-        baseLayerController.setOnRightClick(() -> finishRouteMode());
-    }
-    private void finishRouteMode() {
-        System.out.println("Finish Route mode");
-
-        buildingRoute = null;
-        buildingRouteWaitingFirstPoint = false;
-
-        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
-        baseLayerController.setOnPoiClick(null);
-
-        // If you added a right-click hook:
-        baseLayerController.setOnRightClick(null);
-    }
     private void showPoiPopover(Poi poi, Node anchor) {
         System.out.println("should pop");
         ContextMenu menu = new ContextMenu();
@@ -370,9 +286,13 @@ private void tryShowMap() {
         MenuItem cat = new MenuItem("Category: " + poi.getCategory());
         cat.setDisable(true);
 
+        String is_accessible = poi.isAccessible() ? "Yes" : "No";
+        MenuItem accessibility = new MenuItem("Accessible: " + is_accessible);
+        cat.setDisable(true);
+
         MenuItem close = new MenuItem("Close");
 
-        menu.getItems().addAll(title, desc, cat, new SeparatorMenuItem(), close);
+        menu.getItems().addAll(title, desc, cat, accessibility, new SeparatorMenuItem(), close);
 
         menu.show(anchor, Side.TOP, 0, -10);
     }
@@ -386,10 +306,7 @@ private void tryShowMap() {
             alert.showAndWait();
         }else{
             Object t =response.getData();
-            if(t instanceof RouteIndexPayload indexPayload)
-            {
-                setRoutid(((RouteIndexPayload) t).getIndex()+1);
-            }else if(t instanceof IndexPayload indexPayload)
+            if(t instanceof IndexPayload indexPayload)
             {
                 setPoid(((IndexPayload)t).getIndex()+1);
             }
@@ -415,8 +332,8 @@ private void tryShowMap() {
         String description = askMapDescription();
         if (description == null) { submitInProgress = false; return; }
 
-        MapSheet map = new MapSheet(version, name, description, path,
-                (ArrayList) routes, (ArrayList) pois);
+        MapSheet map = new MapSheet(version, this.map.getCityID() ,name, description, path,
+                 (ArrayList) pois);
  client=ClientApp.getClient();
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
         client.sendRequest(request);
@@ -542,7 +459,6 @@ private void tryShowMap() {
     public void showMap(MapSheet map) {
         overlayLayerController.clearAll();
         List<Poi> pois=map.getPois();
-        List<Route> routes=map.getRoutes();
         if (pois != null) {
             for (Poi p : pois) {
                 System.out.println(p.getName()+" x:"+p.getWorldX(13));
@@ -550,23 +466,6 @@ private void tryShowMap() {
             }
         }
 
-        if (routes != null) {
-            for (Route r : routes) {
-                System.out.println("route id :"+r.getBasePoints());
-                List<double[]> pts = r.getBasePoints();
-
-                if (pts != null && !pts.isEmpty() && pts.get(0).length >= 2) {
-                    double firstX = pts.get(0)[0];
-                    double firstY = pts.get(0)[1];
-
-                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false);
-                    //  overlayLayerController.addPoi(head);
-                }
-                overlayLayerController.addRoute(r);
-
-                overlayLayerController.rerender();
-            }
-        }
 
         // Once all objects are added, ensure positions are correct
         overlayLayerController.rerender();

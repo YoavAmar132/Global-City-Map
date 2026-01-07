@@ -24,14 +24,9 @@ import java.util.List;
 
 public class UserMapViewerController {
     private int poid=0;
-    private int routid=0;
     @FXML
     private StackPane stackPane;
     private List<Poi> pois = new ArrayList<>();
-    private Route buildingRoute = null;
-    private List<Route> routes = new ArrayList<>();
-    private boolean buildingRouteWaitingFirstPoint = false;
-    private int routeId = 0;
     private String path;
     private  MaPayload mapayload;
     private MapSheet map;
@@ -44,17 +39,9 @@ public class UserMapViewerController {
     {
         return this.poid;
     }
-    public int getRoutid()
-    {
-        return this.routeId;
-    }
     public void setPoid(int id)
     {
         this.poid=id;
-    }
-    public void setRoutid(int id)
-    {
-        this.routeId=id;
     }
     public void setMap(MapSheet map)
     {
@@ -179,29 +166,10 @@ public class UserMapViewerController {
     public void showMap(MapSheet map) {
         overlayLayerController.clearAll();
         List<Poi> pois=map.getPois();
-         List<Route> routes=map.getRoutes();
         if (pois != null) {
             for (Poi p : pois) {
                 System.out.println(p.getName()+" x:"+p.getWorldX(13));
                 overlayLayerController.addPoi(p);
-            }
-        }
-
-        if (routes != null) {
-            for (Route r : routes) {
-                System.out.println("route id :"+r.getBasePoints());
-                List<double[]> pts = r.getBasePoints();
-
-                if (pts != null && !pts.isEmpty() && pts.get(0).length >= 2) {
-                    double firstX = pts.get(0)[0];
-                    double firstY = pts.get(0)[1];
-
-                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false);
-                  //  overlayLayerController.addPoi(head);
-                }
-                 overlayLayerController.addRoute(r);
-
-                overlayLayerController.rerender();
             }
         }
 
@@ -225,9 +193,13 @@ public class UserMapViewerController {
         MenuItem cat = new MenuItem("Category: " + poi.getCategory());
         cat.setDisable(true);
 
+        String is_accessible = poi.isAccessible() ? "Yes" : "No";
+        MenuItem accessibility = new MenuItem("Accessible: " + is_accessible);
+        cat.setDisable(true);
+
         MenuItem close = new MenuItem("Close");
 
-        menu.getItems().addAll(title, desc, cat, new SeparatorMenuItem(), close);
+        menu.getItems().addAll(title, desc, cat, accessibility, new SeparatorMenuItem(), close);
 
         menu.show(anchor, Side.TOP, 0, -10);
     }

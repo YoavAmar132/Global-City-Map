@@ -18,12 +18,11 @@ public enum RequestType {
 
     // POIs
     LIST_POIS,
-    LIST_ROUTES,
     SEARCH_POIS,
     CREATE_POI,      // optional
     UPDATE_POI,      // optional
     GET_POI_INDEX,
-    GET_ROUTE_INDEX,      // optional
+
 
     // Routes
     LIST_ROUTES_FOR_CITY,
