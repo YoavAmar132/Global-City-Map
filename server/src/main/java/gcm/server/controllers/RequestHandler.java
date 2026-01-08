@@ -225,6 +225,9 @@ public class RequestHandler {
         if (type == RequestType.LIST_ALL_USERS) {
           return authService.getUsers();
         }
+        if (type == RequestType.LIST_USER_PURCHASES_HISTORY) {
+            return handleHistory(request);
+        }
 
 
         // later you'll add more cases for other RequestTypes
@@ -626,7 +629,22 @@ public class RequestHandler {
         return GcmResponse.ok(messages);
     }
 
+    private GcmResponse handleHistory(GcmRequest request) throws SQLException {
+        System.out.println("get history request received");
 
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof RegisterPayload)) {
+            return GcmResponse.error("Invalid payload for history");
+        }
+        int id =((RegisterPayload) rawPayload).getUserid();
+        ArrayList<String> history = statsService.getHistory(id);
+       if(history.isEmpty())
+       {
+           return GcmResponse.error("faild to get history from db");
+       }
+
+        return GcmResponse.ok(history);
+    }
 
 
 
