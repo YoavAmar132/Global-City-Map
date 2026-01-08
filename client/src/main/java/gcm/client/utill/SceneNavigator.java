@@ -61,6 +61,22 @@ public class SceneNavigator {
         routes.put(ReportResultController.class, "/gcm/client/manager_util/ReportResultView.fxml");
 
 
+
+
+
+
+
+
+
+        //adam
+
+
+
+
+
+
+
+
     }
 
     public <T> void show(Class<T> controllerClass) {

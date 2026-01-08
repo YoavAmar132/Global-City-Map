@@ -1,16 +1,12 @@
 package gcm.server.service;
 
 import common.messages.ApprovePayload;
-import common.messages.BuyMapPayload;
 import common.messages.GcmResponse;
 import common.model.*;
 import gcm.server.data.MapRepo;
 import gcm.server.data.PoiRepo;
-import gcm.server.data.RouteRepo;
-import gcm.server.data.UserRepo;
-import common.messages.IndexPayload;
+
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -41,7 +37,7 @@ public class MapService {
     //load map
     public MapSheet PullMap(int version,String name)
     {
-        return  mapRepository.loadPendingMap(version,name);
+        return  mapRepository.loadPendingMap(version,map.getCityID(),name);
     }
     public List<MapSheet> PullAllMap()
     {

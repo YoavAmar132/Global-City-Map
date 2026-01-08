@@ -15,29 +15,31 @@ public class MapSheet implements Serializable {
     private ArrayList<Poi> pois = new ArrayList<>();
     private int FirstPoi=0;
     private int LastPoi=0;
-    public MapSheet(int version,int cityID ,String name, String description, String path,
-                    ArrayList<Poi> pois) {
-
+    public MapSheet(
+            int version,
+            int cityID,
+            String name,
+            String description,
+            String path,
+            ArrayList<Poi> pois
+    ) {
         this.version = version;
         this.cityID = cityID;
         this.name = name;
         this.description = description;
         this.path = path;
 
-        this.pois   = (pois != null)   ? pois   : new ArrayList<>();
+        this.pois = (pois != null) ? pois : new ArrayList<>();
 
-        // POI bounds
         if (!this.pois.isEmpty()) {
-            Poi firstp = this.pois.get(0);
-            Poi lastp  = this.pois.get(this.pois.size() - 1);
-            this.FirstPoi = firstp.getId();
-            this.LastPoi  = lastp.getId();
+            this.FirstPoi = this.pois.get(0).getId();
+            this.LastPoi  = this.pois.get(this.pois.size() - 1).getId();
         } else {
             this.FirstPoi = -1;
             this.LastPoi  = -1;
         }
-
     }
+
 
 
     public void setDescription(String description) {

@@ -10,6 +10,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 
+
 public class ContentWorkerMenuController {
     private GcmClient client;
 
@@ -52,4 +53,6 @@ public class ContentWorkerMenuController {
     public void onEditPricesButton(ActionEvent actionEvent) {
         ClientApp.getNavigator().show(EditPricesController.class);
     }
+
+
 }

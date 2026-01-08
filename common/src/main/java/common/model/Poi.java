@@ -68,5 +68,6 @@ public class Poi implements Serializable {
     // Optional: if you ever need raw base coords
     public double getBaseWorldX() { return baseWorldX; }
     public double getBaseWorldY() { return baseWorldY; }
+
 }
 

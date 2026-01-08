@@ -211,28 +211,24 @@ public class MapRepo {
     // ==========================================
     //  YOUR EXISTING METHODS
     // ==========================================
-
     public boolean insertPendingMap(MapSheet map) {
         String sql = """
-            INSERT INTO pending_maps
-            (version, name, description, path, poi_array)
-            VALUES (?, ?, ?, ?, ?)
-        """;
-
+        INSERT INTO pending_maps
+        (version, cityID, name, description, path, poi_array, route_array)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            poirepo.insertAllPoi(map.getPois());
 
             stmt.setInt(1, map.getVersion());
-            stmt.setString(2, map.getName());
-            stmt.setString(3, map.getDescription());
-            stmt.setString(4, map.getPath());
-            stmt.setString(5, JsonUtil.poiListToJson(map.getPois()));
+            stmt.setInt(2, map.getCityID());
+            stmt.setString(3, map.getName());
+            stmt.setString(4, map.getDescription());
+            stmt.setString(5, map.getPath());
+            stmt.setString(6, JsonUtil.poiListToJson(map.getPois()));
 
-
-            int affected = stmt.executeUpdate();
-            return affected == 1;
+            return stmt.executeUpdate() == 1;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -240,27 +236,33 @@ public class MapRepo {
         }
     }
 
-    public MapSheet loadPendingMap(int version, String name) {
-        String sql = """
-            SELECT version, name, description, path, poi_array
-            FROM pending_maps
-            WHERE version = ? AND name = ?
-            """;
 
+
+
+
+    public MapSheet loadPendingMap(int version, int cityID, String name) {
+        String sql = """
+        SELECT version, cityID, name, description, path, poi_array, route_array
+        FROM pending_maps
+        WHERE version = ? AND cityID = ? AND name = ?
+    """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, version);
-            stmt.setString(2, name);
+            stmt.setInt(2, cityID);
+            stmt.setString(3, name);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
+
                     String poiJson = rs.getString("poi_array");
+                    String routeJson = rs.getString("route_array"); // can be null
 
                     ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
 
-                    new MapSheet(
+                    return new MapSheet(
                             rs.getInt("version"),
                             rs.getInt("cityID"),
                             rs.getString("name"),
@@ -268,15 +270,17 @@ public class MapRepo {
                             rs.getString("path"),
                             pois
                     );
-
                 }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return null;
     }
+
+
 
     // Fix: Delete using Version AND Name to avoid deleting duplicates
     public boolean deletePendingMap(int version, String name) {
@@ -292,35 +296,62 @@ public class MapRepo {
         }
     }
 
-    public boolean insertApprovedMap(ApprovePayload ApprovedMap) {
-        MapSheet map = ApprovedMap.getMap();
-        String CityName = ApprovedMap.getCityName();
+    public boolean insertApprovedMap(ApprovePayload approvedMap) {
 
-        // 1. Delete from pending first (using Name + Version fix)
-        deletePendingMap(map.getVersion(), map.getName());
+        if (approvedMap == null || approvedMap.getMap() == null)
+            return false;
 
-        if (map == null) return false;
+        MapSheet map = approvedMap.getMap();
+        String cityName = approvedMap.getCityName();
 
-        String sql = """
-            INSERT INTO Maps (cityID, mapName, map, version)
-            VALUES (?, ?, ?, ?)
-        """;
+        String insertMapSql = """
+        INSERT INTO Maps (cityID, mapName, map, version)
+        VALUES (?, ?, ?, ?)
+    """;
 
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
 
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int cityId = cityRepo.idByCityName(cityName);
 
-            int cityId = cityRepo.idByCityName(CityName);
-            String mapName = map.getName();
-            String mapJson = JsonUtil.mapSheetToJsonWithEmbeddedArrays(map);
+            // ✅ Insert ONLY brand-new POIs
+            for (Poi poi : map.getPois()) {
 
-            stmt.setInt(1, cityId);
-            stmt.setString(2, mapName);
-            stmt.setString(3, mapJson);
-            stmt.setInt(4, map.getVersion());
+                // Existing POI → skip
+                if (poi.getId() >= 0) {
+                    continue;
+                }
 
+                // New POI → insert ONCE, approved
+                Poi approvedPoi = new Poi(
+                        poi.getId(),               // temp negative ID (ignored by DB auto-inc)
+                        poi.getName(),
+                        poi.getDescription(),
+                        poi.getNWorldX(),
+                        poi.getNWorldY(),
+                        poi.getCategory(),
+                        poi.isAccessible(),
+                        poi.getCityID(),
+                        true                        // approved = true
+                );
 
-            return stmt.executeUpdate() > 0;
+                poirepo.insertPoi(approvedPoi);
+            }
+
+            // ✅ Delete pending version
+            deletePendingMap(map.getVersion(), map.getName());
+
+            // ✅ Insert approved map JSON
+            try (PreparedStatement stmt = conn.prepareStatement(insertMapSql)) {
+                stmt.setInt(1, cityId);
+                stmt.setString(2, map.getName());
+                stmt.setString(3, JsonUtil.mapSheetToJsonWithEmbeddedArrays(map));
+                stmt.setInt(4, map.getVersion());
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -328,21 +359,29 @@ public class MapRepo {
         }
     }
 
+
+
+
+
+
     public List<MapSheet> loadAllPendingMaps() {
         List<MapSheet> maps = new ArrayList<>();
-        String sql = """
-            SELECT version, name, description, path, poi_array
-            FROM pending_maps
-            ORDER BY name, version
-        """;
 
+        String sql = """
+        SELECT version, cityID, name, description, path, poi_array, route_array
+        FROM pending_maps
+        ORDER BY name, version
+    """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
+
                 String poiJson = rs.getString("poi_array");
+                String routeJson = rs.getString("route_array"); // can be null
+
                 ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
 
                 MapSheet map = new MapSheet(
@@ -356,11 +395,15 @@ public class MapRepo {
 
                 maps.add(map);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return maps;
     }
+
+
 
     public List<MapSheet> loadAllMapsFromCity(String cityName) {
         List<MapSheet> maps = new ArrayList<>();

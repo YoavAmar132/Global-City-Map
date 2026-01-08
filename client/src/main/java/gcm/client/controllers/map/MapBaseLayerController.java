@@ -21,7 +21,8 @@ import java.util.function.Consumer;
 public class MapBaseLayerController {
     public enum InteractionMode {
         VIEW,
-        ADD_POI
+        ADD_POI,
+        ADD_ROUTE
     }
 
     private URI tileRootUri;
@@ -396,6 +397,7 @@ public class MapBaseLayerController {
 
         redraw();
     }
+
 
     public void handleExternalScroll(double deltaY) {
         if (deltaY > 0 && zoom < MAX_ZOOM) setZoom(zoom + 1);

@@ -195,7 +195,7 @@ public class UserMapViewerController {
 
         String is_accessible = poi.isAccessible() ? "Yes" : "No";
         MenuItem accessibility = new MenuItem("Accessible: " + is_accessible);
-        cat.setDisable(true);
+        accessibility.setDisable(true);
 
         MenuItem close = new MenuItem("Close");
 
