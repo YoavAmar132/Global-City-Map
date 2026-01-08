@@ -138,4 +138,19 @@ public class MapService {
         return  messages;
 
     }
+    public ArrayList<Integer> getPopup(String City) throws SQLException {
+        users=userRepository.getAllId();
+        ArrayList<Integer> pop=new ArrayList<>();
+        for(int id:users)
+        {
+            if(mapRepository.isUserSubscribed(id,City))
+            {
+             pop.add(id);
+
+            }
+        }
+        return pop;
+
+
+    }
 }

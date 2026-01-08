@@ -60,10 +60,24 @@ public class LoginController {
             User user = (User) response.getData();
             ClientApp.setCurrentUser(user);          // store the logged-in user globally
             System.out.println("Logged in as: " + user.getUsername() + " (" + user.getRole() + ")");
-
+            int x;
+            try {
+                x = Integer.parseInt(response.getErrorMessage());
+            } catch (NumberFormatException e) {
+                x = 0; // or handle error
+            }
+            Alert alert;
             switch (user.getRole()) {
 
                 case "Customer":
+                    if(x!=0)
+                    {
+                         alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Welcome "+user.getUsername());
+                        alert.setContentText("You have "+x+" new messages");
+                        alert.showAndWait();
+                    }
+
                     ClientApp.getNavigator().show(UserMenuController.class);
                     break;
                 case "ContentManager":
@@ -82,7 +96,7 @@ public class LoginController {
                     break;
 
                 default:
-                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                     alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Login Failed");
                     alert.setContentText("Unknown role: " + user.getRole());
                     alert.showAndWait();

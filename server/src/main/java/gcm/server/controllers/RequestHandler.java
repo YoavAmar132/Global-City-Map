@@ -267,7 +267,15 @@ public class RequestHandler {
 
             }
             online_users.add(user);
-            return GcmResponse.ok(user);
+            int messagecount = authService.PendingMessage(user.getId());
+            System.out.println("pending messages" + messagecount);
+            if(messagecount==0)
+            {
+                return GcmResponse.ok(user);
+            }
+            return GcmResponse.okm(user,String.valueOf(messagecount));
+
+
 
 
         } catch (SQLException e) {
@@ -348,7 +356,8 @@ public class RequestHandler {
         }
         if(!mapService.sendApprovedMap(approvePayload)){ return GcmResponse.error("faild to pend");}
          mapService.SendMessage(((ApprovePayload) rawPayload).getCityName());
-        return GcmResponse.ok(null);
+        Popup list=new Popup(mapService.getPopup(((ApprovePayload) rawPayload).getCityName()));
+        return GcmResponse.ok(list);
     }
     //map request handler
     private GcmResponse handleMapRequest(GcmRequest request) throws SQLException {

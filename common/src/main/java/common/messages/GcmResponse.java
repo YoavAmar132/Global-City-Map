@@ -29,6 +29,9 @@ public class GcmResponse implements Serializable {
     public static GcmResponse ok(Object data) {
         return new GcmResponse(true, data, null);
     }
+    public static GcmResponse okm(Object data,String errorMessage) {
+        return new GcmResponse(true, data, errorMessage);
+    }
 
     // FACTORY METHOD → correct for error case
     public static GcmResponse error(String errorMessage) {

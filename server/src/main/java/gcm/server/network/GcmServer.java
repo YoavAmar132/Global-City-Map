@@ -2,6 +2,7 @@ package gcm.server.network;
 
 import common.messages.GcmRequest;
 import common.messages.GcmResponse;
+import common.messages.Popup;
 import common.messages.Reload;
 import common.model.User;
 import gcm.server.controllers.RequestHandler;
@@ -34,7 +35,10 @@ public class GcmServer extends AbstractServer {
                 User user = (User) response.getData();
                 client.setInfo("user", user);
             }
-
+             if(response.getData() instanceof Popup)
+             {
+                 sendToAllClients(GcmResponse.ok(response));
+             }
 
             /* existing refresh logic */
             if (response.getRefresh() == 1) {
