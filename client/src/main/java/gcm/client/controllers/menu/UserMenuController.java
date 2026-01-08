@@ -20,15 +20,9 @@ public class UserMenuController {
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
     }
+
     private void handleResponse(GcmResponse response) {
-        Object data = response.getData();
-        if(data instanceof Reload)
-        {    Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("new map");
-            alert.setContentText("new map just dropped!!!");
-            alert.showAndWait();
-            Platform.runLater(() -> ClientApp.getNavigator().show(GuestCatalogController.class));
-        }
+
     }
 
 
@@ -55,5 +49,9 @@ public class UserMenuController {
     private void onMyMapsClicked(ActionEvent event) {
         System.out.println("My Maps clicked");
         ClientApp.getNavigator().show(MyMapsController.class);
+    }
+
+    public void onMyMessagesClicked(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(MessagesController.class);
     }
 }

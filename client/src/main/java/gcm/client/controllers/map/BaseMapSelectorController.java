@@ -140,6 +140,6 @@ public class BaseMapSelectorController {
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(gcm.client.controllers.map.PendingMapController.class);
+        ClientApp.getNavigator().show(gcm.client.controllers.map.BaseMapSelectorController.class);
     }
 }

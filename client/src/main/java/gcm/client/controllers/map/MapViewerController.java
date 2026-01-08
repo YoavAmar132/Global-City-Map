@@ -573,27 +573,7 @@ public class MapViewerController {
 
 
     public void handleClose(ActionEvent actionEvent) {
-        User current=ClientApp.getCurrentUser();
-        switch (current.getRole())
-        {
-            case "Customer":
-                ClientApp.getNavigator().show(UserMenuController.class);
-                break;
-            case "ContentManager":
-            case "Worker":
-            case "ContentEmployee":
                 ClientApp.getNavigator().show(ContentWorkerMenuController.class);
-                break;
-
-            case "CustomerSupport":
-                ClientApp.getNavigator().show(BaseMapSelectorController.class);
-                break;
-
-
-            case "CompanyManager":
-                ClientApp.getNavigator().show(BaseMapSelectorController.class);
-                break;
-        }
     }
 
 
