@@ -214,8 +214,8 @@ public class MapRepo {
     public boolean insertPendingMap(MapSheet map) {
         String sql = """
         INSERT INTO pending_maps
-        (version, cityID, name, description, path, poi_array, route_array)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        (version, cityID, name, description, path, poi_array)
+        VALUES (?, ?, ?, ?, ?, ?)
     """;
 
         try (Connection conn = DbManager.getConnection();
