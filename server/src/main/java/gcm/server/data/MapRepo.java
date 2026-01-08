@@ -242,7 +242,7 @@ public class MapRepo {
 
     public MapSheet loadPendingMap(int version, int cityID, String name) {
         String sql = """
-        SELECT version, cityID, name, description, path, poi_array, route_array
+        SELECT version, cityID, name, description, path, poi_array
         FROM pending_maps
         WHERE version = ? AND cityID = ? AND name = ?
     """;
@@ -258,7 +258,6 @@ public class MapRepo {
                 if (rs.next()) {
 
                     String poiJson = rs.getString("poi_array");
-                    String routeJson = rs.getString("route_array"); // can be null
 
                     ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
 
@@ -368,7 +367,7 @@ public class MapRepo {
         List<MapSheet> maps = new ArrayList<>();
 
         String sql = """
-        SELECT version, cityID, name, description, path, poi_array, route_array
+        SELECT version, cityID, name, description, path, poi_array
         FROM pending_maps
         ORDER BY name, version
     """;
@@ -380,7 +379,6 @@ public class MapRepo {
             while (rs.next()) {
 
                 String poiJson = rs.getString("poi_array");
-                String routeJson = rs.getString("route_array"); // can be null
 
                 ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
 
