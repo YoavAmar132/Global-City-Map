@@ -222,6 +222,9 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+        if (type == RequestType.LIST_ALL_USERS) {
+          return authService.getUsers();
+        }
 
 
         // later you'll add more cases for other RequestTypes

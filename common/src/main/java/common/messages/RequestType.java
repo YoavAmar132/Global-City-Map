@@ -37,12 +37,13 @@ public enum RequestType {
     LIST_USER_SUBSCRIPTIONS,
     LIST_USER_MAPS,
 
+
     // Admin / Manager
     LIST_PENDING_MAP_VERSIONS,
     PEND_MAP,
     APPROVE_MAP_VERSION,
     GET_ACTIVITY_REPORT,
-
+    LIST_ALL_USERS,
     // Utility
     PING,
     GET_REPORT,

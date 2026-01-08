@@ -1,6 +1,7 @@
 package gcm.server.data;
 
 import common.messages.RegisterPayload;
+import common.model.User;
 import gcm.server.model.UserEntity;
 
 import java.sql.*;
@@ -179,6 +180,42 @@ public class UserRepo {
 
         return userIds;
     }
+    public ArrayList<RegisterPayload> getAllUsers() throws SQLException {
+
+        ArrayList<RegisterPayload> users = new ArrayList<>();
+
+        String sql = """
+        SELECT UserID, UserName, Password, name,surname, phoneNum
+        FROM Users
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+
+                RegisterPayload user = new RegisterPayload(
+
+                        rs.getString("UserName"),
+                        rs.getString("Password"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        rs.getString("phoneNum"),
+                        "",""
+
+
+
+                );
+               user.setUserid(rs.getInt("UserID"));
+
+                users.add(user);
+            }
+        }
+
+        return users;
+    }
+
 
 
 

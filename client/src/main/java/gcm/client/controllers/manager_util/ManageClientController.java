@@ -1,16 +1,15 @@
-package gcm.client.controllers.menu;
+package gcm.client.controllers.manager_util;
 
-import common.model.Poi;
-import common.model.Route;
+
+import common.model.*;
 import gcm.client.controllers.catalogPublic.GuestCatalogController;
 import gcm.client.controllers.map.MapLoaderController;
 import gcm.client.controllers.map.UserMapViewerController;
+import gcm.client.controllers.menu.UserMenuController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 
 import common.messages.*;
-import common.model.City;
-import common.model.MapSheet;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -29,12 +28,12 @@ import java.util.stream.Collectors;
 
 import java.util.List;
 
-public class MessagesController {
+public class ManageClientController {
     private GcmClient client;
     @FXML
     private VBox Baselist;
 
-    private ArrayList<Message> messages; // loaded earlier
+    private ArrayList<RegisterPayload> users; // loaded earlier
 
     @FXML
     private void initialize() {
@@ -42,29 +41,25 @@ public class MessagesController {
         client.setResponseHandler(this::handleResponse);
 
 
-        GcmRequest request = new GcmRequest(RequestType.GET_MESSAGES, ClientApp.getCurrentUser());
+        GcmRequest request = new GcmRequest(RequestType.LIST_ALL_USERS,null);
         client.sendRequest(request);
     }
 
 
-    private HBox createMapRow(Message message) {
-        Label name = new Label(message.getTitle());
+    private HBox createMapRow(RegisterPayload user) {
+        Label name = new Label(user.getUsername());
         name.setStyle("-fx-text-fill: white; -fx-font-size: 14;");
 
         Button open = new Button("Open");
         open.setPrefSize(90, 30);
         open.setStyle("-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;");
-        open.setOnAction(e -> openMessage(message));
+        open.setOnAction(e -> openCard());
 
-        Button Dismiss = new Button("Dismiss");
-        Dismiss.setPrefSize(90, 30);
-        Dismiss.setStyle("-fx-background-color: rgba(255,255,255,0.20); -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;");
-        Dismiss.setOnAction(e -> Dismiss(message));
 
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
 
-        HBox row = new HBox(12, name, spacer, open, Dismiss);
+        HBox row = new HBox(12, name, spacer, open);
         row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;");
         row.setPadding(new javafx.geometry.Insets(10, 12, 10, 12));
@@ -74,18 +69,11 @@ public class MessagesController {
 
 
 
-    public void openMessage(Message message) {
-        System.out.println("opens message");
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle(message.getTitle());
-        alert.setContentText(message.getMessage());
-        alert.showAndWait();
+    public void openCard() {
+        System.out.println("opens User card");
+
     }
 
-    public void Dismiss(Message message) {
-      messages.remove(message);
-        Platform.runLater(() -> ClientApp.getNavigator().show(MessagesController.class));
-    }
 
 
     private void handleResponse(GcmResponse response) {
@@ -101,13 +89,13 @@ public class MessagesController {
             {
                 ArrayList<?> list = (ArrayList<?>) t;
 
-                if (!list.isEmpty() && list.get(0) instanceof Message) {
-                    messages = (ArrayList<Message>) list;
+                if (!list.isEmpty() && list.get(0) instanceof RegisterPayload) {
+                    users = (ArrayList<RegisterPayload>) list;
                     Baselist.getChildren().clear();
-                    for (Message message  : messages) {
-                        Baselist.getChildren().add(createMapRow(message));
+                    for (RegisterPayload u  : users) {
+                        Baselist.getChildren().add(createMapRow(u));
                     }
-                    System.out.println("City list success");
+                    System.out.println("user list success");
                 }
 
 
@@ -128,6 +116,6 @@ public class MessagesController {
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(MessagesController.class);
+        ClientApp.getNavigator().show(gcm.client.controllers.menu.MessagesController.class);
     }
 }

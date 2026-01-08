@@ -1,5 +1,7 @@
 package gcm.server.service;
 
+import common.messages.GcmRequest;
+import common.messages.GcmResponse;
 import common.messages.RegisterPayload;
 import common.model.User;
 import gcm.server.data.UserRepo;
@@ -7,6 +9,7 @@ import gcm.server.model.UserEntity;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 /**
  * removed user list ofc and loadUsersFromDb + getUsers
@@ -190,6 +193,14 @@ public class AuthService {
             return false;
         }
         return true;
+    }
+    public GcmResponse getUsers() throws SQLException {
+        ArrayList<RegisterPayload> users= userRepo.getAllUsers();
+        if(users.isEmpty())
+        {
+            return GcmResponse.error("faild to load all users");
+        }
+        return GcmResponse.ok(users);
     }
 
 }
