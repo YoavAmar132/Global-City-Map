@@ -5,6 +5,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,4 +91,47 @@ public class StatsRepo {
             return r.next() ? r.getInt(1) : 0;
         }
     }
+
+    public boolean expDate(int userId) throws SQLException {
+
+        String sql = """
+        SELECT EndDate
+        FROM Subscriptions
+        WHERE UserID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (!rs.next()) {
+                    return false; // no subscription found
+                }
+
+                Timestamp endTimestamp = rs.getTimestamp("EndDate");
+                if (endTimestamp == null) {
+                    return false;
+                }
+
+                LocalDateTime endDate = endTimestamp.toLocalDateTime();
+                LocalDateTime now = LocalDateTime.now();
+
+                // already expired → false
+                if (endDate.isBefore(now)) {
+                    return false;
+                }
+
+                // difference in hours
+                long hoursLeft = ChronoUnit.HOURS.between(now, endDate);
+
+                return hoursLeft <= 72; // 3 days = 72 hours
+            }
+        }
+    }
+
+
+
 }

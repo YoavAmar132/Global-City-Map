@@ -4,6 +4,7 @@ import common.messages.RegisterPayload;
 import gcm.server.model.UserEntity;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 /**
  *  removed loadAllUsers not needed now since we use dp (inefficient when users number grow)
@@ -161,6 +162,24 @@ public class UserRepo {
             stmt.executeUpdate();
         }
     }
+    public ArrayList<Integer> getAllId() throws SQLException {
+
+        ArrayList<Integer> userIds = new ArrayList<>();
+
+        String sql = "SELECT UserID FROM Users";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                userIds.add(rs.getInt("UserID"));
+            }
+        }
+
+        return userIds;
+    }
+
 
 
 }

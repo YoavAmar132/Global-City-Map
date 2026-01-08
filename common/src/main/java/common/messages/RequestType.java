@@ -8,6 +8,7 @@ public enum RequestType {
     // Catalog
     LIST_CITIES,
     GET_CITY_DETAILS,
+    GET_MESSAGES,
     LIST_MAPS_FOR_CITY,
     GET_MAP,
     GET_PENDING_MAPS,

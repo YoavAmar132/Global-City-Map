@@ -20,7 +20,7 @@ public class RequestHandler {
     private final StatsService statsService;
     private static final List<User> online_users = new ArrayList<>();
     private User loggedInUser = null;
-
+     public Message message=new Message("new map added","");;
     public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
                           CatalogService catalogService, StatsService statsService) {
         this.authService = authService;
@@ -215,6 +215,13 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+        if (type == RequestType.GET_MESSAGES) {
+            try {
+                return handleMessages(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
 
         // later you'll add more cases for other RequestTypes
@@ -334,6 +341,7 @@ public class RequestHandler {
             return GcmResponse.error("Invalid payload for map pending request");
         }
         if(!mapService.sendApprovedMap(approvePayload)){ return GcmResponse.error("faild to pend");}
+         mapService.SendMessage(((ApprovePayload) rawPayload).getCityName());
         return GcmResponse.ok(null);
     }
     //map request handler
@@ -594,6 +602,60 @@ public class RequestHandler {
         // 4. Return Success
         return GcmResponse.ok(reports);
     }
+    //yoav
+    private GcmResponse handleMessages(GcmRequest request) throws SQLException {
+        System.out.println("get messages request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof User)) {
+            return GcmResponse.error("Invalid payload for messages");
+        }
+       int id =((User) rawPayload).getId();
+        ArrayList<Message> messages = mapService.getMessage(id);
+        Message m=statsService.getMessages(id);
+        if (m!=null)
+        {
+            messages.add(0,m);
+        }
+
+
+
+        return GcmResponse.ok(messages);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //yoav
+    //adam
+
 
 
 }
