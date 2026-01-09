@@ -130,4 +130,22 @@ public class CityRepo {
     public String cityNameById(int cityId) {
         return null;
     }
+
+    public Integer getCityIdByPath(String mapPath) throws SQLException {
+        // Looks up the CityID where the baseMap column matches the path provided
+        String sql = "SELECT CityID FROM GCM_DB.Cities WHERE baseMap = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, mapPath);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("CityID");
+                }
+            }
+        }
+        return null; // Return null if no city matches this path
+    }
 }

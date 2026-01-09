@@ -202,5 +202,17 @@ public class AuthService {
         }
         return GcmResponse.ok(users);
     }
+    public GcmResponse getWorkers() throws SQLException {
+        ArrayList<RegisterPayload> users= userRepo.getAllWorkers();
+        if(users.isEmpty())
+        {
+            return GcmResponse.error("faild to load all workers");
+        }
+        return GcmResponse.ok(users);
+    }
+    public int PendingMessage(int id)
+    {
+        return userRepo.gotMail(id);
+    }
 
 }

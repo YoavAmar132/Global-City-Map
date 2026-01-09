@@ -11,6 +11,8 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert;
+import java.util.ArrayList;
 
 
 public class UserMenuController {
@@ -22,6 +24,19 @@ public class UserMenuController {
     }
 
     private void handleResponse(GcmResponse response) {
+        System.out.println("called");
+        Object t = response.getData();
+        if (t instanceof Popup) {
+            System.out.println("is popup");
+            if((((Popup) t).isInList(ClientApp.getCurrentUser().getId())))
+            {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("");
+                alert.setContentText("you have a new message");
+                alert.showAndWait();
+            }
+        }
+
 
     }
 

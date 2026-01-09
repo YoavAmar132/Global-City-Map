@@ -1,11 +1,13 @@
 package gcm.client.controllers.menu;
 
 import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.manager_util.ClientCardController;
 import gcm.client.controllers.manager_util.ManageClientController;
 import gcm.client.controllers.manager_util.ReportsInputController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
+import gcm.client.utill.SceneNavigator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 
@@ -22,8 +24,17 @@ public class ManagerMenuController {
     }
     @FXML
     public void onManageClientsButton(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ManageClientController.class);
+        SceneNavigator.LoadedView<ManageClientController> view =
+                ClientApp.getNavigator().get(ManageClientController.class);
+        view.controller.initialize(RequestType.LIST_ALL_USERS);
+        ClientApp.getNavigator().showLoaded(view.root);
 
+    }
+    public void onManageWorkersButton(ActionEvent actionEvent) {
+        SceneNavigator.LoadedView<ManageClientController> view =
+                ClientApp.getNavigator().get(ManageClientController.class);
+        view.controller.initialize(RequestType.LIST_ALL_WORKERS);
+        ClientApp.getNavigator().showLoaded(view.root);
     }
     @FXML
     public void onContentMenuButton(ActionEvent actionEvent) {
@@ -41,5 +52,6 @@ public class ManagerMenuController {
     private void handleClose() {
         ClientApp.logout();
     }
+
 
 }

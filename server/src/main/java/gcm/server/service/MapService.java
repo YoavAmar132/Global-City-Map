@@ -130,6 +130,21 @@ public class MapService {
         return routeRepository.approveRoute(routeId);
     }
 
+    }
+    public ArrayList<Integer> getPopup(String City) throws SQLException {
+        users=userRepository.getAllId();
+        ArrayList<Integer> pop=new ArrayList<>();
+        for(int id:users)
+        {
+            if(mapRepository.isUserSubscribed(id,City))
+            {
+             pop.add(id);
+
+            }
+        }
+        return pop;
+
+
     public List<PendingRoute> getPendingRoutes() throws SQLException {
         return routeRepository.getPendingRoutes();
     }
