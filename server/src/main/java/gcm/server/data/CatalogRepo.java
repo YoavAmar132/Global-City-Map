@@ -40,7 +40,9 @@ public class CatalogRepo {
                         rs.getString("CityName"),
                         rs.getInt("mapCount"),
                         rs.getDouble("CityPrice"),
-                        rs.getDouble("SubPrice")
+                        rs.getDouble("SubPrice"),
+                        rs.getInt("PoiCount"),
+                        rs.getInt("RouteCount")
                 ));
 
             }
@@ -113,6 +115,62 @@ public class CatalogRepo {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<CityCatalogItem> searchCities(String queryText) throws SQLException {
+        // NEW LOGIC:
+        // 1. The WHERE IN (...) clause finds the valid CityIDs based on your search.
+        // 2. The main SELECT joins everything again to get the TOTAL counts for those cities.
+
+        String sql = "SELECT " +
+                "  c.CityID, " +
+                "  c.CityName, " +
+                "  c.CityPrice, " +
+                "  c.SubPrice, " +
+                "  COUNT(DISTINCT m.mapID) AS MapCount, " +
+                "  COUNT(DISTINCT p.id) AS PoiCount, " +
+                "  COUNT(DISTINCT r.id) AS RouteCount " +
+                "FROM GCM_DB.Cities c " +
+                "LEFT JOIN GCM_DB.Maps m ON c.CityID = m.cityID " +
+                "LEFT JOIN GCM_DB.pois p ON c.CityID = p.city_id " +
+                "LEFT JOIN GCM_DB.routes r ON c.CityID = r.city_id " +
+                "WHERE c.CityID IN ( " +
+                "    SELECT DISTINCT subC.CityID " +
+                "    FROM GCM_DB.Cities subC " +
+                "    LEFT JOIN GCM_DB.pois subP ON subC.CityID = subP.city_id " +
+                "    WHERE " +
+                "      subC.CityName LIKE ? " +
+                "      OR subP.name LIKE ? " +
+                "      OR subP.description LIKE ? " +
+                ") " +
+                "GROUP BY c.CityID, c.CityName, c.CityPrice, c.SubPrice";
+
+        List<CityCatalogItem> resultList = new ArrayList<>();
+        String searchPattern = "%" + queryText + "%";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            // We still have 3 question marks inside the subquery
+            stmt.setString(1, searchPattern);
+            stmt.setString(2, searchPattern);
+            stmt.setString(3, searchPattern);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    resultList.add(new CityCatalogItem(
+                            rs.getInt("CityID"),
+                            rs.getString("CityName"),
+                            rs.getInt("MapCount"),
+                            rs.getDouble("CityPrice"),
+                            rs.getDouble("SubPrice"),
+                            rs.getInt("PoiCount"),
+                            rs.getInt("RouteCount")
+                    ));
+                }
+            }
+        }
+        return resultList;
     }
 
 

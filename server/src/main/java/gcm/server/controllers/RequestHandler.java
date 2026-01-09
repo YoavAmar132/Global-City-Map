@@ -226,6 +226,15 @@ public class RequestHandler {
           return authService.getUsers();
         }
 
+        if (type == RequestType.SEARCH_CITY) {
+            try {
+                return handleSearch(request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -452,8 +461,7 @@ public class RequestHandler {
             return GcmResponse.error("Invalid payload for city catalog");
         }
 
-        List<CityCatalogItem> cities =
-                catalogService.loadCityCatalog();
+        List<CityCatalogItem> cities = catalogService.searchCities("");
 
         if (cities == null) {
             return GcmResponse.error("Failed to load city catalog");
@@ -627,12 +635,21 @@ public class RequestHandler {
     }
 
 
+    private GcmResponse handleSearch(GcmRequest request) throws SQLException {
+        System.out.println("search request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof SearchPayload)) {
+            return GcmResponse.error("Invalid payload for search");
+        }
 
+        SearchPayload payload = (SearchPayload) request.getPayload();
 
+        // Logic is delegated to the Service
+        // If this fails, the SQLException propagates up immediately
+        List<CityCatalogItem> results = catalogService.searchCities(payload.getQuery());
 
-
-
-
+        return GcmResponse.ok(results);
+    }
 
 
 

@@ -33,4 +33,9 @@ public class CatalogService {
         catalogRepo.logCityView(cityId, userId);
         return;
     }
+
+    public List<CityCatalogItem> searchCities(String query) throws SQLException {
+        // Optional: Add logic here (e.g., logging)
+        return catalogRepo.searchCities(query);
+    }
 }

@@ -236,6 +236,7 @@ private void tryShowMap() {
                 if (category == null) return;
 
                 boolean isAccessible = askPoiAccessibility();
+                int cityID = map.getCityID();
 
                 Poi poi = new Poi(
                         poid++,
@@ -244,7 +245,8 @@ private void tryShowMap() {
                         baseWorldX,
                         baseWorldY,
                         category,
-                        isAccessible
+                        isAccessible,
+                        cityID
                 );
 
                 overlayLayerController.addPoi(poi);
@@ -311,12 +313,12 @@ private void tryShowMap() {
                     if (category == null) return;
 
                     // Create route object (adjust ctor to your Route model)
-                    buildingRoute = new Route(routeId++, name, description, category,null);
+                    buildingRoute = new Route(routeId++, name, description, category,null, map.getCityID());
                     buildingRouteWaitingFirstPoint = false;
 
                     // Add first point
                     buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER,false);
+                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER,false, map.getCityID());
                     overlayLayerController.addPoi(start);
 
                     // Add to overlay immediately so user sees it grow
@@ -416,7 +418,7 @@ private void tryShowMap() {
         if (description == null) { submitInProgress = false; return; }
 
         MapSheet map = new MapSheet(version, name, description, path,
-                (ArrayList) routes, (ArrayList) pois);
+                (ArrayList) routes, (ArrayList) pois, this.map.getCityID());
  client=ClientApp.getClient();
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
         client.sendRequest(request);
@@ -559,7 +561,7 @@ private void tryShowMap() {
                     double firstX = pts.get(0)[0];
                     double firstY = pts.get(0)[1];
 
-                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false);
+                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false, map.getCityID());
                     //  overlayLayerController.addPoi(head);
                 }
                 overlayLayerController.addRoute(r);

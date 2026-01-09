@@ -84,7 +84,7 @@ public class BaseMapSelectorController {
         System.out.println("gets list of cities");
         SceneNavigator.LoadedView<MapViewerController> view =
                 ClientApp.getNavigator().get(MapViewerController.class);
-        MapSheet map=new MapSheet(0,"","",city.getBasemap(),routes,pois);
+        MapSheet map=new MapSheet(0,"","",city.getBasemap(), routes, pois, city.getId());
 
         // set values BEFORE showing
         view.controller.setVals(map);

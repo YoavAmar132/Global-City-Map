@@ -12,6 +12,7 @@ public enum RequestType {
     LIST_MAPS_FOR_CITY,
     GET_MAP,
     GET_PENDING_MAPS,
+    SEARCH_CITY,
 
     //guest catalog
     GET_CITY_CATALOG,

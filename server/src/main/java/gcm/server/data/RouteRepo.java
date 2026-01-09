@@ -106,7 +106,7 @@ public class RouteRepo {
                     POI_Category category = POI_Category.valueOf(string_category);
 
 
-                    Route route = new Route(id, name, description, category, null);
+                    Route route = new Route(id, name, description, category, null, 0);
 
                     // Parse LINESTRING
                     String wkt = rs.getString("wkt");

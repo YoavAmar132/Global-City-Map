@@ -276,7 +276,9 @@ public class MapRepo {
                             rs.getString("description"),
                             rs.getString("path"),
                             routes,
-                            pois
+                            pois,
+                            0
+
                     );
 
                 }
@@ -363,7 +365,8 @@ public class MapRepo {
                         rs.getString("description"),
                         rs.getString("path"),
                         routes,
-                        pois
+                        pois,
+                        0
                 );
 
                 maps.add(map);
