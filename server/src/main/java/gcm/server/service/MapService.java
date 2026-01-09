@@ -143,6 +143,10 @@ public class MapService {
         return routeRepository.loadPendingRouteSheet(routeId);
     }
 
+    public List<RouteSheet> getApprovedRoutesForCity(int cityId) throws SQLException {
+        return routeRepository.loadApprovedRoutesForCity(cityId);
+    }
+
 
 
 

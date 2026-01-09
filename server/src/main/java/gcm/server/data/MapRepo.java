@@ -310,18 +310,24 @@ public class MapRepo {
             conn.setAutoCommit(false);
 
             int cityId = cityRepo.idByCityName(cityName);
+            if (cityId == -1) {
+                conn.rollback();
+                return false;
+            }
 
-            // ✅ Insert ONLY brand-new POIs
+        /* ======================================================
+           1️⃣ INSERT POIs AND FIX THEIR IDS IN THE MAP OBJECT
+           ====================================================== */
+
             for (Poi poi : map.getPois()) {
 
-                // Existing POI → skip
+                // Already approved POI → keep its ID
                 if (poi.getId() >= 0) {
                     continue;
                 }
 
-                // New POI → insert ONCE, approved
                 Poi approvedPoi = new Poi(
-                        poi.getId(),               // temp negative ID (ignored by DB auto-inc)
+                        0, // let DB auto-generate ID
                         poi.getName(),
                         poi.getDescription(),
                         poi.getNWorldX(),
@@ -329,16 +335,24 @@ public class MapRepo {
                         poi.getCategory(),
                         poi.isAccessible(),
                         poi.getCityID(),
-                        true                        // approved = true
+                        true
                 );
 
-                poirepo.insertPoi(approvedPoi);
+                // 🔥 INSERT POI AND GET REAL DB ID
+                int newPoiId = poirepo.insertPoiAndReturnId(approvedPoi);
+
+                // 🔥 CRITICAL FIX: update the POI ID INSIDE THE MAP
+                poi.setId(newPoiId);
             }
 
-            // ✅ Delete pending version
+        /* ======================================================
+           2️⃣ DELETE PENDING MAP
+           ====================================================== */
             deletePendingMap(map.getVersion(), map.getName());
 
-            // ✅ Insert approved map JSON
+        /* ======================================================
+           3️⃣ INSERT APPROVED MAP WITH *FIXED* JSON
+           ====================================================== */
             try (PreparedStatement stmt = conn.prepareStatement(insertMapSql)) {
                 stmt.setInt(1, cityId);
                 stmt.setString(2, map.getName());

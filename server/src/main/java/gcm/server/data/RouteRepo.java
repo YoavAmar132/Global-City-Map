@@ -301,6 +301,36 @@ public class RouteRepo {
         }
     }
 
+    public List<RouteSheet> loadApprovedRoutesForCity(int cityId) throws SQLException {
+
+        String sql = """
+        SELECT routeID
+        FROM routes
+        WHERE cityID = ?
+    """;
+
+        List<RouteSheet> result = new ArrayList<>();
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, cityId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int routeId = rs.getInt("routeID");
+
+                    // reuse existing method
+                    RouteSheet sheet = loadRouteSheet(routeId);
+                    if (sheet != null) result.add(sheet);
+                }
+            }
+        }
+
+        return result;
+    }
+
+
 
 
 

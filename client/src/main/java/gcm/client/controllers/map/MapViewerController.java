@@ -357,6 +357,8 @@ public class MapViewerController {
 
 
 
+
+
     private POI_Category askPoiCategory() {
 
         List<POI_Category> choices = Arrays.asList(POI_Category.values());

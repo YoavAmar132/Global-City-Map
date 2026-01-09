@@ -55,6 +55,9 @@ public class UserMapViewerController {
 
     @FXML
     private void initialize() {
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+
         baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
@@ -107,7 +110,80 @@ public class UserMapViewerController {
         hasVals = true;
         baseLayerController.setTileRoot(path);
         tryShowMap();
+        // ask server for all approved routes of this city
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.GET_APPROVED_ROUTES_FOR_CITY,
+                        new CityIdPayload(map.getCityID())   // use your actual getter name
+                )
+        );
+
     }
+
+    private void handleResponse(GcmResponse response) {
+        Platform.runLater(() -> {
+
+            if (!response.isSuccess()) {
+                //System.out.println("ERROR: " + response.getErrorMessage());
+                return;
+            }
+            Object data = response.getData();
+            //System.out.println("HANDLE RESPONSE DATA = " + data);
+
+            if (data instanceof List<?> list &&
+                    !list.isEmpty() &&
+                    list.get(0) instanceof RouteSheet) {
+
+                //System.out.println("ROUTES RECEIVED: " + list.size());
+                @SuppressWarnings("unchecked")
+                List<RouteSheet> routes = (List<RouteSheet>) list;
+                drawRouteConnections(routes);
+            }
+        });
+    }
+
+    private void drawRouteConnections(List<RouteSheet> approvedRoutes) {
+
+        if (map == null) {
+            System.out.println("MAP IS NULL");
+            return;
+        }
+        if (approvedRoutes == null) return;
+
+        System.out.println("=== DRAW ROUTE CONNECTIONS ===");
+        System.out.println("MAP POIS:");
+        for (Poi p : map.getPois()) {
+            System.out.println("  MAP POI id=" + p.getId() + " name=" + p.getName());
+        }
+
+        if (approvedRoutes == null) return;
+
+        // Set of POI ids that exist in the opened map
+        java.util.Set<Integer> mapPoiIds = new java.util.HashSet<>();
+        if (map.getPois() != null) {
+            for (Poi p : map.getPois()) mapPoiIds.add(p.getId());
+        }
+
+        // clear previous lines (we will add this method next)
+        overlayLayerController.clearRouteLines();
+
+        for (RouteSheet rs : approvedRoutes) {
+            List<Poi> stops = rs.getOrderedPois();
+            if (stops == null || stops.size() < 2) continue;
+
+            for (int i = 0; i < stops.size() - 1; i++) {
+                Poi a = stops.get(i);
+                Poi b = stops.get(i + 1);
+
+                if (mapPoiIds.contains(a.getId()) && mapPoiIds.contains(b.getId())) {
+                    overlayLayerController.addRouteLine(a, b);
+                }
+            }
+        }
+
+        overlayLayerController.rerender();
+    }
+
 
     private void tryShowMap() {
         if (showDone) return;

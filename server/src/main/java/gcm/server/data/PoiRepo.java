@@ -121,6 +121,43 @@ public class PoiRepo {
         );
     }
 
+    public int insertPoiAndReturnId(Poi poi) throws SQLException {
+
+        String sql = """
+        INSERT INTO pois
+        (name, description, category, x, y, is_accessible, cityID, is_approved)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps =
+                     conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setString(1, poi.getName());
+            ps.setString(2, poi.getDescription());
+            ps.setString(3, poi.getCategory().name());
+
+            ps.setDouble(4, poi.getNWorldX());   // → maps to `x`
+            ps.setDouble(5, poi.getNWorldY());   // → maps to `y`
+
+            ps.setBoolean(6, poi.isAccessible());
+            ps.setInt(7, poi.getCityID());
+            ps.setBoolean(8, true);              // approved POI
+
+            ps.executeUpdate();
+
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+
+        throw new SQLException("Failed to insert POI, no ID returned");
+    }
+
+
+
 
 
 }

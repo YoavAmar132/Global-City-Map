@@ -6,7 +6,7 @@ import java.io.Serializable;
 public class Poi implements Serializable {
     public static final int BASE_ZOOM = 16;
 
-    private final int id;
+    private  int id;
     private final String name;
     private final String description;
     private final POI_Category category;
@@ -33,6 +33,9 @@ public class Poi implements Serializable {
         this.is_approved = is_approved;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getId() { return id; }
     public String getName() { return name; }
@@ -43,6 +46,7 @@ public class Poi implements Serializable {
     }
     public int getCityID() { return cityID; }
     public boolean isApproved() { return is_approved; }
+
 
 
 

@@ -272,6 +272,14 @@ public class RequestHandler {
         }
 
 
+        if (type == RequestType.GET_APPROVED_ROUTES_FOR_CITY) {
+            try {
+                return handleGetApprovedRoutesForCity(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
 
 
 
@@ -800,6 +808,16 @@ public class RequestHandler {
         return GcmResponse.ok(routes);
     }
 
+    private GcmResponse handleGetApprovedRoutesForCity(GcmRequest request) throws SQLException {
+
+        Object raw = request.getPayload();
+        if (!(raw instanceof CityIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for GET_APPROVED_ROUTES_FOR_CITY");
+        }
+
+        List<RouteSheet> routes = mapService.getApprovedRoutesForCity(payload.getCityId());
+        return GcmResponse.ok(routes);
+    }
 
 
 
