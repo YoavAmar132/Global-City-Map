@@ -32,6 +32,7 @@ public enum RequestType {
     APPROVE_ROUTE,
     GET_PENDING_ROUTES,
     GET_ROUTE_SHEET,
+    GET_PENDING_ROUTE_SHEET,
 
     // Purchases / Subscriptions
     BUY_MAP,

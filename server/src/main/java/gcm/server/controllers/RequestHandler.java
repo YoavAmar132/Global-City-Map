@@ -255,11 +255,20 @@ public class RequestHandler {
         }
 
         if (type == RequestType.GET_ROUTE_SHEET) {
-            try {
-                return handleGetRouteSheet(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            return GcmResponse.ok(
+                    mapService.getApprovedRouteSheet(
+                            ((GetRouteSheetPayload) request.getPayload()).getRouteId()
+                    )
+            );
+        }
+
+
+        if (type == RequestType.GET_PENDING_ROUTE_SHEET) {
+            return GcmResponse.ok(
+                    mapService.getPendingRouteSheet(
+                            ((GetRouteSheetPayload) request.getPayload()).getRouteId()
+                    )
+            );
         }
 
 
@@ -792,19 +801,6 @@ public class RequestHandler {
     }
 
 
-    private GcmResponse handleGetRouteSheet(GcmRequest request) throws SQLException {
-
-        GetRouteSheetPayload payload =
-                (GetRouteSheetPayload) request.getPayload();
-
-        RouteSheet sheet =
-                mapService.getRouteSheet(payload.getRouteId());
-
-        if (sheet == null)
-            return GcmResponse.error("Route not found");
-
-        return GcmResponse.ok(sheet);
-    }
 
 
 

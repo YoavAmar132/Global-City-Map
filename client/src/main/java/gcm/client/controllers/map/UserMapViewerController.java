@@ -157,28 +157,40 @@ public class UserMapViewerController {
     }
 
 
+
+
     public void setRouteVals(RouteSheet sheet) {
 
-        // 1. Load base map tiles
+        // Load base map tiles
         baseLayerController.setTileRoot(sheet.getCityTilePath());
 
-        // 2. Clear previous map content
+        // Clear overlay
         overlayLayerController.clearAll();
 
-        // 3. Add POIs
-        List<Integer> orderedIds = new ArrayList<>();
+        // Defer POI rendering until JavaFX layout is ready
+        Platform.runLater(() -> {
 
-        for (Poi p : sheet.getOrderedPois()) {
-            overlayLayerController.addPoi(p);
-            orderedIds.add(p.getId());
-        }
+            List<Integer> orderedIds = new ArrayList<>();
 
-        // 4. Apply numbering (1..N) in order
-        overlayLayerController.updateRouteNumbers(orderedIds);
+            for (Poi p : sheet.getOrderedPois()) {
+                overlayLayerController.addPoi(p);
+                orderedIds.add(p.getId());
+            }
 
-        // 5. Render
+            // Apply numbering (1..N)
+            overlayLayerController.updateRouteNumbers(orderedIds);
+
+            // Force render
+            overlayLayerController.rerender();
+
+            // Ensure everything is in view
+            baseLayerController.recenterNow();
+        });
         overlayLayerController.rerender();
+
     }
+
+
 
 
 

@@ -135,15 +135,14 @@ public class MapService {
     }
 
 
-    public RouteSheet getRouteSheet(int routeId) throws SQLException {
+    public RouteSheet getApprovedRouteSheet(int routeId) throws SQLException {
+        return routeRepository.loadRouteSheet(routeId);
+    }
 
-        // 1️⃣ Try approved route
-        RouteSheet sheet = routeRepository.loadRouteSheet(routeId);
-        if (sheet != null) return sheet;
-
-        // 2️⃣ Try pending route (manager preview)
+    public RouteSheet getPendingRouteSheet(int routeId) throws SQLException {
         return routeRepository.loadPendingRouteSheet(routeId);
     }
+
 
 
 

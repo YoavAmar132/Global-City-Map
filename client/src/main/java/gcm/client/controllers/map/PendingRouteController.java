@@ -138,7 +138,7 @@ public class PendingRouteController {
     private void openRoute(int routeId) {
         client.sendRequest(
                 new GcmRequest(
-                        RequestType.GET_ROUTE_SHEET,
+                        RequestType.GET_PENDING_ROUTE_SHEET,
                         new GetRouteSheetPayload(routeId)
                 )
         );
