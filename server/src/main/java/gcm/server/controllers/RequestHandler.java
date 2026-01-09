@@ -356,8 +356,9 @@ public class RequestHandler {
         }
         if(!mapService.sendApprovedMap(approvePayload)){ return GcmResponse.error("faild to pend");}
          mapService.SendMessage(((ApprovePayload) rawPayload).getCityName());
-        Popup list=new Popup(mapService.getPopup(((ApprovePayload) rawPayload).getCityName()));
-        return GcmResponse.ok(list);
+        Popup l=new Popup(mapService.getPopup(((ApprovePayload) rawPayload).getCityName()));
+        System.out.println(l.getIds().isEmpty());
+        return GcmResponse.ok(l);
     }
     //map request handler
     private GcmResponse handleMapRequest(GcmRequest request) throws SQLException {
