@@ -227,6 +227,33 @@ public class RequestHandler {
           return authService.getUsers();
         }
 
+        if (type == RequestType.SUBMIT_ROUTE) {
+            try {
+                return handleSubmitRoute(request);
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to submit route", e);
+            }
+        }
+
+        if (type == RequestType.APPROVE_ROUTE) {
+            try {
+                return handleApproveRoute(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.GET_PENDING_ROUTES) {
+            try {
+                return handleGetPendingRoutes(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -626,6 +653,7 @@ public class RequestHandler {
 
 
 
+
         return GcmResponse.ok(messages);
     }
 
@@ -694,4 +722,60 @@ public class RequestHandler {
 
 
     //Adam
+    private GcmResponse handleSubmitRoute(GcmRequest request) throws SQLException {
+
+        System.out.println("SUBMIT_ROUTE request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof PendingRoute route)) {
+            return GcmResponse.error("Invalid payload for SUBMIT_ROUTE");
+        }
+
+        try {
+            boolean success = mapService.submitPendingRoute(route);
+
+            if (!success) {
+                return GcmResponse.error("Failed to submit route");
+            }
+
+            return GcmResponse.ok(null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return GcmResponse.error("Server error while submitting route");
+        }
+    }
+
+    private GcmResponse handleApproveRoute(GcmRequest request) throws SQLException {
+
+        System.out.println("route approval request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof ApproveRoutePayload payload)) {
+            return GcmResponse.error("Invalid payload for APPROVE_ROUTE");
+        }
+
+        boolean success = mapService.approveRoute(payload.getRouteId());
+
+        if (!success) {
+            return GcmResponse.error("Failed to approve route");
+        }
+
+        return GcmResponse.ok(null);
+    }
+
+    private GcmResponse handleGetPendingRoutes(GcmRequest request) throws SQLException {
+
+        System.out.println("GET_PENDING_ROUTES request received");
+
+        List<PendingRoute> routes = mapService.getPendingRoutes();
+
+        if (routes == null) {
+            return GcmResponse.error("Failed to load pending routes");
+        }
+
+        return GcmResponse.ok(routes);
+    }
+
+
 }

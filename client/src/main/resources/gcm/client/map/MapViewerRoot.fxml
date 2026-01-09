@@ -28,7 +28,7 @@
             <Button text="Add POI" onAction="#onAddPoiMode"/>
             <Button text="Add Route" onAction="#onAddRouteMode"/>
 
-            <Button text="Submit POIs" onAction="#onSubmitPois"/>
+            <Button text="Submit Map" onAction="#onSubmitPois"/>
             <Button text="Submit Route" onAction="#onSubmitRoute"/>
 
             <Region prefWidth="20"/>

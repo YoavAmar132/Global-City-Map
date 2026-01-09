@@ -20,7 +20,7 @@
 
     <!-- Close (X) button -->
     <Button text="✕"
-            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;"
+            style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;"
             onAction="#handleClose"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
 

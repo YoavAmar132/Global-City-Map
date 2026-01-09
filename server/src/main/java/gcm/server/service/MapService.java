@@ -131,4 +131,25 @@ public class MapService {
         return  messages;
 
     }
+
+    public boolean submitPendingRoute(PendingRoute route) throws SQLException {
+
+        // Basic sanity checks only
+        if (route == null) return false;
+        if (route.getStops() == null || route.getStops().size() < 2) return false;
+
+        // Delegate DB logic to repository
+        return mapRepository.insertPendingRoute(route);
+    }
+
+    public boolean approveRoute(int routeId) throws SQLException {
+        return mapRepository.insertApprovedRoute(routeId);
+    }
+
+    public List<PendingRoute> getPendingRoutes() throws SQLException {
+        return mapRepository.getPendingRoutes();
+    }
+
+
+
 }

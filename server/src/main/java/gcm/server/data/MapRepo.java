@@ -5,6 +5,9 @@ import common.model.Poi;
 import common.model.Route;
 import common.model.MapSheet;
 import common.model.City;
+import common.model.Route;
+import common.model.RouteStop;
+import common.model.PendingRoute;
 import gcm.server.data.JsonUtil; // Make sure this import matches your project structure
 
 import java.sql.*;
@@ -626,6 +629,201 @@ public class MapRepo {
 
         return messages;
     }
+
+
+    public boolean insertPendingRoute(PendingRoute route) throws SQLException {
+
+        Connection conn = null;
+
+        try {
+            conn = DbManager.getConnection();
+            conn.setAutoCommit(false); //
+
+            // Insert into pending_routes
+            String routeSql = """
+            INSERT INTO pending_routes (cityID, name, description, createdBy)
+            VALUES (?, ?, ?, ?)
+        """;
+
+            int routeId;
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    routeSql, Statement.RETURN_GENERATED_KEYS)) {
+
+                ps.setInt(1, route.getCityId());
+                ps.setString(2, route.getName());
+                ps.setString(3, route.getDescription());
+                ps.setInt(4, route.getCreatedBy());
+
+                ps.executeUpdate();
+
+                ResultSet rs = ps.getGeneratedKeys();
+                if (!rs.next()) {
+                    conn.rollback();
+                    return false;
+                }
+
+                routeId = rs.getInt(1);
+            }
+
+            // Insert pending_route_stops
+            String stopSql = """
+            INSERT INTO pending_route_stops
+            (routeID, poiID, stop_order, recommended_minutes)
+            VALUES (?, ?, ?, ?)
+        """;
+
+            try (PreparedStatement ps = conn.prepareStatement(stopSql)) {
+                for (RouteStop stop : route.getStops()) {
+                    ps.setInt(1, routeId);
+                    ps.setInt(2, stop.getPoiId());
+                    ps.setInt(3, stop.getOrder());
+                    ps.setInt(4, stop.getRecommendedMinutes());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            conn.commit(); // success
+            return true;
+
+        } catch (Exception e) {
+            if (conn != null) conn.rollback();
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            if (conn != null) conn.setAutoCommit(true);
+            if (conn != null) conn.close();
+        }
+    }
+
+    public boolean insertApprovedRoute(int routeId) {
+
+        String insertRouteSql = """
+        INSERT INTO routes (cityID, name, description, createdBy)
+        SELECT cityID, name, description, createdBy
+        FROM pending_routes
+        WHERE routeID = ?
+    """;
+
+        String insertStopsSql = """
+        INSERT INTO route_stops (routeID, poiID, stop_order, recommended_minutes)
+        SELECT ?, poiID, stop_order, recommended_minutes
+        FROM pending_route_stops
+        WHERE routeID = ?
+    """;
+
+        String deleteStopsSql = """
+        DELETE FROM pending_route_stops WHERE routeID = ?
+    """;
+
+        String deleteRouteSql = """
+        DELETE FROM pending_routes WHERE routeID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
+
+            int newRouteId;
+
+            // 1️⃣ Insert route
+            try (PreparedStatement ps =
+                         conn.prepareStatement(insertRouteSql, Statement.RETURN_GENERATED_KEYS)) {
+
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
+
+                ResultSet rs = ps.getGeneratedKeys();
+                if (!rs.next()) {
+                    conn.rollback();
+                    return false;
+                }
+                newRouteId = rs.getInt(1);
+            }
+
+            // 2️⃣ Insert stops
+            try (PreparedStatement ps = conn.prepareStatement(insertStopsSql)) {
+                ps.setInt(1, newRouteId);
+                ps.setInt(2, routeId);
+                ps.executeUpdate();
+            }
+
+            // 3️⃣ Cleanup pending
+            try (PreparedStatement ps = conn.prepareStatement(deleteStopsSql)) {
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(deleteRouteSql)) {
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public List<PendingRoute> getPendingRoutes() throws SQLException {
+
+        String routeSql = """
+        SELECT routeID, cityID, name, description, createdBy
+        FROM pending_routes
+    """;
+
+        String stopsSql = """
+        SELECT poiID, stop_order, recommended_minutes
+        FROM pending_route_stops
+        WHERE routeID = ?
+        ORDER BY stop_order
+    """;
+
+        List<PendingRoute> result = new ArrayList<>();
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement routeStmt = conn.prepareStatement(routeSql);
+             ResultSet rs = routeStmt.executeQuery()) {
+
+            while (rs.next()) {
+                int routeId = rs.getInt("routeID");
+
+                List<RouteStop> stops = new ArrayList<>();
+                try (PreparedStatement stopStmt = conn.prepareStatement(stopsSql)) {
+                    stopStmt.setInt(1, routeId);
+                    ResultSet srs = stopStmt.executeQuery();
+
+                    while (srs.next()) {
+                        stops.add(new RouteStop(
+                                srs.getInt("poiID"),
+                                srs.getInt("stop_order"),
+                                srs.getInt("recommended_minutes")
+                        ));
+                    }
+                }
+
+                PendingRoute route = new PendingRoute(
+                        rs.getInt("cityID"),
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        rs.getInt("createdBy"),
+                        stops
+                );
+                route.setRouteId(routeId);
+
+                result.add(route);
+            }
+        }
+
+        return result;
+    }
+
+
 
 
 

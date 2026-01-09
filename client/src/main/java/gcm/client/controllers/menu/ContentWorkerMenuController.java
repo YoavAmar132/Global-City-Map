@@ -49,6 +49,24 @@ public class ContentWorkerMenuController {
 
 
     }
+
+    @FXML
+    public void onRouteApproveButton(ActionEvent actionEvent) {
+        User current = ClientApp.getCurrentUser();
+
+        if (current.getRole().equals("ContentManager") ||
+                current.getRole().equals("CompanyManager")) {
+
+            ClientApp.getNavigator().show(PendingRouteController.class);
+            return;
+        }
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Restriction Error");
+        alert.setContentText("This Feature is not Accessible for your account");
+        alert.showAndWait();
+    }
+
     @FXML
     public void onEditPricesButton(ActionEvent actionEvent) {
         ClientApp.getNavigator().show(EditPricesController.class);

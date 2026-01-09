@@ -33,7 +33,6 @@ public class MapViewerController {
     private boolean showDone = false;
     private final List<Integer> selectedPoiIds = new ArrayList<>();
     private int tempPoiId = -1;
-    private final List<Integer> routeOrder = new ArrayList<>();
 
 
     private enum Mode { VIEW, ADD_POI, ADD_ROUTE }
@@ -257,24 +256,6 @@ public class MapViewerController {
 
 
 
-    private void updateRouteNumbers() {
-        // Clear all numbers
-        for (Integer id : selectedPoiIds) {
-            PoiView view = overlayLayerController.getPoiView(id);
-            if (view != null) {
-                view.clearOrderIndex();
-            }
-        }
-
-        // Apply new order
-        for (int i = 0; i < routeOrder.size(); i++) {
-            PoiView view = overlayLayerController.getPoiView(routeOrder.get(i));
-            if (view != null) {
-                view.setOrderIndex(i);
-            }
-        }
-    }
-
 
 
 
@@ -332,9 +313,6 @@ public class MapViewerController {
     @FXML
     public void onSubmitRoute(ActionEvent actionEvent) {
 
-        showInfo("Routes are not enabled yet.");
-        return;
-        /*
         if (mode != Mode.ADD_ROUTE) {
             showInfo("Press Add Route first.");
             return;
@@ -344,9 +322,6 @@ public class MapViewerController {
             showInfo("Select at least 2 POIs.");
             return;
         }
-        routeOrder.clear();
-        overlayLayerController.clearPoiSelections();
-
 
         String routeName = askRouteName();
         if (routeName == null) return;
@@ -354,18 +329,32 @@ public class MapViewerController {
         String routeDesc = askRouteDescription();
         if (routeDesc == null) return;
 
-        // TODO: create Route object based on YOUR Route constructor
-        // Example idea:
-        // Route r = new Route(0, routeName, routeDesc, map.getCityID(), new ArrayList<>(selectedPoiIds));
+        List<RouteStop> stops = new ArrayList<>();
 
-        showInfo("Route payload not finished yet (need Route constructor).");
+        for (int i = 0; i < selectedPoiIds.size(); i++) {
+            int poiId = selectedPoiIds.get(i);
 
-        // after submit, clear selection and exit route mode
+            // for now hardcode minutes, later ask user
+            stops.add(new RouteStop(poiId, i, 10));
+        }
+
+        PendingRoute payload = new PendingRoute(
+                map.getCityID(),
+                routeName,
+                routeDesc,
+                ClientApp.getCurrentUser().getId(),
+                stops
+        );
+
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+        client.sendRequest(new GcmRequest(RequestType.SUBMIT_ROUTE, payload));
+
         selectedPoiIds.clear();
         overlayLayerController.clearPoiSelections();
         mode = Mode.VIEW;
-        System.out.println("ROUTE mode OFF");*/
     }
+
 
 
 
@@ -502,7 +491,6 @@ public class MapViewerController {
     @FXML
     private void onAddRouteMode() {
         mode = Mode.ADD_ROUTE;
-        routeOrder.clear();
 
         showInfo("Route mode: click POIs in order, then Submit Route.");
     }

@@ -61,6 +61,8 @@ public class SceneNavigator {
         routes.put(ManageClientController.class, "/gcm/client/manager_util/ManageClientScreen.fxml");
 
 
+        routes.put(PendingRouteController.class, "/gcm/client/map/PendingRouteScreen.fxml");
+
 
 
 

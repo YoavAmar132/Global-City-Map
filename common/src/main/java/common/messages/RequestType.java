@@ -26,8 +26,12 @@ public enum RequestType {
 
 
     // Routes
+    SUBMIT_ROUTE,
     LIST_ROUTES_FOR_CITY,
     GET_ROUTE_DETAILS,
+    APPROVE_ROUTE,
+    GET_PENDING_ROUTES,
+
 
     // Purchases / Subscriptions
     BUY_MAP,
