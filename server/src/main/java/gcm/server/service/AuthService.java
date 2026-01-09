@@ -202,5 +202,9 @@ public class AuthService {
         }
         return GcmResponse.ok(users);
     }
+    public int PendingMessage(int id)
+    {
+        return userRepo.gotMail(id);
+    }
 
 }

@@ -129,7 +129,7 @@ public class PendingMapController {
             }
 
             Object t = response.getData();
-            if (t == null) {
+            if (t instanceof Popup) {
                 // Likely the result of "APPROVE_MAP_VERSION" success
                 System.out.println("Map approval success (or empty response)");
                 // Optional: refresh list automatically

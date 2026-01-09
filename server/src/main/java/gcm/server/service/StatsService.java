@@ -40,4 +40,10 @@ public class StatsService {
 
          return null;
     }
+    public ArrayList<String> getHistory(int userid) throws SQLException {
+
+        return statsRepo.getHistory(userid);
+
+
+    }
 }

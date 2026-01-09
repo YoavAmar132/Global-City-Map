@@ -215,6 +215,32 @@ public class UserRepo {
 
         return users;
     }
+    public int gotMail(int userId) {
+
+        String sql = """
+        SELECT COUNT(*) AS msgCount
+        FROM Messages
+        WHERE UserID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("msgCount");
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0; // no messages or error
+    }
+
 
 
 

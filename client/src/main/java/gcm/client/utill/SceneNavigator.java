@@ -3,6 +3,7 @@ package gcm.client.utill;
 import gcm.client.controllers.*;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalog.ContentCatalogController;
+import gcm.client.controllers.manager_util.ClientCardController;
 import gcm.client.controllers.manager_util.ManageClientController;
 import gcm.client.controllers.manager_util.ReportResultController;
 import gcm.client.controllers.manager_util.ReportsInputController;
@@ -59,6 +60,7 @@ public class SceneNavigator {
         routes.put(ReportResultController.class, "/gcm/client/manager_util/ReportResultView.fxml");
         routes.put(MessagesController.class, "/gcm/client/menu/MessagesScreen.fxml"); //yoav
         routes.put(ManageClientController.class, "/gcm/client/manager_util/ManageClientScreen.fxml");
+        routes.put(ClientCardController.class, "/gcm/client/manager_util/ClientCardScreen.fxml");
 
 
 
