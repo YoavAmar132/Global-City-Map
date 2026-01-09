@@ -118,8 +118,8 @@ public class MapLoaderController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
+        client.sendRequest(request);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

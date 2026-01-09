@@ -9,7 +9,7 @@
 <AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gcm.client.controllers.RegistrationController">
 
     <!-- Close (X) button -->
-    <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;" text="✕" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
+    <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;" text="✕" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
 
     <!-- Center card -->
     <StackPane layoutX="100.0" layoutY="60.0" prefHeight="300.0" prefWidth="400.0" style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
@@ -48,9 +48,10 @@
                 <PasswordField fx:id="confirmPasswordField" promptText="Re-enter your password" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
             </VBox>
 
+
             <!-- Fill E-form small button with text -->
             <HBox alignment="CENTER_LEFT" spacing="8.0">
-                <Button fx:id="fillEFormButton"  prefHeight="26.0" prefWidth="26.0" style="-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 50; -fx-cursor: hand; -fx-font-size: 12;" text="📝" />
+                <Button fx:id="fillEFormButton" onAction="#onFillFormClicked" prefHeight="26.0" prefWidth="26.0" style="-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 50; -fx-cursor: hand; -fx-font-size: 12;" text="📝" />
                 <Label style="-fx-font-size: 13;" text="fill E-form" textFill="white" />
             </HBox>
 

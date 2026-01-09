@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.menu.MessagesController"
+            prefHeight="500.0" prefWidth="820.0"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+
+    <!-- Close (X) button -->
+    <Button text="✕"
+            style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18; -fx-cursor: hand;"
+            onAction="#handleClose"
+            AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+
+    <!-- Center card -->
+    <StackPane layoutX="80.0" layoutY="60.0"
+               prefWidth="660.0" prefHeight="380.0"
+               style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+        <effect>
+            <DropShadow radius="10.0" color="#00000055"/>
+        </effect>
+
+        <VBox spacing="14.0" prefWidth="620.0" prefHeight="340.0" alignment="TOP_CENTER">
+            <padding>
+                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+            </padding>
+
+            <!-- Title -->
+            <Text text="My Messages" fill="white">
+                <font>
+                    <Font name="Segoe UI Semibold" size="28.0"/>
+                </font>
+            </Text>
+
+            <Label text="Select a City to review"
+                   textFill="white"
+                   style="-fx-font-size: 13; -fx-opacity: 0.9;"/>
+
+            <!-- Actions -->
+            <HBox spacing="10.0" alignment="CENTER">
+                <Button fx:id="SrefreshButton" text="Refresh"
+                        prefWidth="120.0" prefHeight="32.0"
+                        style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
+                        onAction="#onRefreshClicked"/>
+
+                <Button fx:id="SbackButton" text="Back"
+                        prefWidth="120.0" prefHeight="32.0"
+                        style="-fx-background-color: rgba(255,255,255,0.20); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
+                        onAction="#onBackClicked"/>
+            </HBox>
+
+            <!-- List of maps -->
+            <ScrollPane fitToWidth="true"
+                        prefWidth="620.0" prefHeight="250.0"
+                        hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                        style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;">
+                <content>
+                    <VBox fx:id="Baselist" spacing="10.0">
+                        <padding>
+                            <Insets top="8.0" right="8.0" bottom="8.0" left="8.0"/>
+                        </padding>
+
+                        <!-- Example row (you can delete this in production) -->
+                        <HBox spacing="12.0" alignment="CENTER_LEFT"
+                              style="-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;">
+                            <padding>
+                                <Insets top="10.0" right="12.0" bottom="10.0" left="12.0"/>
+                            </padding>
+
+                            <Label text=""
+                                   textFill="white"
+                                   style="-fx-font-size: 14;"/>
+
+                            <HBox HBox.hgrow="ALWAYS"/>
+
+                            <Button text="Open"
+                                    prefWidth="90.0" prefHeight="30.0"
+                                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                        </HBox>
+
+                    </VBox>
+                </content>
+            </ScrollPane>
+
+            <Label fx:id="SstatusLabel"
+                   text="Loading City maps..."
+                   textFill="white"
+                   style="-fx-font-size: 12; -fx-opacity: 0.85;"/>
+        </VBox>
+    </StackPane>
+</AnchorPane>

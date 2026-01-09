@@ -2,6 +2,7 @@ package gcm.client.controllers.user_util;
 
 import common.messages.*;
 import common.model.MapSheet;
+import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.map.UserMapViewerController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
@@ -105,6 +106,11 @@ public class MyMapsController {
         // Pass the MapSheet object to the viewer
         view.controller.setVals(map);
 
+        //
+        if (view.root instanceof javafx.scene.layout.Region) {
+            ((javafx.scene.layout.Region) view.root).setPrefSize(500, 350);
+        }
+
         ClientApp.getNavigator().showLoaded(view.root);
         System.out.println("Opened map: " + map.getName() + " v" + map.getVersion());
     }
@@ -152,7 +158,7 @@ public class MyMapsController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        Platform.exit();
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

@@ -1,5 +1,8 @@
 package gcm.client.controllers.menu;
 
+import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.manager_util.ManageClientController;
+import gcm.client.controllers.manager_util.ReportsInputController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -12,16 +15,15 @@ public class ManagerMenuController {
     public void initialize() {
         client = ClientApp.getClient();
 
-        // for now: handle all responses here (only LOGIN exists)
-        client.setResponseHandler(this::handleResponse);
     }
-    private void handleResponse(GcmResponse response) {}
 
     @FXML
     public void onPricingButton(ActionEvent actionEvent) {
     }
     @FXML
     public void onManageClientsButton(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(ManageClientController.class);
+
     }
     @FXML
     public void onContentMenuButton(ActionEvent actionEvent) {
@@ -32,8 +34,12 @@ public class ManagerMenuController {
         ClientApp.getNavigator().show(CustomerSupportMenuController.class);
     }
     @FXML
-    private void handleClose() {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+    public void onReportsButton(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(ReportsInputController.class);
     }
+    @FXML
+    private void handleClose() {
+        ClientApp.logout();
+    }
+
 }

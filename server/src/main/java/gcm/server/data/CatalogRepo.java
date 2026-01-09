@@ -19,16 +19,15 @@ public class CatalogRepo {
         List<CityCatalogItem> result = new ArrayList<>();
 
         String sql = """
-            SELECT
-                c.CityID,
-                c.CityName,
-                c.CityPrice,
-                COUNT(m.mapID) AS mapCount,
-                MIN(JSON_EXTRACT(m.map, '$.price')) AS minPrice,
-                MAX(JSON_EXTRACT(m.map, '$.price')) AS maxPrice
+           SELECT
+            c.CityID,
+            c.CityName,
+            c.CityPrice,
+            c.SubPrice,
+            COUNT(m.mapID) AS mapCount
             FROM Cities c
             LEFT JOIN Maps m ON m.cityID = c.CityID
-            GROUP BY c.CityID, c.CityName, c.CityPrice
+            GROUP BY c.CityID, c.CityName, c.CityPrice, c.SubPrice
         """;
 
         try (Connection conn = DbManager.getConnection();
@@ -36,23 +35,14 @@ public class CatalogRepo {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-
-                double minPrice = rs.getObject("minPrice") != null
-                        ? rs.getDouble("minPrice")
-                        : 0;
-
-                double maxPrice = rs.getObject("maxPrice") != null
-                        ? rs.getDouble("maxPrice")
-                        : 0;
-
                 result.add(new CityCatalogItem(
                         rs.getInt("CityID"),
                         rs.getString("CityName"),
                         rs.getInt("mapCount"),
-                        minPrice,
-                        maxPrice,
-                        rs.getDouble("CityPrice")
+                        rs.getDouble("CityPrice"),
+                        rs.getDouble("SubPrice")
                 ));
+
             }
 
         } catch (SQLException e) {
@@ -102,4 +92,28 @@ public class CatalogRepo {
 
         return result;
     }
+
+    /**
+     * Logs a user view for a specific city.
+     * If the user is a Guest, userId should be 0.
+     */
+    public void logCityView(int cityId, int userId) {
+
+        String sql = "INSERT INTO ViewLogs (userID, CityID, viewDate) VALUES (?, ?, NOW())";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, cityId);
+
+            stmt.executeUpdate();
+            System.out.println("Logged view for CityID: " + cityId + ", UserID: " + userId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

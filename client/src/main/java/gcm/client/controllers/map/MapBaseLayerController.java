@@ -13,14 +13,20 @@ import javafx.scene.image.Image;
 
 
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.function.Consumer;
 
 public class MapBaseLayerController {
     public enum InteractionMode {
         VIEW,
-        ADD_POI
+        ADD_POI,
+        ADD_ROUTE
     }
+
+    private URI tileRootUri;
+
 
     private InteractionMode mode = InteractionMode.VIEW;
     // make tiles cache to load smoother
@@ -88,9 +94,10 @@ public class MapBaseLayerController {
     private void initialize() {
         gc = mapCanvas.getGraphicsContext2D();
 
-        File testTile = new File(
-               "client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
-       );
+        tileRootUri = Paths.get(
+                "C:/Users/PCS/IdeaProjects/Global-City-Map/client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
+        ).toUri();
+        File testTile = new File(tileRootUri);
         System.out.println("DEBUG testTile: " + testTile.getAbsolutePath()
                 + " exists=" + testTile.exists());
 
@@ -220,7 +227,6 @@ public class MapBaseLayerController {
     /* ================= drawing ================= */
 
     private void redraw() {
-        System.out.println("redraw: start");
         if (gc == null)
         {
             System.out.println("gc was null");
@@ -233,9 +239,7 @@ public class MapBaseLayerController {
         drawTiles(gc, mapCanvas);
 
         if (onViewChanged != null) {
-            System.out.println("redraw: calling onViewChanged");
             onViewChanged.run();
-            System.out.println("redraw: returned from onViewChanged");
         }
     }
 
@@ -262,14 +266,8 @@ public class MapBaseLayerController {
 
         // ✅ if view is outside the world (or overflow happened), nothing to draw
         if (clampedMaxX < clampedMinX || clampedMaxY < clampedMinY) {
-            System.out.println("drawTiles: nothing in range (clamped)");
             return;
         }
-
-        // ✅ Debug (TEMP): print ranges so we can confirm it’s sane
-        System.out.println("drawTiles range: z=" + z +
-                " X=" + clampedMinX + ".." + clampedMaxX +
-                " Y=" + clampedMinY + ".." + clampedMaxY);
 
         int drawn = 0;
 
@@ -298,7 +296,6 @@ public class MapBaseLayerController {
             }
         }
 
-        System.out.println("drawTiles: zoom=" + z + " tilesDrawn=" + drawn);
     }
 
 
@@ -306,12 +303,15 @@ public class MapBaseLayerController {
     /** copied from your test app, adapted to use tileRoot + mapCanvas */
     private void centerOnAvailableTiles() {
         if (mapCanvas.getWidth() <= 0 || mapCanvas.getHeight() <= 0) return;
-        File test = new File(tileRoot);
+        File test = new File(tileRoot+ File.separator + zoom);
         String pathh =  test.getAbsolutePath();
+        tileRootUri = Paths.get(pathh).toUri();
+
+
 
         System.out.println("pathh=" + pathh);
 
-        File zoomDir = new File(pathh + File.separator + zoom);
+        File zoomDir = new File(tileRootUri );
 
         System.out.println("pathh=" + zoomDir.getAbsolutePath());
 
@@ -397,6 +397,7 @@ public class MapBaseLayerController {
 
         redraw();
     }
+
 
     public void handleExternalScroll(double deltaY) {
         if (deltaY > 0 && zoom < MAX_ZOOM) setZoom(zoom + 1);

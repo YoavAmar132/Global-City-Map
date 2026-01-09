@@ -7,8 +7,10 @@ import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 
 
 public class UserMenuController {
@@ -16,17 +18,19 @@ public class UserMenuController {
 
     public void initialize() {
         client = ClientApp.getClient();
-
-        // for now: handle all responses here (only LOGIN exists)
         client.setResponseHandler(this::handleResponse);
     }
-    private void handleResponse(GcmResponse response) {}
+
+    private void handleResponse(GcmResponse response) {
+
+    }
+
 
     @FXML
     private void handleClose(ActionEvent event) {
-        ClientApp.getNavigator().show(WelcomeController.class);
-
+        ClientApp.logout();
     }
+
 
     @FXML
     private void onViewCatalogClicked(ActionEvent event) {
@@ -45,5 +49,9 @@ public class UserMenuController {
     private void onMyMapsClicked(ActionEvent event) {
         System.out.println("My Maps clicked");
         ClientApp.getNavigator().show(MyMapsController.class);
+    }
+
+    public void onMyMessagesClicked(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(MessagesController.class);
     }
 }
