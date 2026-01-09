@@ -1,58 +1,56 @@
 package common.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PendingRoute implements Serializable {
 
-
-    private int routeId;          // optional, usually 0 before DB insert
-    private int cityId;
+    private int routeId;
     private String name;
     private String description;
-    private int createdBy;        // userID
-    private List<RouteStop> stops;
+    private int cityId;
 
-    public PendingRoute(int cityId,
-                        String name,
-                        String description,
-                        int createdBy,
-                        List<RouteStop> stops) {
-        this.cityId = cityId;
+    // ORDER MATTERS – POI IDs ONLY
+    private ArrayList<Integer> stops;
+
+    public PendingRoute(int routeId, String name, String description, int cityId, ArrayList<Integer> stops) {
+        this.routeId = routeId;
         this.name = name;
         this.description = description;
-        this.createdBy = createdBy;
+        this.cityId = cityId;
         this.stops = stops;
     }
 
-
-    public int getRouteId() {
-        return routeId;
+    public ArrayList<Integer> getStops() {
+        return stops;
     }
 
     public int getCityId() {
         return cityId;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public int getCreatedBy() {
-        return createdBy;
-    }
-
-    public List<RouteStop> getStops() {
-        return stops;
-    }
-
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public int getRouteId() { return routeId; }
 
     public void setRouteId(int routeId) {
         this.routeId = routeId;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setCityId(int cityId) {
+        this.cityId = cityId;
+    }
+
+    public void setStops(ArrayList<Integer> stops) {
+        this.stops = stops;
+    }
 }

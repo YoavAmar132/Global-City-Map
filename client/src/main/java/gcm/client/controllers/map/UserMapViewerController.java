@@ -26,9 +26,7 @@ public class UserMapViewerController {
     private int poid=0;
     @FXML
     private StackPane stackPane;
-    private List<Poi> pois = new ArrayList<>();
     private String path;
-    private  MaPayload mapayload;
     private MapSheet map;
     private boolean initialized = false;
     private boolean hasVals = false;
@@ -157,6 +155,35 @@ public class UserMapViewerController {
         baseLayerController.setZoom(current - 1);
         overlayLayerController.rerender();
     }
+
+
+    public void setRouteVals(RouteSheet sheet) {
+
+        // 1. Load base map tiles
+        baseLayerController.setTileRoot(sheet.getCityTilePath());
+
+        // 2. Clear previous map content
+        overlayLayerController.clearAll();
+
+        // 3. Add POIs
+        List<Integer> orderedIds = new ArrayList<>();
+
+        for (Poi p : sheet.getOrderedPois()) {
+            overlayLayerController.addPoi(p);
+            orderedIds.add(p.getId());
+        }
+
+        // 4. Apply numbering (1..N) in order
+        overlayLayerController.updateRouteNumbers(orderedIds);
+
+        // 5. Render
+        overlayLayerController.rerender();
+    }
+
+
+
+
+
 
     /**
      * Show a map with given POIs and routes.

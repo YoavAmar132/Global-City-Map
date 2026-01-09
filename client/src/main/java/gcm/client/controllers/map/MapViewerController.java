@@ -329,15 +329,11 @@ public class MapViewerController {
         String routeDesc = askRouteDescription();
         if (routeDesc == null) return;
 
-        List<RouteStop> stops = new ArrayList<>();
+        // PendingRoute expects POI IDs only (order = list order)
+        ArrayList<Integer> stops = new ArrayList<>(selectedPoiIds);
 
-        for (int i = 0; i < selectedPoiIds.size(); i++) {
-            int poiId = selectedPoiIds.get(i);
 
-            // for now hardcode minutes, later ask user
-            stops.add(new RouteStop(poiId, i, 10));
-        }
-
+        // PendingRoute(int cityId, String name, String description, int userId, ArrayList<Integer> stops)
         PendingRoute payload = new PendingRoute(
                 map.getCityID(),
                 routeName,
@@ -350,10 +346,13 @@ public class MapViewerController {
         client.setResponseHandler(this::handleResponse);
         client.sendRequest(new GcmRequest(RequestType.SUBMIT_ROUTE, payload));
 
+        // UI reset (same style you do elsewhere)
         selectedPoiIds.clear();
         overlayLayerController.clearPoiSelections();
+        overlayLayerController.updateRouteNumbers(selectedPoiIds); // clears numbers too
         mode = Mode.VIEW;
     }
+
 
 
 

@@ -2,9 +2,11 @@ package gcm.client.controllers.map;
 
 import common.messages.*;
 import common.model.PendingRoute;
+import common.model.RouteSheet;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
+import gcm.client.utill.SceneNavigator;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -32,6 +34,10 @@ public class PendingRouteController {
         );
     }
 
+    /* =========================
+       UI ROW
+       ========================= */
+
     private HBox createRouteRow(PendingRoute route) {
 
         Label name = new Label(route.getName());
@@ -46,9 +52,9 @@ public class PendingRouteController {
             -fx-background-radius: 8;
             -fx-cursor: hand;
         """);
-        open.setOnAction(e ->
-                System.out.println("TODO: open route " + route.getRouteId())
-        );
+
+        // FOR NOW: just log
+        open.setOnAction(e -> openRoute(route.getRouteId()));
 
         Button approve = new Button("Approve");
         approve.setPrefSize(90, 30);
@@ -59,6 +65,7 @@ public class PendingRouteController {
             -fx-background-radius: 8;
             -fx-cursor: hand;
         """);
+
         approve.setOnAction(e -> approveRoute(route));
 
         HBox spacer = new HBox();
@@ -72,6 +79,10 @@ public class PendingRouteController {
         return row;
     }
 
+    /* =========================
+       ACTIONS
+       ========================= */
+
     private void approveRoute(PendingRoute route) {
         client.sendRequest(
                 new GcmRequest(
@@ -81,6 +92,10 @@ public class PendingRouteController {
         );
     }
 
+    /* =========================
+       SERVER RESPONSE
+       ========================= */
+
     private void handleResponse(GcmResponse response) {
         Platform.runLater(() -> {
 
@@ -89,21 +104,54 @@ public class PendingRouteController {
                 return;
             }
 
-            if (response.getData() == null) {
-                // approval success → refresh
-                onRefreshClicked(null);
+            Object data = response.getData();
+
+            // Case 1: Pending routes list
+            if (data instanceof List<?> list
+                    && (list.isEmpty() || list.get(0) instanceof PendingRoute)) {
+
+                pendingList.getChildren().clear();
+                for (Object o : list) {
+                    PendingRoute r = (PendingRoute) o;
+                    pendingList.getChildren().add(createRouteRow(r));
+                }
                 return;
             }
 
-            @SuppressWarnings("unchecked")
-            List<PendingRoute> routes = (List<PendingRoute>) response.getData();
+            // Case 2: Open pending route (EXACT SAME PATTERN AS MAPS)
+            if (data instanceof RouteSheet sheet) {
 
-            pendingList.getChildren().clear();
-            for (PendingRoute r : routes) {
-                pendingList.getChildren().add(createRouteRow(r));
+                SceneNavigator.LoadedView<UserMapViewerController> view =
+                        ClientApp.getNavigator().get(UserMapViewerController.class);
+
+                view.controller.setRouteVals(sheet);
+                ClientApp.getNavigator().showLoaded(view.root);
+
+                return;
             }
         });
     }
+
+
+
+
+    private void openRoute(int routeId) {
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.GET_ROUTE_SHEET,
+                        new GetRouteSheetPayload(routeId)
+                )
+        );
+    }
+
+
+
+
+
+
+    /* =========================
+       NAVIGATION
+       ========================= */
 
     @FXML
     public void handleClose(ActionEvent event) {

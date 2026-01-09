@@ -106,6 +106,21 @@ public class PoiRepo {
         return pois;
     }
 
+    public static Poi fromResultSet(ResultSet rs) throws SQLException {
+
+        return new Poi(
+                rs.getInt("id"),
+                rs.getString("name"),
+                rs.getString("description"),
+                rs.getDouble("x"),
+                rs.getDouble("y"),
+                POI_Category.valueOf(rs.getString("category")),
+                rs.getBoolean("is_accessible"),
+                rs.getInt("cityID"),
+                rs.getBoolean("is_approved")
+        );
+    }
+
 
 
 }

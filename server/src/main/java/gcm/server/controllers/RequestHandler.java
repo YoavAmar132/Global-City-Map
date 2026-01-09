@@ -2,6 +2,7 @@ package gcm.server.controllers;
 
 import common.messages.*;
 import common.model.*;
+import gcm.server.data.RouteRepo;
 import gcm.server.network.GcmServer;
 import gcm.server.service.*;
 import common.messages.CityMapsRequestPayload;
@@ -231,9 +232,11 @@ public class RequestHandler {
             try {
                 return handleSubmitRoute(request);
             } catch (SQLException e) {
-                throw new RuntimeException("failed to submit route", e);
+                e.printStackTrace();
+                return GcmResponse.error("Database error while submitting route");
             }
         }
+
 
         if (type == RequestType.APPROVE_ROUTE) {
             try {
@@ -250,6 +253,20 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+
+        if (type == RequestType.GET_ROUTE_SHEET) {
+            try {
+                return handleGetRouteSheet(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+
+
+
+
 
 
 
@@ -723,28 +740,25 @@ public class RequestHandler {
 
     //Adam
     private GcmResponse handleSubmitRoute(GcmRequest request) throws SQLException {
-
         System.out.println("SUBMIT_ROUTE request received");
 
         Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof PendingRoute route)) {
-            return GcmResponse.error("Invalid payload for SUBMIT_ROUTE");
+        if (!(rawPayload instanceof PendingRoute)) {
+            return GcmResponse.error("Invalid payload for submit route");
         }
 
-        try {
-            boolean success = mapService.submitPendingRoute(route);
+        PendingRoute route = (PendingRoute) rawPayload;
 
-            if (!success) {
-                return GcmResponse.error("Failed to submit route");
-            }
+        boolean success = mapService.submitPendingRoute(route);
 
-            return GcmResponse.ok(null);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return GcmResponse.error("Server error while submitting route");
+        if (!success) {
+            return GcmResponse.error("Failed to submit route");
         }
+
+        return GcmResponse.ok(null);
     }
+
+
 
     private GcmResponse handleApproveRoute(GcmRequest request) throws SQLException {
 
@@ -776,6 +790,24 @@ public class RequestHandler {
 
         return GcmResponse.ok(routes);
     }
+
+
+    private GcmResponse handleGetRouteSheet(GcmRequest request) throws SQLException {
+
+        GetRouteSheetPayload payload =
+                (GetRouteSheetPayload) request.getPayload();
+
+        RouteSheet sheet =
+                mapService.getRouteSheet(payload.getRouteId());
+
+        if (sheet == null)
+            return GcmResponse.error("Route not found");
+
+        return GcmResponse.ok(sheet);
+    }
+
+
+
 
 
 }

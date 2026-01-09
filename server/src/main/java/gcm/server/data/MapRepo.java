@@ -1,13 +1,8 @@
 package gcm.server.data;
 
 import common.messages.ApprovePayload;
-import common.model.Poi;
+import common.model.*;
 import common.model.Route;
-import common.model.MapSheet;
-import common.model.City;
-import common.model.Route;
-import common.model.RouteStop;
-import common.model.PendingRoute;
 import gcm.server.data.JsonUtil; // Make sure this import matches your project structure
 
 import java.sql.*;
@@ -653,7 +648,6 @@ public class MapRepo {
                 ps.setInt(1, route.getCityId());
                 ps.setString(2, route.getName());
                 ps.setString(3, route.getDescription());
-                ps.setInt(4, route.getCreatedBy());
 
                 ps.executeUpdate();
 
@@ -674,11 +668,11 @@ public class MapRepo {
         """;
 
             try (PreparedStatement ps = conn.prepareStatement(stopSql)) {
-                for (RouteStop stop : route.getStops()) {
+                int order = 1;
+                for (int poiId : route.getStops()) {
                     ps.setInt(1, routeId);
-                    ps.setInt(2, stop.getPoiId());
-                    ps.setInt(3, stop.getOrder());
-                    ps.setInt(4, stop.getRecommendedMinutes());
+                    ps.setInt(2, poiId);
+                    ps.setInt(3, order++);
                     ps.addBatch();
                 }
                 ps.executeBatch();
@@ -772,55 +766,58 @@ public class MapRepo {
 
     public List<PendingRoute> getPendingRoutes() throws SQLException {
 
-        String routeSql = """
-        SELECT routeID, cityID, name, description, createdBy
+        List<PendingRoute> routes = new ArrayList<>();
+
+        String routesSql = """
+        SELECT routeId, name, description, cityId
         FROM pending_routes
+        ORDER BY routeId
     """;
 
         String stopsSql = """
-        SELECT poiID, stop_order, recommended_minutes
+        SELECT poiId
         FROM pending_route_stops
-        WHERE routeID = ?
+        WHERE routeId = ?
         ORDER BY stop_order
     """;
 
-        List<PendingRoute> result = new ArrayList<>();
+        try (Connection conn = DbManager.getConnection()) {
 
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement routeStmt = conn.prepareStatement(routeSql);
-             ResultSet rs = routeStmt.executeQuery()) {
+            try (PreparedStatement routePs = conn.prepareStatement(routesSql);
+                 ResultSet rs = routePs.executeQuery()) {
 
-            while (rs.next()) {
-                int routeId = rs.getInt("routeID");
+                while (rs.next()) {
 
-                List<RouteStop> stops = new ArrayList<>();
-                try (PreparedStatement stopStmt = conn.prepareStatement(stopsSql)) {
-                    stopStmt.setInt(1, routeId);
-                    ResultSet srs = stopStmt.executeQuery();
+                    int routeId = rs.getInt("routeId");
+                    String name = rs.getString("name");
+                    String description = rs.getString("description");
+                    int cityId = rs.getInt("cityId");
 
-                    while (srs.next()) {
-                        stops.add(new RouteStop(
-                                srs.getInt("poiID"),
-                                srs.getInt("stop_order"),
-                                srs.getInt("recommended_minutes")
-                        ));
+                    // ---- Load stops (ORDER MATTERS) ----
+                    ArrayList<Integer> stops = new ArrayList<>();
+
+                    try (PreparedStatement stopPs = conn.prepareStatement(stopsSql)) {
+                        stopPs.setInt(1, routeId);
+
+                        try (ResultSet rsStops = stopPs.executeQuery()) {
+                            while (rsStops.next()) {
+                                stops.add(rsStops.getInt("poiId"));
+                            }
+                        }
                     }
+
+                    routes.add(new PendingRoute(
+                            routeId,
+                            name,
+                            description,
+                            cityId,
+                            stops
+                    ));
                 }
-
-                PendingRoute route = new PendingRoute(
-                        rs.getInt("cityID"),
-                        rs.getString("name"),
-                        rs.getString("description"),
-                        rs.getInt("createdBy"),
-                        stops
-                );
-                route.setRouteId(routeId);
-
-                result.add(route);
             }
         }
 
-        return result;
+        return routes;
     }
 
 
