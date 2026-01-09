@@ -37,7 +37,7 @@ public class GcmServer extends AbstractServer {
             }
              if(response.getData() instanceof Popup)
              {
-                 sendToAllClients(GcmResponse.ok(response));
+                 sendToAllClients(response);
              }
 
             /* existing refresh logic */

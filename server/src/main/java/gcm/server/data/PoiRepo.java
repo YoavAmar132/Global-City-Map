@@ -65,7 +65,7 @@ public class PoiRepo {
         ArrayList<Poi> pois = new ArrayList<>();
 
         String sql = """
-        SELECT id, name, description, category, x, y, is_accessible
+        SELECT id, name, description, category, x, y, is_accessible,city_id
         FROM pois
         WHERE id BETWEEN ? AND ?
         ORDER BY id

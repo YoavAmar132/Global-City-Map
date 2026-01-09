@@ -86,7 +86,14 @@
                     <Label fx:id="lblPhone" text="—"
                            textFill="white"
                            style="-fx-font-size: 14;"/>
-                </HBox>
+                    <HBox HBox.hgrow="ALWAYS"/>
+                <Label text="Role:"
+                       textFill="white"
+                       style="-fx-font-size: 14; -fx-opacity: 0.9; -fx-font-weight: bold;"/>
+                <Label fx:id="lblRole" text=""
+                       textFill="white"
+                       style="-fx-font-size: 14;"/>
+            </HBox>
 
                 <!-- Row 2 -->
                 <HBox spacing="12.0" alignment="CENTER_LEFT">

@@ -11,6 +11,7 @@ public class RegisterPayload implements Serializable {
     private final String credit;
     private final String pin;
     private  int userid;
+    private  String role;
 
     public RegisterPayload(String username,String password,String firstname, String lastname,String phonenum,String credit,String pin) {
         this.username=username;
@@ -36,6 +37,14 @@ public class RegisterPayload implements Serializable {
 
     public void setUserid(int userid) {
         this.userid = userid;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 
     public String getPassword() {

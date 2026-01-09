@@ -185,9 +185,11 @@ public class UserRepo {
         ArrayList<RegisterPayload> users = new ArrayList<>();
 
         String sql = """
-        SELECT UserID, UserName, Password, name,surname, phoneNum
-        FROM Users
-    """;
+    SELECT UserID, UserName, Password, name, surname, phoneNum,role
+    FROM Users
+    WHERE role = 'Customer'
+""";
+
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -208,6 +210,46 @@ public class UserRepo {
 
                 );
                user.setUserid(rs.getInt("UserID"));
+               user.setRole(rs.getString("role"));
+
+                users.add(user);
+            }
+        }
+
+        return users;
+    }
+    public ArrayList<RegisterPayload> getAllWorkers() throws SQLException {
+
+        ArrayList<RegisterPayload> users = new ArrayList<>();
+
+        String sql = """
+    SELECT UserID, UserName, Password, name, surname, phoneNum,role
+    FROM Users
+    WHERE role <> 'Customer'
+""";
+
+
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+
+                RegisterPayload user = new RegisterPayload(
+
+                        rs.getString("UserName"),
+                        rs.getString("Password"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        rs.getString("phoneNum"),
+                        "",""
+
+
+
+                );
+                user.setUserid(rs.getInt("UserID"));
+                user.setRole(rs.getString("role"));
 
                 users.add(user);
             }

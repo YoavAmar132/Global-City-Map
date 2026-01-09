@@ -1,7 +1,9 @@
 package gcm.client.controllers.manager_util;
 
 import common.messages.RegisterPayload;
+import common.messages.RequestType;
 import gcm.client.utill.ClientApp;
+import gcm.client.utill.SceneNavigator;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -20,6 +22,9 @@ public class ClientCardController {
     @FXML private Label lblFirstName;
     @FXML private Label lblSurname;
     @FXML private Label lblPhone;
+    @FXML private Label lblRole;
+          private RequestType type;
+
 
     /* ===== Purchase history ===== */
     @FXML private TableView<String> tblPurchases;
@@ -46,7 +51,12 @@ public class ClientCardController {
         lblUsername.setText(p.getUsername());
         lblFirstName.setText(p.getFirstname());
         lblSurname.setText(p.getLastname());
-        lblPhone.setText(p.getPhonenum());
+        lblPhone.setText("0"+p.getPhonenum());
+        lblRole.setText(p.getRole());
+    }
+    public void setType(RequestType type)
+    {
+        this.type=type;
     }
 
     /** Replace entire purchase history */
@@ -76,15 +86,20 @@ public class ClientCardController {
 
     @FXML
     public void onBackClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ManageClientController.class);
+        SceneNavigator.LoadedView<ManageClientController> view =
+                ClientApp.getNavigator().get(ManageClientController.class);
+        view.controller.initialize(type);
+
+        Platform.runLater(() ->  ClientApp.getNavigator().showLoaded(view.root));
+
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ManageClientController.class);
+        onBackClicked(null);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
-        Platform.runLater(() -> ClientApp.getNavigator().show(ClientCardController.class));
+
     }
 
 

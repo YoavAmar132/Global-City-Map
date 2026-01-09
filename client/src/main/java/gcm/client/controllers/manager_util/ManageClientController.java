@@ -34,18 +34,20 @@ public class ManageClientController {
     private GcmClient client;
     @FXML
     private VBox Baselist;
+    private RequestType type;
 
     private ArrayList<RegisterPayload> users; // loaded earlier
     public static ArrayList<String> history;
     private static  GcmRequest request;
 
     @FXML
-    private void initialize() {
+    public void initialize(RequestType type) {
+        this.type=type;
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
 
 
-         request = new GcmRequest(RequestType.LIST_ALL_USERS,null);
+         request = new GcmRequest(type,null);
         client.sendRequest(request);
     }
 
@@ -74,9 +76,22 @@ public class ManageClientController {
 
 
     public void openCard(RegisterPayload user) {
+        if(request.getType()==RequestType.LIST_ALL_WORKERS)
+        {
+            SceneNavigator.LoadedView<ClientCardController> view =
+                    ClientApp.getNavigator().get(ClientCardController.class);
+            view.controller.setClientInfo(user);
+            view.controller.setType(type);
+            ClientApp.getNavigator().showLoaded(view.root);
 
-         request = new GcmRequest(RequestType.LIST_USER_PURCHASES_HISTORY,user);
-        client.sendRequest(request);
+        }else{
+            request = new GcmRequest(RequestType.LIST_USER_PURCHASES_HISTORY,user);
+            client.sendRequest(request);
+
+
+        }
+
+
 
 
     }
@@ -116,7 +131,7 @@ public class ManageClientController {
                         RegisterPayload payload=(RegisterPayload)s;
                         view.controller.setClientInfo(payload);
                     }
-
+                    view.controller.setType(type);
                     view.controller.setPurchaseHistory(history);
 
                     // now show
@@ -141,6 +156,10 @@ public class ManageClientController {
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
-        Platform.runLater(() -> ClientApp.getNavigator().show(ManageClientController.class));
+        SceneNavigator.LoadedView<ManageClientController> view =
+                ClientApp.getNavigator().get(ManageClientController.class);
+        view.controller.initialize(type);
+
+        Platform.runLater(() ->  ClientApp.getNavigator().showLoaded(view.root));
     }
 }

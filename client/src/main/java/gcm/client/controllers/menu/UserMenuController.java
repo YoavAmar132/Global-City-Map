@@ -24,8 +24,10 @@ public class UserMenuController {
     }
 
     private void handleResponse(GcmResponse response) {
+        System.out.println("called");
         Object t = response.getData();
         if (t instanceof Popup) {
+            System.out.println("is popup");
             if((((Popup) t).isInList(ClientApp.getCurrentUser().getId())))
             {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
