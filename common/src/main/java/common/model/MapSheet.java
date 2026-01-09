@@ -6,7 +6,6 @@ import java.util.List;
 
 public class MapSheet implements Serializable {
     private  int version;
-    private  double price;
     private  String name;
     private  String description;
     private  String path;
@@ -16,11 +15,10 @@ public class MapSheet implements Serializable {
     private int LastPoi=0;
     private int FirstRoute=0;
     private int LastRoute=0;
-    public MapSheet(int version,double price, String name, String description, String path,
+    public MapSheet(int version, String name, String description, String path,
                     ArrayList<Route> routes, ArrayList<Poi> pois) {
 
         this.version = version;
-        this.price = price;
         this.name = name;
         this.description = description;
         this.path = path;
@@ -76,9 +74,6 @@ public class MapSheet implements Serializable {
         this.version = version;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
-    }
 
 
     //getters
@@ -115,9 +110,6 @@ public class MapSheet implements Serializable {
         return version;
     }
 
-    public double getPrice() {
-        return price;
-    }
 
     public ArrayList<Poi> getPois() {
         return pois;

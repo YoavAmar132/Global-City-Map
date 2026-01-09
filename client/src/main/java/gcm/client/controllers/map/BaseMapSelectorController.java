@@ -84,7 +84,7 @@ public class BaseMapSelectorController {
         System.out.println("gets list of cities");
         SceneNavigator.LoadedView<MapViewerController> view =
                 ClientApp.getNavigator().get(MapViewerController.class);
-        MapSheet map=new MapSheet(0,0,"","",city.getBasemap(),routes,pois);
+        MapSheet map=new MapSheet(0,"","",city.getBasemap(),routes,pois);
 
         // set values BEFORE showing
         view.controller.setVals(map);
@@ -149,6 +149,6 @@ public class BaseMapSelectorController {
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(gcm.client.controllers.map.PendingMapController.class);
+        ClientApp.getNavigator().show(gcm.client.controllers.map.BaseMapSelectorController.class);
     }
 }
