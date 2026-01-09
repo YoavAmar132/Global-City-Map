@@ -465,7 +465,7 @@ public class RequestHandler {
         }
 
         List<CityCatalogItem> cities =
-                catalogService.loadCityCatalog();
+                catalogService.searchCities("");
 
         if (cities == null) {
             return GcmResponse.error("Failed to load city catalog");
