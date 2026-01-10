@@ -276,11 +276,6 @@ public class MapViewerController {
             return;
         }
 
-        int version = askVersionNum();
-        if (version < 0) {
-            submitInProgress = false;
-            return;
-        }
 
         String name = askMapName();
         if (name == null) {
@@ -295,7 +290,7 @@ public class MapViewerController {
         }
 
         MapSheet payload = new MapSheet(
-                version,
+                1,
                 map.getCityID(),
                 name,
                 description,
@@ -539,9 +534,6 @@ public class MapViewerController {
         return askNonEmptyString("New Map", "Enter map description", "Description:");
     }
 
-    int askVersionNum() {
-        return askNonNegativeInt("New Map Version", "Enter Map Version", "Version:");
-    }
 
 
     public void showMap(MapSheet map) {
