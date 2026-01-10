@@ -13,7 +13,7 @@ public class ServerBootstrap {
         AuthService authService = new AuthService(userRepo);
 
         MapRepo mapRepo = new MapRepo();
-        MapService mapService = new MapService(mapRepo);
+        MapService mapService = new MapService(mapRepo,userRepo);
 
         CityRepo cityRepo = new CityRepo();
         CityService cityService = new CityService(cityRepo);

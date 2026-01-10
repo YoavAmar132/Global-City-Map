@@ -11,6 +11,7 @@ public class Poi implements Serializable {
     private final String description;
     private final POI_Category category;
     private final boolean accessible;
+    private final int cityID;
 
     // Stored in BASE_ZOOM world-pixels
     private final double baseWorldX;
@@ -19,7 +20,7 @@ public class Poi implements Serializable {
     public Poi(int id, String name, String description,
                double baseWorldX, double baseWorldY,
                POI_Category category,
-               boolean accessible) {
+               boolean accessible, int cityID) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -27,6 +28,7 @@ public class Poi implements Serializable {
         this.baseWorldY = baseWorldY;
         this.category = category;
         this.accessible = accessible;
+        this.cityID = cityID;
     }
 
 
@@ -37,6 +39,7 @@ public class Poi implements Serializable {
     public boolean isAccessible() {
         return accessible;
     }
+    public int getCityID() { return cityID; }
 
 
 

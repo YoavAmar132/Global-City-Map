@@ -22,8 +22,8 @@ public class PoiRepo {
     }
     public boolean insertPoi(Poi poi) throws SQLException {
         String sql = """
-        INSERT INTO pois (name, description, category, x, y, is_accessible)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO pois (name, description, category, x, y, is_accessible, city_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
 
 
@@ -36,6 +36,7 @@ public class PoiRepo {
             stmt.setDouble(4, poi.getNWorldX());
             stmt.setDouble(5, poi.getNWorldY());
             stmt.setBoolean(6, poi.isAccessible());
+            stmt.setInt(7, poi.getCityID());
 
 
             int rows = stmt.executeUpdate();
@@ -64,7 +65,7 @@ public class PoiRepo {
         ArrayList<Poi> pois = new ArrayList<>();
 
         String sql = """
-        SELECT id, name, description, category, x, y, is_accessible
+        SELECT id, name, description, category, x, y, is_accessible,city_id
         FROM pois
         WHERE id BETWEEN ? AND ?
         ORDER BY id
@@ -87,7 +88,8 @@ public class PoiRepo {
                             rs.getDouble("x"),
                             rs.getDouble("y"),
                             category,
-                            rs.getBoolean("is_accessible")
+                            rs.getBoolean("is_accessible"),
+                            rs.getInt("city_id")
                     );
 
 

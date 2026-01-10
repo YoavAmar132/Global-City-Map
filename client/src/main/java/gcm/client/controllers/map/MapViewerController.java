@@ -155,12 +155,9 @@ private void tryShowMap() {
         if (stackPane.getScene() == null) return;
 
         baseLayerController.setTileRoot(path);
-        System.out.println("should show map");
         showMap(map);
         overlayLayerController.rerender();
         showDone = true;
-
-        System.out.println("stackPane size=" + stackPane.getWidth() + "x" + stackPane.getHeight());
 
     });
 }
@@ -215,7 +212,6 @@ private void tryShowMap() {
             double scaleUp = Math.pow(2, Poi.BASE_ZOOM - currentZoom);
             double baseWorldX = worldX * scaleUp;
             double baseWorldY = worldY * scaleUp;
-            System.out.printf("worldx:"+worldX+",worldy:"+worldY);
             // ask name
             try {
                 String name = askPoiName();
@@ -236,6 +232,7 @@ private void tryShowMap() {
                 if (category == null) return;
 
                 boolean isAccessible = askPoiAccessibility();
+                int cityID = map.getCityID();
 
                 Poi poi = new Poi(
                         poid++,
@@ -244,12 +241,12 @@ private void tryShowMap() {
                         baseWorldX,
                         baseWorldY,
                         category,
-                        isAccessible
+                        isAccessible,
+                        cityID
                 );
 
                 overlayLayerController.addPoi(poi);
                 pois.add(poi);
-                System.out.println("Created POI " + name + " at " + worldX + ", " + worldY);
 
             }finally {
                 baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
@@ -311,12 +308,12 @@ private void tryShowMap() {
                     if (category == null) return;
 
                     // Create route object (adjust ctor to your Route model)
-                    buildingRoute = new Route(routeId++, name, description, category,null);
+                    buildingRoute = new Route(routeId++, name, description, category,null, map.getCityID());
                     buildingRouteWaitingFirstPoint = false;
 
                     // Add first point
                     buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER,false);
+                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER,false, map.getCityID());
                     overlayLayerController.addPoi(start);
 
                     // Add to overlay immediately so user sees it grow
@@ -332,7 +329,6 @@ private void tryShowMap() {
                 if (buildingRoute != null) {
                     buildingRoute.addBasePoint(baseWorldX, baseWorldY);
                     overlayLayerController.rerender();
-                    System.out.println("Added route point: " + baseWorldX + "," + baseWorldY);
                 }
 
             } finally {
@@ -346,7 +342,6 @@ private void tryShowMap() {
         baseLayerController.setOnRightClick(() -> finishRouteMode());
     }
     private void finishRouteMode() {
-        System.out.println("Finish Route mode");
 
         buildingRoute = null;
         buildingRouteWaitingFirstPoint = false;
@@ -358,7 +353,6 @@ private void tryShowMap() {
         baseLayerController.setOnRightClick(null);
     }
     private void showPoiPopover(Poi poi, Node anchor) {
-        System.out.println("should pop");
         ContextMenu menu = new ContextMenu();
 
         MenuItem title = new MenuItem("Name: "+poi.getName());
@@ -416,7 +410,7 @@ private void tryShowMap() {
         if (description == null) { submitInProgress = false; return; }
 
         MapSheet map = new MapSheet(version, name, description, path,
-                (ArrayList) routes, (ArrayList) pois);
+                (ArrayList) routes, (ArrayList) pois, this.map.getCityID());
  client=ClientApp.getClient();
         GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
         client.sendRequest(request);
@@ -552,14 +546,13 @@ private void tryShowMap() {
 
         if (routes != null) {
             for (Route r : routes) {
-                System.out.println("route id :"+r.getBasePoints());
                 List<double[]> pts = r.getBasePoints();
 
                 if (pts != null && !pts.isEmpty() && pts.get(0).length >= 2) {
                     double firstX = pts.get(0)[0];
                     double firstY = pts.get(0)[1];
 
-                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false);
+                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false, map.getCityID());
                     //  overlayLayerController.addPoi(head);
                 }
                 overlayLayerController.addRoute(r);
@@ -570,32 +563,11 @@ private void tryShowMap() {
 
         // Once all objects are added, ensure positions are correct
         overlayLayerController.rerender();
-        System.out.println("rerenderddd");
     }
 
 
     public void handleClose(ActionEvent actionEvent) {
-        User current=ClientApp.getCurrentUser();
-        switch (current.getRole())
-        {
-            case "Customer":
-                ClientApp.getNavigator().show(UserMenuController.class);
-                break;
-            case "ContentManager":
-            case "Worker":
-            case "ContentEmployee":
                 ClientApp.getNavigator().show(ContentWorkerMenuController.class);
-                break;
-
-            case "CustomerSupport":
-                ClientApp.getNavigator().show(BaseMapSelectorController.class);
-                break;
-
-
-            case "CompanyManager":
-                ClientApp.getNavigator().show(BaseMapSelectorController.class);
-                break;
-        }
     }
 
 

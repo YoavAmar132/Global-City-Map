@@ -1,11 +1,15 @@
 package gcm.server.service;
 
+import common.messages.GcmRequest;
+import common.messages.GcmResponse;
+import common.messages.RegisterPayload;
 import common.model.User;
 import gcm.server.data.UserRepo;
 import gcm.server.model.UserEntity;
 
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 /**
  * removed user list ofc and loadUsersFromDb + getUsers
@@ -83,26 +87,26 @@ public class AuthService {
 
 
     //  REGISTER
-    public User register(String username, String password) throws SQLException {
+    public User register(RegisterPayload payload) throws SQLException {
 
-        if (userRepo.existsByUsername(username)) {
+        if (userRepo.existsByUsername(payload.getUsername())) {
             Errormsg = "Username is already in use";
             return null;
         }
 
-        if (!validUsername(username) || !validPassword(password)) {
+        if (!validUsername(payload.getUsername()) || !validPassword(payload.getPassword())) {
             return null;
         }
 
         // TEMP: store plaintext, later hash
-        boolean inserted = userRepo.insertUser(username, password, "Customer");
+        boolean inserted = userRepo.insertUser(payload, "Customer");
 
         if (!inserted) {
             Errormsg = "Failed to create user";
             return null;
         }
 
-        UserEntity entity = userRepo.findByUsername(username);
+        UserEntity entity = userRepo.findByUsername(payload.getUsername());
         return new User(entity.getId(), entity.getUsername(), entity.getRole());
     }
 
@@ -189,6 +193,26 @@ public class AuthService {
             return false;
         }
         return true;
+    }
+    public GcmResponse getUsers() throws SQLException {
+        ArrayList<RegisterPayload> users= userRepo.getAllUsers();
+        if(users.isEmpty())
+        {
+            return GcmResponse.error("faild to load all users");
+        }
+        return GcmResponse.ok(users);
+    }
+    public GcmResponse getWorkers() throws SQLException {
+        ArrayList<RegisterPayload> users= userRepo.getAllWorkers();
+        if(users.isEmpty())
+        {
+            return GcmResponse.error("faild to load all workers");
+        }
+        return GcmResponse.ok(users);
+    }
+    public int PendingMessage(int id)
+    {
+        return userRepo.gotMail(id);
     }
 
 }

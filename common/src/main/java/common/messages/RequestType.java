@@ -7,11 +7,12 @@ public enum RequestType {
 
     // Catalog
     LIST_CITIES,
-    GET_CITIES_COUNT,
     GET_CITY_DETAILS,
+    GET_MESSAGES,
     LIST_MAPS_FOR_CITY,
     GET_MAP,
     GET_PENDING_MAPS,
+    SEARCH_CITY,
 
     //guest catalog
     GET_CITY_CATALOG,
@@ -34,15 +35,18 @@ public enum RequestType {
     BUY_MAP,
     BUY_SUBSCRIPTION,
     LIST_USER_PURCHASES,
+    LIST_USER_PURCHASES_HISTORY,
     LIST_USER_SUBSCRIPTIONS,
     LIST_USER_MAPS,
+
 
     // Admin / Manager
     LIST_PENDING_MAP_VERSIONS,
     PEND_MAP,
     APPROVE_MAP_VERSION,
     GET_ACTIVITY_REPORT,
-
+    LIST_ALL_USERS,
+    LIST_ALL_WORKERS,
     // Utility
     PING,
     GET_REPORT,

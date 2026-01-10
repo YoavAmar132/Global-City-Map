@@ -11,17 +11,19 @@ public class Route implements Serializable {
     private final String name;
     private final String description;
     private final POI_Category category;
+    private final int cityID;
 
     // each point: [baseWorldX, baseWorldY]
     private final List<double[]> basePoints = new ArrayList<>();
 
     public Route(int id, String name, String description,
-                 POI_Category category, List<double[]> basePoints) {
+                 POI_Category category, List<double[]> basePoints, int cityID) {
         this.id = id;
         this.name = name;
         this.description=description;
         this.category=category;
         if (basePoints != null) this.basePoints.addAll(basePoints);
+        this.cityID = cityID;
     }
 
     public int getId() { return id; }

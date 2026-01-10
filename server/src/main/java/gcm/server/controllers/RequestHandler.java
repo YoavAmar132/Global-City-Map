@@ -20,7 +20,7 @@ public class RequestHandler {
     private final StatsService statsService;
     private static final List<User> online_users = new ArrayList<>();
     private User loggedInUser = null;
-
+     public Message message=new Message("new map added","");;
     public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
                           CatalogService catalogService, StatsService statsService) {
         this.authService = authService;
@@ -215,6 +215,31 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+        if (type == RequestType.GET_MESSAGES) {
+            try {
+                return handleMessages(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (type == RequestType.LIST_ALL_USERS) {
+          return authService.getUsers();
+        }
+        if (type == RequestType.LIST_ALL_WORKERS) {
+            return authService.getWorkers();
+        }
+        if (type == RequestType.LIST_USER_PURCHASES_HISTORY) {
+            return handleHistory(request);
+        }
+
+        if (type == RequestType.SEARCH_CITY) {
+            try {
+                return handleSearch(request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
 
 
         // later you'll add more cases for other RequestTypes
@@ -254,7 +279,8 @@ public class RequestHandler {
 
             }
             online_users.add(user);
-            return GcmResponse.ok(user);
+            int x=authService.PendingMessage(user.getId());
+          return GcmResponse.okm(user,String.valueOf(x));
 
 
         } catch (SQLException e) {
@@ -305,7 +331,6 @@ public class RequestHandler {
         if (!(rawPayload instanceof CityPricingItem item)) {
             return GcmResponse.error("Invalid payload for UPDATE_CITY_PRICE");
         }
-
         boolean success = cityService.updateCityPrice(item);
 
         if (!success) {
@@ -313,6 +338,7 @@ public class RequestHandler {
         }
 
         return GcmResponse.ok(null);
+
     }
 
 
@@ -334,7 +360,9 @@ public class RequestHandler {
             return GcmResponse.error("Invalid payload for map pending request");
         }
         if(!mapService.sendApprovedMap(approvePayload)){ return GcmResponse.error("faild to pend");}
-        return GcmResponse.ok(null);
+         mapService.SendMessage(((ApprovePayload) rawPayload).getCityName());
+        Popup p=new Popup(mapService.getPopup(((ApprovePayload) rawPayload).getCityName()));
+        return GcmResponse.ok(p);
     }
     //map request handler
     private GcmResponse handleMapRequest(GcmRequest request) throws SQLException {
@@ -409,7 +437,7 @@ public class RequestHandler {
         System.out.println("registration request received");
         // 1. Validate and cast payload
         Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof LoginPayload payload)) {
+        if (!(rawPayload instanceof RegisterPayload payload)) {
             return GcmResponse.error("Invalid payload for register request");
         }
 
@@ -418,7 +446,7 @@ public class RequestHandler {
 
         try {
             // 2. Delegate to AuthService to check DB / users list
-            User user = authService.register(username, password);
+            User user = authService.register(payload);
             // 3. Handle failure
             if (user == null) {
                 return GcmResponse.error(authService.getErrormsg());
@@ -442,7 +470,7 @@ public class RequestHandler {
         }
 
         List<CityCatalogItem> cities =
-                catalogService.loadCityCatalog();
+                catalogService.searchCities("");
 
         if (cities == null) {
             return GcmResponse.error("Failed to load city catalog");
@@ -594,6 +622,85 @@ public class RequestHandler {
         // 4. Return Success
         return GcmResponse.ok(reports);
     }
+    //yoav
+    private GcmResponse handleMessages(GcmRequest request) throws SQLException {
+        System.out.println("get messages request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof User)) {
+            return GcmResponse.error("Invalid payload for messages");
+        }
+       int id =((User) rawPayload).getId();
+        ArrayList<Message> messages = mapService.getMessage(id);
+        Message m=statsService.getMessages(id);
+        if (m!=null)
+        {
+            messages.add(0,m);
+        }
+
+
+
+        return GcmResponse.ok(messages);
+    }
+
+    private GcmResponse handleHistory(GcmRequest request) throws SQLException {
+        System.out.println("get history request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof RegisterPayload)) {
+            return GcmResponse.error("Invalid payload for history");
+        }
+        int id =((RegisterPayload) rawPayload).getUserid();
+        ArrayList<String> history = statsService.getHistory(id);
+       if(history.isEmpty())
+       {
+           return GcmResponse.error("faild to get history from db");
+       }
+
+        return GcmResponse.ok(history);
+    }
+
+    private GcmResponse handleSearch(GcmRequest request) throws SQLException {
+        System.out.println("search request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof SearchPayload)) {
+            return GcmResponse.error("Invalid payload for search");
+        }
+
+        SearchPayload payload = (SearchPayload) request.getPayload();
+
+        // Logic is delegated to the Service
+        // If this fails, the SQLException propagates up immediately
+        List<CityCatalogItem> results = catalogService.searchCities(payload.getQuery());
+
+        return GcmResponse.ok(results);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //yoav
+    //adam
+
 
 
 }

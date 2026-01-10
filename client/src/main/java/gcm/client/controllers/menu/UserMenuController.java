@@ -7,8 +7,12 @@ import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert;
+import java.util.ArrayList;
 
 
 public class UserMenuController {
@@ -16,8 +20,26 @@ public class UserMenuController {
 
     public void initialize() {
         client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
     }
-    
+
+    private void handleResponse(GcmResponse response) {
+        System.out.println("called");
+        Object t = response.getData();
+        if (t instanceof Popup) {
+            System.out.println("is popup");
+            if((((Popup) t).isInList(ClientApp.getCurrentUser().getId())))
+            {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("");
+                alert.setContentText("you have a new message");
+                alert.showAndWait();
+            }
+        }
+
+
+    }
+
 
     @FXML
     private void handleClose(ActionEvent event) {
@@ -42,5 +64,9 @@ public class UserMenuController {
     private void onMyMapsClicked(ActionEvent event) {
         System.out.println("My Maps clicked");
         ClientApp.getNavigator().show(MyMapsController.class);
+    }
+
+    public void onMyMessagesClicked(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(MessagesController.class);
     }
 }
