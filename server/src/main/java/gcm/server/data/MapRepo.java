@@ -216,8 +216,8 @@ public class MapRepo {
     public boolean insertPendingMap(MapSheet map) {
         String sql = """
         INSERT INTO pending_maps
-        (version, cityID, name, description, path, poi_array)
-        VALUES (?, ?, ?, ?, ?, ?)
+        (version, cityID, name, description, path, poi_array, is_edit, source_map_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """;
 
         try (Connection conn = DbManager.getConnection();
@@ -229,6 +229,9 @@ public class MapRepo {
             stmt.setString(4, map.getDescription());
             stmt.setString(5, map.getPath());
             stmt.setString(6, JsonUtil.poiListToJson(map.getPois()));
+            stmt.setBoolean(7, map.isEdit());
+            stmt.setObject(8, map.getSourceMapId());
+
 
             return stmt.executeUpdate() == 1;
 
@@ -242,9 +245,10 @@ public class MapRepo {
 
 
 
+
     public MapSheet loadPendingMap(int version, int cityID, String name) {
         String sql = """
-        SELECT version, cityID, name, description, path, poi_array
+        SELECT version, cityID, name, description, path, poi_array, is_edit
         FROM pending_maps
         WHERE version = ? AND cityID = ? AND name = ?
     """;
@@ -258,12 +262,10 @@ public class MapRepo {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-
                     String poiJson = rs.getString("poi_array");
-
                     ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
 
-                    return new MapSheet(
+                    MapSheet map = new MapSheet(
                             rs.getInt("version"),
                             rs.getInt("cityID"),
                             rs.getString("name"),
@@ -271,6 +273,10 @@ public class MapRepo {
                             rs.getString("path"),
                             pois
                     );
+
+                    map.setEdit(rs.getBoolean("is_edit"));
+                    map.setSourceMapId((Integer) rs.getObject("source_map_id"));
+                    return map;
                 }
             }
 
@@ -280,6 +286,7 @@ public class MapRepo {
 
         return null;
     }
+
 
 
 
@@ -319,19 +326,13 @@ public class MapRepo {
                 return false;
             }
 
-        /* ======================================================
-           1️⃣ INSERT POIs AND FIX THEIR IDS IN THE MAP OBJECT
-           ====================================================== */
-
+            // Ensure POIs exist + fix IDs
             for (Poi poi : map.getPois()) {
 
-                // Already approved POI → keep its ID
-                if (poi.getId() >= 0) {
-                    continue;
-                }
+                if (poi.getId() >= 0) continue;
 
                 Poi approvedPoi = new Poi(
-                        0, // let DB auto-generate ID
+                        0,
                         poi.getName(),
                         poi.getDescription(),
                         poi.getNWorldX(),
@@ -342,26 +343,39 @@ public class MapRepo {
                         true
                 );
 
-                // 🔥 INSERT POI AND GET REAL DB ID
                 int newPoiId = poirepo.insertPoiAndReturnId(approvedPoi);
-
-                // 🔥 CRITICAL FIX: update the POI ID INSIDE THE MAP
                 poi.setId(newPoiId);
             }
 
-        /* ======================================================
-           2️⃣ DELETE PENDING MAP
-           ====================================================== */
+            // Decide version + handle edit replacement
+            int newVersion;
+
+            if (map.isEdit()) {
+                if (map.getSourceMapId() == null) {
+                    conn.rollback();
+                    throw new SQLException("Edit map missing sourceMapId");
+                }
+
+                // Remove old approved map
+                deleteApprovedMapById(conn, map.getSourceMapId());
+
+                // Increment version
+                newVersion = getLatestVersionForCity(cityId) + 1;
+
+            } else {
+                // New map
+                newVersion = 1;
+            }
+
+            // Delete pending map (approval finished)
             deletePendingMap(map.getVersion(), map.getName());
 
-        /* ======================================================
-           3️⃣ INSERT APPROVED MAP WITH *FIXED* JSON
-           ====================================================== */
+            // Insert approved map
             try (PreparedStatement stmt = conn.prepareStatement(insertMapSql)) {
                 stmt.setInt(1, cityId);
                 stmt.setString(2, map.getName());
                 stmt.setString(3, JsonUtil.mapSheetToJsonWithEmbeddedArrays(map));
-                stmt.setInt(4, map.getVersion());
+                stmt.setInt(4, newVersion);
                 stmt.executeUpdate();
             }
 
@@ -379,11 +393,21 @@ public class MapRepo {
 
 
 
+    private boolean deleteApprovedMapById(Connection conn, int mapId) throws SQLException {
+        String sql = "DELETE FROM Maps WHERE mapID = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, mapId);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+
+
     public List<MapSheet> loadAllPendingMaps() {
         List<MapSheet> maps = new ArrayList<>();
 
         String sql = """
-        SELECT version, cityID, name, description, path, poi_array
+        SELECT version, cityID, name, description, path, poi_array, is_edit, source_map_id
         FROM pending_maps
         ORDER BY name, version
     """;
@@ -393,9 +417,7 @@ public class MapRepo {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-
                 String poiJson = rs.getString("poi_array");
-
                 ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
 
                 MapSheet map = new MapSheet(
@@ -407,6 +429,8 @@ public class MapRepo {
                         pois
                 );
 
+                map.setEdit(rs.getBoolean("is_edit"));
+                map.setSourceMapId((Integer) rs.getObject("source_map_id"));
                 maps.add(map);
             }
 
@@ -419,9 +443,11 @@ public class MapRepo {
 
 
 
+
+
     public List<MapSheet> loadAllMapsFromCity(String cityName) {
         List<MapSheet> maps = new ArrayList<>();
-        String sql = "SELECT map FROM maps WHERE cityID = ?";
+        String sql = "SELECT mapID, map FROM maps WHERE cityID = ?";
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -432,8 +458,12 @@ public class MapRepo {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String mapJson = rs.getString("map");
+                    int mapId = rs.getInt("mapID");
                     MapSheet map = JsonUtil.jsonToMapSheetWithEmbeddedArrays(mapJson);
-                    if (map != null) maps.add(map);
+                    if (map != null){
+                        map.setSourceMapId(mapId);
+                        maps.add(map);
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -444,18 +474,25 @@ public class MapRepo {
 
     // Helper: Get latest version (Required for OTP)
     public int getLatestVersionForCity(int cityId) {
-        // If your Maps table doesn't have a 'version' column yet, this will return 0 or fail.
-        // Ensure you ran: ALTER TABLE Maps ADD COLUMN version INT;
-        String sql = "SELECT MAX(version) as maxVer FROM Maps WHERE cityID = ?";
+        String sql = "SELECT MAX(version) AS maxVer FROM Maps WHERE cityID = ?";
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, cityId);
+
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getInt("maxVer");
+                if (rs.next()) {
+                    return rs.getInt("maxVer"); // returns 0 if NULL
+                }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return 1; // Default to 1 if not found
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
     }
+
 
     // 1. Helper: Loads a specific version of a map (NEW)
     public MapSheet loadMapByVersion(String cityName, int version) {

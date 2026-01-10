@@ -363,15 +363,16 @@ public class RequestHandler {
 
         Object payload = request.getPayload();
 
-        // If client sent a CityIdPayload -> return POIs for that city only
+        // 1) city-only
         if (payload instanceof CityIdPayload cityPayload) {
             int cityId = cityPayload.getCityId();
             return GcmResponse.ok(mapService.getPoisForCity(cityId));
         }
 
-        // Otherwise fallback to old behavior (all POIs)
+        // 2) all pois (for older screens)
         return GcmResponse.ok(mapService.getpois());
     }
+
 
     /*
     private GcmResponse handleRoute(GcmRequest request) throws SQLException {

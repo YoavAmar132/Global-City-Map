@@ -274,7 +274,7 @@ public class MapOverlayLayerController {
         if (a == null || b == null || linesPane == null) return;
 
         Line line = new Line();
-        line.setStroke(Color.ORANGE);
+        line.setStroke(Color.LIMEGREEN);
         line.setStrokeWidth(3);
         line.setMouseTransparent(true);
 

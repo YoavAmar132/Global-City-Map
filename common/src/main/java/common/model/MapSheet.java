@@ -15,6 +15,9 @@ public class MapSheet implements Serializable {
     private ArrayList<Poi> pois = new ArrayList<>();
     private int FirstPoi=0;
     private int LastPoi=0;
+    private boolean edit = false;   // true = edit existing map, false = new map
+    private Integer sourceMapId; // null = new map
+
     public MapSheet(
             int version,
             int cityID,
@@ -28,7 +31,6 @@ public class MapSheet implements Serializable {
         this.name = name;
         this.description = description;
         this.path = path;
-
         this.pois = (pois != null) ? pois : new ArrayList<>();
 
         if (!this.pois.isEmpty()) {
@@ -40,7 +42,21 @@ public class MapSheet implements Serializable {
         }
     }
 
+    public Integer getSourceMapId() {
+        return sourceMapId;
+    }
 
+    public void setSourceMapId(Integer sourceMapId) {
+        this.sourceMapId = sourceMapId;
+    }
+
+    public boolean isEdit() {
+        return edit;
+    }
+
+    public void setEdit(boolean edit) {
+        this.edit = edit;
+    }
 
     public void setDescription(String description) {
         this.description = description;

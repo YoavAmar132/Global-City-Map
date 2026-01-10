@@ -131,6 +131,9 @@ public class MapViewerController {
 
         showDone = false;
 
+        approvedMap.setEdit(true);
+        approvedMap.setSourceMapId(approvedMap.getSourceMapId()); // APPROVED MAP ID
+
         this.path = approvedMap.getPath();
         setMap(approvedMap);
         hasVals = true;
@@ -143,7 +146,7 @@ public class MapViewerController {
         selectedPoiIds.clear();
         overlayLayerController.clearAll();
 
-        // ---- PHASE 1: add map POIs (no visual selection yet) ----
+        // add map POIs (no visual selection yet) ----
         if (approvedMap.getPois() != null) {
             for (Poi p : approvedMap.getPois()) {
                 overlayLayerController.addPoi(p);
@@ -154,7 +157,7 @@ public class MapViewerController {
         // Force overlay to actually create PoiView nodes
         overlayLayerController.rerender();
 
-        // ---- PHASE 2: mark map POIs as selected (GREEN) ----
+        // mark map POIs as selected (GREEN) ----
         if (approvedMap.getPois() != null) {
             for (Poi p : approvedMap.getPois()) {
                 overlayLayerController.markPoiSelected(p);
@@ -170,9 +173,6 @@ public class MapViewerController {
                 RequestType.LIST_POIS,
                 new CityIdPayload(map.getCityID())
         ));
-
-
-
 
 
         baseLayerController.setTileRoot(path);
@@ -229,9 +229,6 @@ public class MapViewerController {
                 RequestType.LIST_POIS,
                 new CityIdPayload(map.getCityID())
         ));
-
-
-
 
 
         baseLayerController.setTileRoot(tilePath);
@@ -444,6 +441,11 @@ public class MapViewerController {
                 path,
                 new ArrayList<>(selected)
         );
+
+        payload.setEdit(map.isEdit());
+        if (map.isEdit()) {
+            payload.setSourceMapId(map.getSourceMapId());
+        }
 
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
