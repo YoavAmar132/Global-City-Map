@@ -225,6 +225,9 @@ public class RequestHandler {
         if (type == RequestType.LIST_ALL_USERS) {
           return authService.getUsers();
         }
+        if (type == RequestType.LIST_ALL_WORKERS) {
+            return authService.getWorkers();
+        }
         if (type == RequestType.LIST_USER_PURCHASES_HISTORY) {
             return handleHistory(request);
         }
@@ -276,7 +279,8 @@ public class RequestHandler {
 
             }
             online_users.add(user);
-            return GcmResponse.ok(user);
+            int x=authService.PendingMessage(user.getId());
+          return GcmResponse.okm(user,String.valueOf(x));
 
 
         } catch (SQLException e) {
@@ -357,7 +361,8 @@ public class RequestHandler {
         }
         if(!mapService.sendApprovedMap(approvePayload)){ return GcmResponse.error("faild to pend");}
          mapService.SendMessage(((ApprovePayload) rawPayload).getCityName());
-        return GcmResponse.ok(null);
+        Popup p=new Popup(mapService.getPopup(((ApprovePayload) rawPayload).getCityName()));
+        return GcmResponse.ok(p);
     }
     //map request handler
     private GcmResponse handleMapRequest(GcmRequest request) throws SQLException {

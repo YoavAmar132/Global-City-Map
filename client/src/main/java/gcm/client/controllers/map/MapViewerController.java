@@ -155,12 +155,9 @@ private void tryShowMap() {
         if (stackPane.getScene() == null) return;
 
         baseLayerController.setTileRoot(path);
-        System.out.println("should show map");
         showMap(map);
         overlayLayerController.rerender();
         showDone = true;
-
-        System.out.println("stackPane size=" + stackPane.getWidth() + "x" + stackPane.getHeight());
 
     });
 }
@@ -215,7 +212,6 @@ private void tryShowMap() {
             double scaleUp = Math.pow(2, Poi.BASE_ZOOM - currentZoom);
             double baseWorldX = worldX * scaleUp;
             double baseWorldY = worldY * scaleUp;
-            System.out.printf("worldx:"+worldX+",worldy:"+worldY);
             // ask name
             try {
                 String name = askPoiName();
@@ -251,7 +247,6 @@ private void tryShowMap() {
 
                 overlayLayerController.addPoi(poi);
                 pois.add(poi);
-                System.out.println("Created POI " + name + " at " + worldX + ", " + worldY);
 
             }finally {
                 baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
@@ -334,7 +329,6 @@ private void tryShowMap() {
                 if (buildingRoute != null) {
                     buildingRoute.addBasePoint(baseWorldX, baseWorldY);
                     overlayLayerController.rerender();
-                    System.out.println("Added route point: " + baseWorldX + "," + baseWorldY);
                 }
 
             } finally {
@@ -348,7 +342,6 @@ private void tryShowMap() {
         baseLayerController.setOnRightClick(() -> finishRouteMode());
     }
     private void finishRouteMode() {
-        System.out.println("Finish Route mode");
 
         buildingRoute = null;
         buildingRouteWaitingFirstPoint = false;
@@ -360,7 +353,6 @@ private void tryShowMap() {
         baseLayerController.setOnRightClick(null);
     }
     private void showPoiPopover(Poi poi, Node anchor) {
-        System.out.println("should pop");
         ContextMenu menu = new ContextMenu();
 
         MenuItem title = new MenuItem("Name: "+poi.getName());
@@ -554,7 +546,6 @@ private void tryShowMap() {
 
         if (routes != null) {
             for (Route r : routes) {
-                System.out.println("route id :"+r.getBasePoints());
                 List<double[]> pts = r.getBasePoints();
 
                 if (pts != null && !pts.isEmpty() && pts.get(0).length >= 2) {
@@ -572,7 +563,6 @@ private void tryShowMap() {
 
         // Once all objects are added, ensure positions are correct
         overlayLayerController.rerender();
-        System.out.println("rerenderddd");
     }
 
 
