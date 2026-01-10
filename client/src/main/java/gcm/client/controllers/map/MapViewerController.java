@@ -34,14 +34,12 @@ public class MapViewerController {
     private final List<Integer> selectedPoiIds = new ArrayList<>();
     private int tempPoiId = -1;
 
-    private enum Mode { VIEW, EDIT_MAP, CREATE_MAP ,ADD_POI, ADD_ROUTE }
+
+    private enum Mode { VIEW, EDIT_MAP,EDIT_ROUTE ,CREATE_MAP ,ADD_POI, ADD_ROUTE }
 
     private Mode mode = Mode.VIEW;
 
-
-
-
-
+    private List<Poi> routePois = new ArrayList<>();
 
 
     public void setMap(MapSheet map)
@@ -183,6 +181,70 @@ public class MapViewerController {
                         "Red POIs are approved for the city but not in the map."
         );
     }
+
+
+    public void setValsForEditRoute(RouteSheet sheet) {
+
+        System.out.println("MapViewer: entering EDIT_ROUTE mode");
+
+
+        showDone = false;
+        hasVals = true;
+
+        this.mode = Mode.EDIT_ROUTE;
+
+
+        this.path = sheet.getCityTilePath();
+
+        // reuse MapSheet holder so other logic still works
+        this.map = new MapSheet(
+                1,
+                sheet.getCityId(),
+                sheet.getRoute().getName(),
+                sheet.getRoute().getDescription(),
+                path,
+                new ArrayList<>()   // map POIs not relevant here
+        );
+
+        // ---- reset UI state ----
+        selectedPoiIds.clear();
+        routePois.clear();
+        overlayLayerController.clearAll();
+
+        // ---- load base map ----
+        baseLayerController.setTileRoot(path);
+
+        // ---- load APPROVED POIs for city (RED) ----
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+        waitingForCityPois = true;
+
+        client.sendRequest(new GcmRequest(
+                RequestType.LIST_POIS,
+                new CityIdPayload(sheet.getCityId())
+        ));
+
+        // ---- preload ROUTE POIs (ORDER MATTERS) ----
+        if (sheet.getOrderedPois() != null) {
+            for (Poi p : sheet.getOrderedPois()) {
+                overlayLayerController.addPoi(p);
+                selectedPoiIds.add(p.getId());   // order preserved
+                overlayLayerController.markPoiSelected(p);
+            }
+        }
+
+        overlayLayerController.updateRouteNumbers(selectedPoiIds);
+        overlayLayerController.rerender();
+
+        tryShowMap();
+
+        showInfo(
+                "Edit Route mode: numbered POIs are part of the route.\n" +
+                        "Click a POI to remove it or add new ones at the end."
+        );
+    }
+
+
 
 
 

@@ -49,6 +49,20 @@ public class ContentWorkerMenuController {
         ClientApp.getNavigator().showLoaded(view.root);
     }
 
+    @FXML
+    public void onEditExistingRoute(ActionEvent actionEvent) {
+
+        var view = ClientApp.getNavigator()
+                .get(ContentCatalogController.class);
+
+        view.controller.setOpenIntent(
+                ContentCatalogController.OpenIntent.EDIT_ROUTE
+        );
+
+        ClientApp.getNavigator().showLoaded(view.root);
+    }
+
+
 
     @FXML
     public void onCreateButton(ActionEvent actionEvent) {

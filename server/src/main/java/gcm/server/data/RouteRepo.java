@@ -10,9 +10,7 @@ import java.util.List;
 
 public class RouteRepo {
 
-    /* ==============================
-       INSERT PENDING ROUTE
-       ============================== */
+
     public boolean insertPendingRoute(PendingRoute route) throws SQLException {
 
         String insertRouteSql = """
@@ -64,9 +62,7 @@ public class RouteRepo {
         }
     }
 
-    /* ==============================
-       APPROVE ROUTE
-       ============================== */
+
     public boolean approveRoute(int routeId) throws SQLException {
 
         String insertRouteSql = """
@@ -92,7 +88,7 @@ public class RouteRepo {
         try (Connection conn = DbManager.getConnection()) {
             conn.setAutoCommit(false);
 
-            // 1. Create approved route
+            //  Create approved route
             try (PreparedStatement ps = conn.prepareStatement(
                     insertRouteSql, Statement.RETURN_GENERATED_KEYS)) {
 
@@ -107,7 +103,7 @@ public class RouteRepo {
 
                 int newRouteId = rs.getInt(1);
 
-                // 2. Copy stops
+                //  Copy stops
                 try (PreparedStatement psStops =
                              conn.prepareStatement(insertStopsSql)) {
                     psStops.setInt(1, newRouteId);
@@ -116,7 +112,7 @@ public class RouteRepo {
                 }
             }
 
-            // 3. Cleanup pending
+            // Cleanup pending
             try (PreparedStatement ps = conn.prepareStatement(deletePendingStopsSql)) {
                 ps.setInt(1, routeId);
                 ps.executeUpdate();
@@ -132,9 +128,7 @@ public class RouteRepo {
         }
     }
 
-    /* ==============================
-       GET ALL PENDING ROUTES
-       ============================== */
+
     public List<PendingRoute> getPendingRoutes() throws SQLException {
 
         List<PendingRoute> routes = new ArrayList<>();
