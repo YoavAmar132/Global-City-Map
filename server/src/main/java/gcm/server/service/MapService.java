@@ -1,14 +1,12 @@
 package gcm.server.service;
 
-import common.messages.ApprovePayload;
-import common.messages.BuyMapPayload;
-import common.messages.GcmResponse;
+import common.messages.*;
 import common.model.*;
 import gcm.server.data.MapRepo;
 import gcm.server.data.PoiRepo;
 import gcm.server.data.RouteRepo;
 import gcm.server.data.UserRepo;
-import common.messages.IndexPayload;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +14,14 @@ import java.util.List;
 
 public class MapService {
     private final MapRepo mapRepository;
+    private final UserRepo userRepository;
+    private ArrayList<Integer> users;
 
     public MapSheet map;
 
-    public MapService(MapRepo mapRepository) {
-        this.mapRepository = mapRepository;
+    public MapService(MapRepo mapRepository ,UserRepo userRepository) {
+        this.mapRepository = mapRepository ;
+        this.userRepository=userRepository;
     }
 
     //store
@@ -108,5 +109,48 @@ public class MapService {
         } catch (Exception e) {
             return GcmResponse.error("Server Error: " + e.getMessage());
         }
+    }
+    public void SendMessage(String City) throws SQLException {
+        users=userRepository.getAllId();
+        for(int id:users)
+        {
+            if(mapRepository.isUserSubscribed(id,City))
+            {
+               mapRepository.writeMessage(id,"new version of"+City+" is now available");
+
+            }
+        }
+
+
+    }
+    public ArrayList<Message> getMessage(int id) throws SQLException {
+        ArrayList<Message> messages=new ArrayList<Message>();
+        ArrayList<String> strings=mapRepository.getaAllMessages(id);
+        if(!strings.isEmpty())
+        {
+            for(String s:strings)
+            {
+                Message m =new Message("Map update",s);
+                messages.add(m);
+            }
+        }
+
+        return  messages;
+
+    }
+    public ArrayList<Integer> getPopup(String City) throws SQLException {
+        users=userRepository.getAllId();
+        ArrayList<Integer> pop=new ArrayList<>();
+        for(int id:users)
+        {
+            if(mapRepository.isUserSubscribed(id,City))
+            {
+             pop.add(id);
+
+            }
+        }
+        return pop;
+
+
     }
 }

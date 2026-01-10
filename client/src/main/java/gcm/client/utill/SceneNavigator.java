@@ -3,13 +3,12 @@ package gcm.client.utill;
 import gcm.client.controllers.*;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalog.ContentCatalogController;
+import gcm.client.controllers.manager_util.ClientCardController;
+import gcm.client.controllers.manager_util.ManageClientController;
 import gcm.client.controllers.manager_util.ReportResultController;
 import gcm.client.controllers.manager_util.ReportsInputController;
 import gcm.client.controllers.map.*;
-import gcm.client.controllers.menu.ContentWorkerMenuController;
-import gcm.client.controllers.menu.CustomerSupportMenuController;
-import gcm.client.controllers.menu.ManagerMenuController;
-import gcm.client.controllers.menu.UserMenuController;
+import gcm.client.controllers.menu.*;
 
 import gcm.client.controllers.user_util.BuyMapScreenController;
 import gcm.client.controllers.user_util.MyMapsController;
@@ -34,6 +33,7 @@ public class SceneNavigator {
 
         // NOTE: leading "/" and matching src/main/resources structure
         routes.put(LoginController.class, "/gcm/client/Login/LoginScreen.fxml");
+        routes.put(FillFormController.class, "/gcm/client/Login/FillFormScreen.fxml");
         routes.put(WelcomeController.class, "/gcm/client/Login/WelcomeScreen.fxml");
         routes.put(RegistrationController.class, "/gcm/client/Login/RegistrationScreen.fxml");
         routes.put(UserMenuController.class, "/gcm/client/menu/UserMenuScreen.fxml");
@@ -58,7 +58,17 @@ public class SceneNavigator {
         routes.put(SubscriptionMapsController.class, "/gcm/client/user_util/SubscriptionMaps.fxml");
         routes.put(ReportsInputController.class, "/gcm/client/manager_util/ReportsInputScreen.fxml");
         routes.put(ReportResultController.class, "/gcm/client/manager_util/ReportResultView.fxml");
+        routes.put(MessagesController.class, "/gcm/client/menu/MessagesScreen.fxml"); //yoav
+        routes.put(ManageClientController.class, "/gcm/client/manager_util/ManageClientScreen.fxml");
+        routes.put(ClientCardController.class, "/gcm/client/manager_util/ClientCardScreen.fxml");
 
+
+
+
+
+
+        //yoav
+        //adam
 
     }
 

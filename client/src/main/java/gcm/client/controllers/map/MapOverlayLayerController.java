@@ -151,7 +151,6 @@ public class MapOverlayLayerController {
             double wx = p.getWorldX(z);
             double wy = p.getWorldY(z);
             double[] xy = mapper.mapLonLatToView(wx, wy);
-            System.out.println("drawn succcesfuly");
             view.setLayoutX(xy[0]);
             view.setLayoutY(xy[1]);
         }

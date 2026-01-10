@@ -276,7 +276,9 @@ public class MapRepo {
                             rs.getString("description"),
                             rs.getString("path"),
                             routes,
-                            pois
+                            pois,
+                            0
+
                     );
 
                 }
@@ -363,7 +365,8 @@ public class MapRepo {
                         rs.getString("description"),
                         rs.getString("path"),
                         routes,
-                        pois
+                        pois,
+                        0
                 );
 
                 maps.add(map);
@@ -535,6 +538,70 @@ public class MapRepo {
         } catch (SQLException e) { e.printStackTrace(); }
         return cities;
     }
+    public void writeMessage(int id, String message) throws SQLException {
+
+        String sql = """
+        INSERT INTO Messages (UserID, Message, CreatedAt)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            stmt.setString(2, message);
+
+            stmt.executeUpdate();
+        }
+    }
+    public ArrayList<String> getaAllMessages(int id) throws SQLException {
+
+        ArrayList<String> messages = new ArrayList<>();
+
+        String selectSql = """
+        SELECT Message
+        FROM Messages
+        WHERE UserID = ?
+        ORDER BY CreatedAt
+    """;
+
+        String deleteSql = """
+        DELETE FROM Messages
+        WHERE UserID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection()) {
+
+            // Important: make this atomic
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement selectStmt = conn.prepareStatement(selectSql)) {
+                selectStmt.setInt(1, id);
+
+                try (ResultSet rs = selectStmt.executeQuery()) {
+                    while (rs.next()) {
+                        messages.add(rs.getString("Message"));
+                    }
+                }
+            }
+
+            try (PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
+                deleteStmt.setInt(1, id);
+                deleteStmt.executeUpdate();
+            }
+
+            // commit only if everything succeeded
+            conn.commit();
+
+        } catch (SQLException e) {
+            // rollback on error
+            throw e;
+        }
+
+        return messages;
+    }
+
+
 
     // Getters for other repos
     public RouteRepo getRouteRepo() { return routeRepo; }

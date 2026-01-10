@@ -9,6 +9,7 @@ public class MapSheet implements Serializable {
     private  String name;
     private  String description;
     private  String path;
+    private int cityID;
     private ArrayList<Route> routes = new ArrayList<>();
     private ArrayList<Poi> pois = new ArrayList<>();
     private int FirstPoi=0;
@@ -16,12 +17,13 @@ public class MapSheet implements Serializable {
     private int FirstRoute=0;
     private int LastRoute=0;
     public MapSheet(int version, String name, String description, String path,
-                    ArrayList<Route> routes, ArrayList<Poi> pois) {
+                    ArrayList<Route> routes, ArrayList<Poi> pois, int cityID) {
 
         this.version = version;
         this.name = name;
         this.description = description;
         this.path = path;
+        this.cityID = cityID;
 
         this.routes = (routes != null) ? routes : new ArrayList<>();
         this.pois   = (pois != null)   ? pois   : new ArrayList<>();
@@ -110,6 +112,7 @@ public class MapSheet implements Serializable {
         return version;
     }
 
+    public int getCityID() {return cityID;}
 
     public ArrayList<Poi> getPois() {
         return pois;

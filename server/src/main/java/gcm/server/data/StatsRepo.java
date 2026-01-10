@@ -5,6 +5,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,4 +91,126 @@ public class StatsRepo {
             return r.next() ? r.getInt(1) : 0;
         }
     }
+
+    public boolean expDate(int userId) throws SQLException {
+
+        String sql = """
+        SELECT EndDate
+        FROM Subscriptions
+        WHERE UserID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (!rs.next()) {
+                    return false; // no subscription found
+                }
+
+                Timestamp endTimestamp = rs.getTimestamp("EndDate");
+                if (endTimestamp == null) {
+                    return false;
+                }
+
+                LocalDateTime endDate = endTimestamp.toLocalDateTime();
+                LocalDateTime now = LocalDateTime.now();
+
+                // already expired → false
+                if (endDate.isBefore(now)) {
+                    return false;
+                }
+
+                // difference in hours
+                long hoursLeft = ChronoUnit.HOURS.between(now, endDate);
+
+                return hoursLeft <= 72; // 3 days = 72 hours
+            }
+        }
+    }
+    public ArrayList<String> getHistory(int userId) {
+
+        ArrayList<String> history = new ArrayList<>();
+
+        // 1) Purchases
+        String purchasesSql = """
+        SELECT PurchaseDate, CityName, mapVersion, DownloadUsed
+        FROM Purchases
+        WHERE UserID = ?
+        ORDER BY PurchaseDate DESC
+    """;
+
+        // 2) Subscriptions (join Cities to get a readable city name)
+        String subsSql = """
+        SELECT s.StartDate, s.EndDate, s.DownloadsRemaining, c.CityName
+        FROM Subscriptions s
+        JOIN Cities c ON c.CityID = s.CityID
+        WHERE s.UserID = ?
+        ORDER BY s.StartDate DESC
+    """;
+
+        try (Connection conn = DbManager.getConnection()) {
+
+            // ---- Purchases ----
+            try (PreparedStatement stmt = conn.prepareStatement(purchasesSql)) {
+                stmt.setInt(1, userId);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String date = rs.getTimestamp("PurchaseDate").toString();
+                        String city = rs.getString("CityName");
+                        int version = rs.getInt("mapVersion");
+                        boolean used = rs.getBoolean("DownloadUsed");
+
+                        String row = String.format(
+                                "PURCHASE | %s | City: %s | Version: %d | Download used: %s",
+                                date,
+                                city,
+                                version,
+                                used ? "Yes" : "No"
+                        );
+
+                        history.add(row);
+                    }
+                }
+            }
+
+            // ---- Subscriptions ----
+            try (PreparedStatement stmt = conn.prepareStatement(subsSql)) {
+                stmt.setInt(1, userId);
+
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String start = rs.getTimestamp("StartDate").toString();
+                        String end = rs.getTimestamp("EndDate").toString();
+                        int remaining = rs.getInt("DownloadsRemaining");
+                        String city = rs.getString("CityName");
+
+                        String row = String.format(
+                                "SUBSCRIPTION | City: %s | %s → %s | Downloads remaining: %d",
+                                city,
+                                start,
+                                end,
+                                remaining
+                        );
+
+                        history.add(row);
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return history;
+    }
+
+
+
+
+
 }

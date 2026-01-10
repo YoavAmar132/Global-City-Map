@@ -1,8 +1,11 @@
 package gcm.server.data;
 
+import common.messages.RegisterPayload;
+import common.model.User;
 import gcm.server.model.UserEntity;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 /**
  *  removed loadAllUsers not needed now since we use dp (inefficient when users number grow)
@@ -59,24 +62,30 @@ public class UserRepo {
     }
 
     // Insert new user (REGISTER)
-    public boolean insertUser(String username, String passwordHash, String role)
+    public boolean insertUser(RegisterPayload payload, String role)
             throws SQLException {
 
         String sql = """
-            INSERT INTO Users (UserName, Password, Role)
-            VALUES (?, ?, ?)
-        """;
+        INSERT INTO Users (UserName, Password, Role, name, surname, phoneNum)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, username);
-            stmt.setString(2, passwordHash);
+            stmt.setString(1, payload.getUsername());
+            stmt.setString(2, payload.getPassword());
             stmt.setString(3, role);
+            stmt.setString(4, payload.getFirstname());
+            stmt.setString(5, payload.getLastname());
+
+            // phoneNum is INT in DB
+            stmt.setInt(6, Integer.parseInt(payload.getPhonenum()));
 
             return stmt.executeUpdate() == 1;
         }
     }
+
 
     // Login SUCCESS
     public void recordLoginSuccess(int userId) throws SQLException {
@@ -154,6 +163,128 @@ public class UserRepo {
             stmt.executeUpdate();
         }
     }
+    public ArrayList<Integer> getAllId() throws SQLException {
+
+        ArrayList<Integer> userIds = new ArrayList<>();
+
+        String sql = "SELECT UserID FROM Users";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                userIds.add(rs.getInt("UserID"));
+            }
+        }
+
+        return userIds;
+    }
+    public ArrayList<RegisterPayload> getAllUsers() throws SQLException {
+
+        ArrayList<RegisterPayload> users = new ArrayList<>();
+
+        String sql = """
+    SELECT UserID, UserName, Password, name, surname, phoneNum,role
+    FROM Users
+    WHERE role = 'Customer'
+""";
+
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+
+                RegisterPayload user = new RegisterPayload(
+
+                        rs.getString("UserName"),
+                        rs.getString("Password"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        rs.getString("phoneNum"),
+                        "",""
+
+
+
+                );
+               user.setUserid(rs.getInt("UserID"));
+               user.setRole(rs.getString("role"));
+
+                users.add(user);
+            }
+        }
+
+        return users;
+    }
+    public ArrayList<RegisterPayload> getAllWorkers() throws SQLException {
+
+        ArrayList<RegisterPayload> users = new ArrayList<>();
+
+        String sql = """
+    SELECT UserID, UserName, Password, name, surname, phoneNum,role
+    FROM Users
+    WHERE role <> 'Customer'
+""";
+
+
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+
+                RegisterPayload user = new RegisterPayload(
+
+                        rs.getString("UserName"),
+                        rs.getString("Password"),
+                        rs.getString("name"),
+                        rs.getString("surname"),
+                        rs.getString("phoneNum"),
+                        "",""
+
+
+
+                );
+                user.setUserid(rs.getInt("UserID"));
+                user.setRole(rs.getString("role"));
+
+                users.add(user);
+            }
+        }
+
+        return users;
+    }
+    public int gotMail(int userId) {
+
+        String sql = """
+        SELECT COUNT(*) AS msgCount
+        FROM Messages
+        WHERE UserID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("msgCount");
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0; // no messages or error
+    }
+
+
+
 
 
 }

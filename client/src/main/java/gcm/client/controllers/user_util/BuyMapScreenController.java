@@ -103,15 +103,26 @@ public class BuyMapScreenController {
     private void handleResponse(GcmResponse response) {
         Platform.runLater(() -> {
             if (response.isSuccess()) {
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Success");
-                alert.setHeaderText("Purchase Successful!");
-                alert.setContentText("You have successfully purchased access to " + selectedCity.getName());
-                alert.showAndWait();
+                Object t = response.getData();
+                if (t instanceof Popup) {
+                    if((((Popup) t).isInList(ClientApp.getCurrentUser().getId())))
+                    {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("");
+                        alert.setContentText("you have a new message");
+                        alert.showAndWait();
+                    }
+                }else {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Success");
+                    alert.setHeaderText("Purchase Successful!");
+                    alert.setContentText("You have successfully purchased access to " + selectedCity.getName());
+                    alert.showAndWait();
 
-                // Clear session and go to Main Menu
-                PurchaseSession.getInstance().clear();
-                ClientApp.getNavigator().show(UserMenuController.class);
+                    // Clear session and go to Main Menu
+                    PurchaseSession.getInstance().clear();
+                    ClientApp.getNavigator().show(UserMenuController.class);
+                }
             } else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Purchase Failed");
