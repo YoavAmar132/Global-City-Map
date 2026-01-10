@@ -10,9 +10,11 @@ public class PendingRoute implements Serializable {
     private String name;
     private String description;
     private int cityId;
+    private Integer sourceRouteId; // null = new route
 
     // ORDER MATTERS – POI IDs ONLY
     private ArrayList<Integer> stops;
+    private boolean isEdit;
 
     public PendingRoute(int routeId, String name, String description, int cityId, ArrayList<Integer> stops) {
         this.routeId = routeId;
@@ -20,7 +22,32 @@ public class PendingRoute implements Serializable {
         this.description = description;
         this.cityId = cityId;
         this.stops = stops;
+        this.sourceRouteId = null;
+        this.isEdit = false;
     }
+    public PendingRoute(int routeId, String name, String description,
+                        int cityId, ArrayList<Integer> stops,
+                        Integer sourceRouteId) {
+        this(routeId, name, description, cityId, stops);
+        this.sourceRouteId = sourceRouteId;
+    }
+
+    public boolean isEdit() {
+        return isEdit;
+    }
+
+    public void setEdit(boolean edit) {
+        isEdit = edit;
+    }
+
+    public Integer getSourceRouteId() {
+        return sourceRouteId;
+    }
+
+    public void setSourceRouteId(Integer sourceRouteId) {
+        this.sourceRouteId = sourceRouteId;
+    }
+
 
     public ArrayList<Integer> getStops() {
         return stops;

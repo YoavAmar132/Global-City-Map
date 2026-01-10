@@ -14,8 +14,9 @@ public class RouteRepo {
     public boolean insertPendingRoute(PendingRoute route) throws SQLException {
 
         String insertRouteSql = """
-        INSERT INTO pending_routes (name, description, cityID)
-        VALUES (?, ?, ?)
+        INSERT INTO pending_routes
+        (name, description, cityID, is_edit, sourceRouteID)
+        VALUES (?, ?, ?, ?, ?)
     """;
 
         String insertStopSql = """
@@ -35,6 +36,8 @@ public class RouteRepo {
                 ps.setString(1, route.getName());
                 ps.setString(2, route.getDescription());
                 ps.setInt(3, route.getCityId());
+                ps.setBoolean(4, route.isEdit());
+                ps.setObject(5, route.getSourceRouteId(), Types.INTEGER);
 
                 ps.executeUpdate();
 
@@ -61,6 +64,7 @@ public class RouteRepo {
             return true;
         }
     }
+
 
 
     public boolean approveRoute(int routeId) throws SQLException {
@@ -129,14 +133,48 @@ public class RouteRepo {
     }
 
 
+    public PendingRoute getPendingRouteById(int routeId)
+            throws SQLException {
+
+        String sql = """
+    SELECT routeID, cityID, name, description, sourceRouteID
+    FROM pending_routes
+    WHERE routeID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, routeId);
+            ResultSet rs = ps.executeQuery();
+
+            if (!rs.next()) return null;
+
+            PendingRoute r = new PendingRoute(
+                    rs.getInt("routeID"),
+                    rs.getString("name"),
+                    rs.getString("description"),
+                    rs.getInt("cityID"),
+                    new ArrayList<>()
+            );
+
+            r.setSourceRouteId(
+                    rs.getObject("sourceRouteID", Integer.class)
+            );
+
+            return r;
+        }
+    }
+
     public List<PendingRoute> getPendingRoutes() throws SQLException {
 
         List<PendingRoute> routes = new ArrayList<>();
 
         String routeSql = """
-        SELECT routeID, cityID, name, description
-        FROM pending_routes
-    """;
+            SELECT routeID, cityID, name, description, sourceRouteID
+            FROM pending_routes
+        """;
+
 
         String stopsSql = """
         SELECT poiID, stop_order
@@ -155,6 +193,8 @@ public class RouteRepo {
                 int cityId  = rs.getInt("cityID");
                 String name = rs.getString("name");
                 String desc = rs.getString("description");
+                Integer sourceRouteId =
+                        rs.getObject("sourceRouteID", Integer.class);
 
                 ArrayList<Integer> stops = new ArrayList<>();
 
@@ -175,7 +215,7 @@ public class RouteRepo {
                         cityId,
                         stops
                 );
-
+                route.setSourceRouteId(sourceRouteId);
                 routes.add(route);
             }
         }
@@ -323,6 +363,31 @@ public class RouteRepo {
 
         return result;
     }
+
+
+    public boolean deleteApprovedRoute(int routeId) throws SQLException {
+
+        String deleteStops = "DELETE FROM route_stops WHERE routeID = ?";
+        String deleteRoute = "DELETE FROM routes WHERE routeID = ?";
+
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps1 = conn.prepareStatement(deleteStops)) {
+                ps1.setInt(1, routeId);
+                ps1.executeUpdate();
+            }
+
+            try (PreparedStatement ps2 = conn.prepareStatement(deleteRoute)) {
+                ps2.setInt(1, routeId);
+                ps2.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        }
+    }
+
 
 
 

@@ -87,7 +87,10 @@ public class PendingRouteController {
         client.sendRequest(
                 new GcmRequest(
                         RequestType.APPROVE_ROUTE,
-                        new ApproveRoutePayload(route.getRouteId())
+                        new ApproveRoutePayload(
+                                route.getRouteId(),
+                                route.getSourceRouteId()
+                        )
                 )
         );
     }

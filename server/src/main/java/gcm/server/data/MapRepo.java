@@ -691,18 +691,20 @@ public class MapRepo {
 
             // Insert into pending_routes
             String routeSql = """
-            INSERT INTO pending_routes (cityID, name, description, createdBy)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO pending_routes (name, description, cityID, is_edit, sourceRouteID)
+            VALUES (?, ?, ?, ?, ?)
         """;
 
             int routeId;
 
             try (PreparedStatement ps = conn.prepareStatement(
                     routeSql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, route.getName());
+                ps.setString(2, route.getDescription());
+                ps.setInt(3, route.getCityId());
+                ps.setBoolean(4, route.isEdit());
+                ps.setObject(5, route.getSourceRouteId(), Types.INTEGER);
 
-                ps.setInt(1, route.getCityId());
-                ps.setString(2, route.getName());
-                ps.setString(3, route.getDescription());
 
                 ps.executeUpdate();
 

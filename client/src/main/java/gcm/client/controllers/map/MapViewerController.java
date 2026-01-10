@@ -33,6 +33,7 @@ public class MapViewerController {
     private boolean showDone = false;
     private final List<Integer> selectedPoiIds = new ArrayList<>();
     private int tempPoiId = -1;
+    private Integer editedRouteId = null; // null = new route
 
 
     private enum Mode { VIEW, EDIT_MAP,EDIT_ROUTE ,CREATE_MAP ,ADD_POI, ADD_ROUTE }
@@ -192,6 +193,7 @@ public class MapViewerController {
         hasVals = true;
 
         this.mode = Mode.EDIT_ROUTE;
+        this.editedRouteId = sheet.getRouteId();
 
 
         this.path = sheet.getCityTilePath();
@@ -205,6 +207,7 @@ public class MapViewerController {
                 path,
                 new ArrayList<>()   // map POIs not relevant here
         );
+
 
         // ---- reset UI state ----
         selectedPoiIds.clear();
@@ -425,23 +428,24 @@ public class MapViewerController {
 
     private void handlePoiSelection(Poi poi, Node node) {
 
+        // ROUTE MODE: toggle + numbering (ADD + EDIT)
+        if (mode == Mode.ADD_ROUTE || mode == Mode.EDIT_ROUTE) {
 
-        // ROUTE MODE: toggle + numbering
-        if (mode == Mode.ADD_ROUTE) {
             int id = poi.getId();
 
             if (selectedPoiIds.contains(id)) {
                 selectedPoiIds.remove((Integer) id);
                 overlayLayerController.setPoiSelected(node, false);
-                overlayLayerController.updateRouteNumbers(selectedPoiIds);
             } else {
                 selectedPoiIds.add(id);
                 overlayLayerController.setPoiSelected(node, true);
-                overlayLayerController.updateRouteNumbers(selectedPoiIds);
             }
+
+            overlayLayerController.updateRouteNumbers(selectedPoiIds);
+            return; // IMPORTANT: do not fall through
         }
 
-        //  MAP SELECTION (CREATE or EDIT)
+        // MAP SELECTION (CREATE or EDIT)
         if (mode == Mode.CREATE_MAP || mode == Mode.EDIT_MAP) {
 
             int id = poi.getId();
@@ -455,10 +459,8 @@ public class MapViewerController {
             }
             return;
         }
-
-
-
     }
+
 
 
 
@@ -519,8 +521,10 @@ public class MapViewerController {
     @FXML
     public void onSubmitRoute(ActionEvent actionEvent) {
 
-        if (mode != Mode.ADD_ROUTE) {
-            showInfo("Press Add Route first.");
+
+
+        if (mode != Mode.ADD_ROUTE && mode != Mode.EDIT_ROUTE) {
+            showInfo("Press Add Route or Edit Route first.");
             return;
         }
 
@@ -535,29 +539,46 @@ public class MapViewerController {
         String routeDesc = askRouteDescription();
         if (routeDesc == null) return;
 
-        // PendingRoute expects POI IDs only (order = list order)
         ArrayList<Integer> stops = new ArrayList<>(selectedPoiIds);
 
+        PendingRoute payload;
 
-        // PendingRoute(int cityId, String name, String description, int userId, ArrayList<Integer> stops)
-        PendingRoute payload = new PendingRoute(
-                map.getCityID(),
-                routeName,
-                routeDesc,
-                ClientApp.getCurrentUser().getId(),
-                stops
-        );
+        if (mode == Mode.EDIT_ROUTE) {
+            payload = new PendingRoute(
+                    0,
+                    routeName,
+                    routeDesc,
+                    map.getCityID(),
+                    stops,
+                    editedRouteId
+            );
+            payload.setEdit(true);
+        } else {
+            payload = new PendingRoute(
+                    0,
+                    routeName,
+                    routeDesc,
+                    map.getCityID(),
+                    stops
+            );
+        }
 
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
         client.sendRequest(new GcmRequest(RequestType.SUBMIT_ROUTE, payload));
 
-        // UI reset (same style you do elsewhere)
         selectedPoiIds.clear();
         overlayLayerController.clearPoiSelections();
-        overlayLayerController.updateRouteNumbers(selectedPoiIds); // clears numbers too
+        overlayLayerController.updateRouteNumbers(selectedPoiIds);
+
+        editedRouteId = null;
         mode = Mode.VIEW;
+
+
     }
+
+
+
 
 
 
@@ -733,10 +754,17 @@ public class MapViewerController {
 
     @FXML
     private void onAddRouteMode() {
-        mode = Mode.ADD_ROUTE;
 
+        if (mode == Mode.EDIT_ROUTE) {
+            showInfo("You are editing an existing route.\n" +
+                    "You can only add/remove POIs, not start a new route.");
+            return;
+        }
+
+        mode = Mode.ADD_ROUTE;
         showInfo("Route mode: click POIs in order, then Submit Route.");
     }
+
 
 
 

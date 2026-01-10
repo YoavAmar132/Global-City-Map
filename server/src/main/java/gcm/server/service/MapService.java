@@ -165,5 +165,34 @@ public class MapService {
         return routeRepository.loadApprovedRoutesForCity(cityId);
     }
 
+    public boolean approveEditedRoute(int pendingRouteId, int oldRouteId)
+            throws SQLException {
+
+        // delete old approved route
+        routeRepository.deleteApprovedRoute(oldRouteId);
+
+        // approve pending route (existing logic)
+        return routeRepository.approveRoute(pendingRouteId);
+    }
+    public boolean approveRouteWithEditCheck(int pendingRouteId)
+            throws SQLException {
+
+        PendingRoute pr =
+                routeRepository.getPendingRouteById(pendingRouteId);
+
+        if (pr == null) return false;
+
+        // EDIT case → remove old approved route
+        if (pr.getSourceRouteId() != null) {
+            routeRepository.deleteApprovedRoute(
+                    pr.getSourceRouteId()
+            );
+        }
+
+        // Always approve pending
+        return routeRepository.approveRoute(pendingRouteId);
+    }
+
+
 
 }

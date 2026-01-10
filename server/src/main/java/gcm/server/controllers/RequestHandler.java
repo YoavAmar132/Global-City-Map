@@ -811,23 +811,26 @@ public class RequestHandler {
 
     //Adam
     private GcmResponse handleSubmitRoute(GcmRequest request) throws SQLException {
+
         System.out.println("SUBMIT_ROUTE request received");
 
         Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof PendingRoute)) {
+        if (!(rawPayload instanceof PendingRoute route)) {
             return GcmResponse.error("Invalid payload for submit route");
         }
 
-        PendingRoute route = (PendingRoute) rawPayload;
+        System.out.println("---- DEBUG PENDING ROUTE ----");
+        System.out.println("isEdit = " + route.isEdit());
+        System.out.println("sourceRouteId = " + route.getSourceRouteId());
+        System.out.println("cityId = " + route.getCityId());
+        System.out.println("name = " + route.getName());
+        System.out.println("-----------------------------");
 
         boolean success = mapService.submitPendingRoute(route);
-
-        if (!success) {
-            return GcmResponse.error("Failed to submit route");
-        }
-
-        return GcmResponse.ok(null);
+        return success ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to submit route");
     }
+
 
 
 
@@ -840,7 +843,21 @@ public class RequestHandler {
             return GcmResponse.error("Invalid payload for APPROVE_ROUTE");
         }
 
-        boolean success = mapService.approveRoute(payload.getRouteId());
+        boolean success;
+
+        if (payload.getSourceRouteId() != null) {
+            success = mapService.approveEditedRoute(
+                    payload.getRouteId(),
+                    payload.getSourceRouteId()
+            );
+        } else {
+             success =
+                    mapService.approveRouteWithEditCheck(
+                            payload.getRouteId()
+                    );
+
+        }
+
 
         if (!success) {
             return GcmResponse.error("Failed to approve route");
@@ -848,6 +865,7 @@ public class RequestHandler {
 
         return GcmResponse.ok(null);
     }
+
 
     private GcmResponse handleGetPendingRoutes(GcmRequest request) throws SQLException {
 
