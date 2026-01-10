@@ -42,8 +42,10 @@ public class BaseMapSelectorController {
         EmptyPayload payload=new EmptyPayload();
         GcmRequest request = new GcmRequest(RequestType.LIST_CITIES, payload);
         client.sendRequest(request);
-        request=new GcmRequest(RequestType.LIST_POIS,null);
+
+        request = new GcmRequest(RequestType.LIST_POIS, null);
         client.sendRequest(request);
+
     }
 
     public void setCities(ArrayList<City> cities) {
@@ -81,10 +83,8 @@ public class BaseMapSelectorController {
         System.out.println("gets list of cities");
         SceneNavigator.LoadedView<MapViewerController> view =
                 ClientApp.getNavigator().get(MapViewerController.class);
-        MapSheet map=new MapSheet(0, city.getId(), "","",city.getBasemap(),pois);
+        view.controller.setValsForCreate(city, city.getBasemap());
 
-        // set values BEFORE showing
-        view.controller.setVals(map);
 
         // now show
         ClientApp.getNavigator().showLoaded(view.root);

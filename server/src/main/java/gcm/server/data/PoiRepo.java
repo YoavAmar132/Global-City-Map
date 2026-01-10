@@ -106,6 +106,53 @@ public class PoiRepo {
         return pois;
     }
 
+    public List<Poi> loadPoisByCity(int cityId) {
+
+        List<Poi> pois = new ArrayList<>();
+
+        String sql = """
+        SELECT id, name, description, category,
+               x, y,
+               is_accessible, cityID, is_approved
+        FROM pois
+        WHERE cityID = ? AND is_approved = 1
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, cityId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+
+                    Poi poi = new Poi(
+                            rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getString("description"),
+
+                            rs.getDouble("x"),   // ← maps to nWorldX
+                            rs.getDouble("y"),   // ← maps to nWorldY
+
+                            POI_Category.valueOf(rs.getString("category")),
+                            rs.getBoolean("is_accessible"),
+                            rs.getInt("cityID"),
+                            rs.getBoolean("is_approved")
+                    );
+
+                    pois.add(poi);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return pois;
+    }
+
+
+
     public static Poi fromResultSet(ResultSet rs) throws SQLException {
 
         return new Poi(

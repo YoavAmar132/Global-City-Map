@@ -25,6 +25,10 @@ public class MapRepo {
     //  NEW METHODS FOR BUY MAP
     // ==========================================
 
+    public List<Poi> getPoisForCity(int cityId) {
+        return poirepo.loadPoisByCity(cityId);
+    }
+
     public List<City> getPurchasedCitiesByUserId(int userId) {
         List<City> cities = new ArrayList<>();
 

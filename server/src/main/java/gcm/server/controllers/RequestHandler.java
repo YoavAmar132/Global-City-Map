@@ -359,9 +359,20 @@ public class RequestHandler {
 
 
     private GcmResponse handlePoi(GcmRequest request) throws SQLException {
-        System.out.println("get all poi request");
+        System.out.println("LIST_POIS request received");
+
+        Object payload = request.getPayload();
+
+        // If client sent a CityIdPayload -> return POIs for that city only
+        if (payload instanceof CityIdPayload cityPayload) {
+            int cityId = cityPayload.getCityId();
+            return GcmResponse.ok(mapService.getPoisForCity(cityId));
+        }
+
+        // Otherwise fallback to old behavior (all POIs)
         return GcmResponse.ok(mapService.getpois());
     }
+
     /*
     private GcmResponse handleRoute(GcmRequest request) throws SQLException {
         System.out.println("get all route request");

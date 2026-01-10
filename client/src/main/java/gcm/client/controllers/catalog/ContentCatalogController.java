@@ -26,6 +26,11 @@ import java.util.stream.Collectors;
 import java.util.List;
 
 public class ContentCatalogController {
+
+
+    public enum OpenIntent { VIEW, EDIT_MAP }
+    private OpenIntent openIntent = OpenIntent.VIEW;
+
     private GcmClient client;
     @FXML
     private VBox Citylist;
@@ -40,6 +45,13 @@ public class ContentCatalogController {
         GcmRequest request = new GcmRequest(RequestType.LIST_CITIES, payload);
         client.sendRequest(request);
     }
+
+
+    public void setOpenIntent(OpenIntent intent) {
+        this.openIntent = intent;
+    }
+
+
 
     public void setCities(ArrayList<City> cities) {
         this.cities = cities;
@@ -77,7 +89,7 @@ public class ContentCatalogController {
         SceneNavigator.LoadedView<MapLoaderController> view =
                 ClientApp.getNavigator().get(MapLoaderController.class);
         // set values BEFORE showing
-        view.controller.setVals(city.getName());
+        view.controller.setVals(city.getName(), openIntent == OpenIntent.EDIT_MAP);
 
         // now show
         ClientApp.getNavigator().showLoaded(view.root);

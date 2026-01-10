@@ -25,10 +25,33 @@ public class ContentWorkerMenuController {
 
     @FXML
     public void onViewCatalogClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ContentCatalogController.class);
+
+        var view = ClientApp.getNavigator()
+                .get(ContentCatalogController.class);
+
+        view.controller.setOpenIntent(
+                ContentCatalogController.OpenIntent.VIEW
+        );
+
+        ClientApp.getNavigator().showLoaded(view.root);
     }
+
     @FXML
-    public void onEditButton(ActionEvent actionEvent) {
+    public void onEditExistingMap(ActionEvent actionEvent) {
+
+        var view = ClientApp.getNavigator()
+                .get(ContentCatalogController.class);
+
+        view.controller.setOpenIntent(
+                ContentCatalogController.OpenIntent.EDIT_MAP
+        );
+
+        ClientApp.getNavigator().showLoaded(view.root);
+    }
+
+
+    @FXML
+    public void onCreateButton(ActionEvent actionEvent) {
         ClientApp.getNavigator().show(BaseMapSelectorController.class);
     }
     @FXML

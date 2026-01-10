@@ -31,6 +31,10 @@ public class MapService {
         this.routeRepository = routeRepository;
     }
 
+    public List<Poi> getPoisForCity(int cityId) {
+        return mapRepository.getPoisForCity(cityId);
+    }
+
     /* ================= MAPS ================= */
 
     public List<Poi> getpois() {
