@@ -3,41 +3,39 @@ package common.model;
 import java.io.Serializable;
 
 public class Complaint implements Serializable {
-    private long id;
-    private long userId;
+    private int complaintId = 0;
+    private int userId;
     private String text;
-    private long previousComplaintId;
+    private String response = null;
+    private String responseBy = null;
+    private int previousComplaintId = 0; //if the complaint isn't a response to a previous complaint then previousComplaintId = 0
 
-    // getters + setters
-    Complaint(long id, long userId, String text, long previousComplaintId) {
-        this.id = id;
+
+    public Complaint(int userId, String text) {
         this.userId = userId;
         this.text = text;
-        this.previousComplaintId = previousComplaintId;
-    }
-    public long getId() {
-        return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public int getId() {
+        return complaintId;
     }
-    public long getUserId() {
+    public void setId(int complaintId) {
+        this.complaintId = complaintId;
+    }
+    public int getUserId() {
         return userId;
-    }
-    public void setUserId(long userId) {
-        this.userId = userId;
     }
     public String getText() {
         return text;
     }
-    public void setText(String text) {
-        this.text = text;
-    }
-    public long getPreviousComplaintId() {
+    public int getPreviousComplaintId() {
         return previousComplaintId;
     }
-    public void setPreviousComplaintId(long previousComplaintId) {
+    public void setPreviousComplaintId(int previousComplaintId) {
         this.previousComplaintId = previousComplaintId;
     }
+    public void setResponse(String response) {this.response = response;}
+    public String getResponse() {return response;}
+    public void setResponseBy(String responseBy) {this.responseBy = responseBy;}
+    public String getResponseBy() {return responseBy;}
 }
