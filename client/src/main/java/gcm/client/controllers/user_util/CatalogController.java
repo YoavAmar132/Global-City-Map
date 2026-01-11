@@ -59,7 +59,7 @@ public class CatalogController {
     private void updatePagination() {
 
         CitiesCountPayload payload = new CitiesCountPayload(searchField.getText());
-        GcmRequest request = new GcmRequest(RequestType.GET_CITIES_COUNT, payload);
+        GcmRequest request = new GcmRequest(RequestType.GET_CITY_CATALOG, payload);
         client.sendRequest(request);
 
     }

@@ -5,6 +5,9 @@ public enum RequestType {
     LOGOUT,
     REGISTER,
 
+    //Complaints
+    SUBMIT_COMPLAINT,
+
     // Catalog
     LIST_CITIES,
     GET_CITY_DETAILS,

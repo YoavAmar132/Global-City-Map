@@ -18,16 +18,19 @@ public class RequestHandler {
     private final CityService cityService;
     private final CatalogService catalogService;
     private final StatsService statsService;
+    private final ComplaintService complaintService;
+
     private static final List<User> online_users = new ArrayList<>();
     private User loggedInUser = null;
      public Message message=new Message("new map added","");;
     public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
-                          CatalogService catalogService, StatsService statsService) {
+                          CatalogService catalogService, StatsService statsService,ComplaintService complaintService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
         this.statsService = statsService;
+        this.complaintService = complaintService;
     }
 
     /**
@@ -177,6 +180,14 @@ public class RequestHandler {
                     r.setRefresh(1);
                 }
                 return r;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.SUBMIT_COMPLAINT) {
+            try {
+                return handleSubmitComplaint(request);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -552,7 +563,18 @@ public class RequestHandler {
         }
     }
 
-    private GcmResponse handleGetCityPurchases(GcmRequest request) throws SQLException {
+    private GcmResponse handleSubmitComplaint(GcmRequest request) throws SQLException {
+
+        SubmitComplaintPayload payload =
+                (SubmitComplaintPayload) request.getPayload();
+
+
+        boolean b = complaintService.submitComplaint(payload.getComplaint());
+        return null;
+    }
+
+
+        private GcmResponse handleGetCityPurchases(GcmRequest request) throws SQLException {
         System.out.println("LIST_USER_PURCHASES request received");
         if (request.getPayload() instanceof Integer userId) {
             return mapService.handleGetPurchasedCities(userId);

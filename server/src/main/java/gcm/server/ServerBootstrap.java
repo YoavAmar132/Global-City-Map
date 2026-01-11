@@ -1,5 +1,8 @@
 package gcm.server;
 
+import gcm.server.bot.BotAgent;
+import gcm.server.bot.BotToolService;
+import gcm.server.bot.OllamaClient;
 import gcm.server.controllers.RequestHandler;
 import gcm.server.data.*;
 import gcm.server.network.GcmServer;
@@ -24,8 +27,14 @@ public class ServerBootstrap {
         StatsRepo statsRepo = new StatsRepo();
         StatsService statsService = new StatsService(statsRepo);
 
+        ComplaintRepo complaintRepo = new ComplaintRepo();
+        OllamaClient ollamaClient = new OllamaClient();
+        BotToolService botToolService = new BotToolService(cityService,mapService);
+        BotAgent botAgent = new BotAgent(ollamaClient,botToolService);
+        ComplaintService complaintService = new ComplaintService(botAgent,complaintRepo);
+
         RequestHandler handler =
-                new RequestHandler(authService, mapService, cityService, catalogService, statsService);
+                new RequestHandler(authService, mapService, cityService, catalogService, statsService,complaintService);
 
         GcmServer server = new GcmServer(5555, handler);
 

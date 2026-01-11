@@ -51,7 +51,7 @@ public class CityCardController {
     public void setCity(City city) {
         this.city = city;
         cityNameLabel.setText(city.getName());
-        String key = city.getCityImageKey();
+        String key = "";
         InputStream is;
 
         try{
