@@ -564,13 +564,11 @@ public class RequestHandler {
     }
 
     private GcmResponse handleSubmitComplaint(GcmRequest request) throws SQLException {
-
-        SubmitComplaintPayload payload =
-                (SubmitComplaintPayload) request.getPayload();
-
-
-        boolean b = complaintService.submitComplaint(payload.getComplaint());
-        return null;
+        System.out.println("LIST_USER_PURCHASES request received");
+        if (request.getPayload() instanceof SubmitComplaintPayload payload) {
+            return complaintService.submitComplaint(payload.getComplaint());
+        }
+        return GcmResponse.error("Invalid Payload for LIST_USER_PURCHASES");
     }
 
 

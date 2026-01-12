@@ -1,11 +1,14 @@
 package gcm.server.service;
 
+import common.messages.GcmResponse;
+import common.model.City;
 import common.model.Complaint;
 import gcm.server.bot.*;
 import gcm.server.data.ComplaintRepo;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ComplaintService {
 
@@ -48,25 +51,34 @@ public class ComplaintService {
      *
      * */
 
-    public void submitComplaint(Complaint complaint) throws SQLException {
-
-        int id = complaintRepo.createComplaint(complaint.getUserId(), complaint.getText(), complaint.getPreviousComplaintId());
-        complaint.setId(id);
-        if (complaint.getPreviousComplaintId() == 0) {
-            complaintRepo.setWaitingForBot(complaint.getId());
-        } else {
-            //getting the previous complaint and deciding base on it's respondent to whom the complaint will wait
-            Complaint previousComplaint = complaintRepo.getComplaint(complaint.getPreviousComplaintId());
-            if (previousComplaint.getResponseBy().equals("Bot")) {
+    public GcmResponse submitComplaint(Complaint complaint) throws SQLException {
+        try {
+            int id = complaintRepo.createComplaint(complaint.getUserId(), complaint.getText(), complaint.getPreviousComplaintId());
+            complaint.setId(id);
+            if (complaint.getPreviousComplaintId() == 0) { //there was no previous complaint
                 complaintRepo.setWaitingForBot(complaint.getId());
-            } else if (previousComplaint.getResponseBy().equals("Human")) {
-                complaintRepo.setWaitingForHuman(complaint.getId());
+            } else {
+                //getting the previous complaint and deciding base on it's respondent to whom the complaint will wait
+                Complaint previousComplaint = complaintRepo.getComplaint(complaint.getPreviousComplaintId());
+                if (previousComplaint.getResponseBy().equals("Bot")) {
+                    complaintRepo.setWaitingForBot(complaint.getId());
+                } else if (previousComplaint.getResponseBy().equals("Human")) {
+                    complaintRepo.setWaitingForHuman(complaint.getId());
+                }
             }
+            return GcmResponse.ok(id);
+        } catch (Exception e) {
+            return GcmResponse.error("Server Error: " + e.getMessage());
         }
     }
 
     //used for showing the customer support worker every complaint that they need to respond too
-    public ArrayList<Complaint> getAllComplaintsForCustomerSupport() throws SQLException {
-        return complaintRepo.getComplaintsWaitingForHuman();
+    public GcmResponse getAllComplaintsForCustomerSupport() throws SQLException {
+        try {
+            ArrayList<Complaint> complaints = complaintRepo.getComplaintsWaitingForHuman();
+            return GcmResponse.ok(complaints); // Returns ArrayList<Complaint>
+        } catch (Exception e) {
+            return GcmResponse.error("Server Error: " + e.getMessage());
+        }
     }
 }

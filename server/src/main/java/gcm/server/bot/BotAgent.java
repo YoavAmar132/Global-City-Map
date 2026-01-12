@@ -1,34 +1,41 @@
-
 package gcm.server.bot;
 
 import gcm.server.data.ComplaintRepo;
+import gcm.server.bot.tools.BotTool;
 import common.model.Complaint;
 
 import java.util.Optional;
 
 public class BotAgent implements Runnable {
 
-    private final ComplaintRepo complaintRepo;
-    private final OllamaClient ollamaClient;
+    private final ComplaintRepo repo;
+    private final OllamaClient ollama;
+    private final BotToolRegistry toolRegistry;
 
-    private volatile boolean running = true;
-
-    public BotAgent() {
-        this.complaintRepo = new ComplaintRepo();
-        this.ollamaClient = new OllamaClient();
+    public BotAgent(
+            ComplaintRepo repo,
+            OllamaClient ollama,
+            BotToolRegistry toolRegistry
+    ) {
+        this.repo = repo;
+        this.ollama = ollama;
+        this.toolRegistry = toolRegistry;
     }
 
-    /**
-     * Main loop – single bot, FIFO processing
-     */
     @Override
     public void run() {
-        while (running) {
+        while (true) {
             try {
-                processNextComplaint();
+                if (!repo.claimNextComplaint()) {
+                    Thread.sleep(1000);
+                    continue;
+                }
 
-                // Prevent tight loop when no work exists
-                Thread.sleep(2000);
+                Optional<Complaint> opt = repo.getNextInProgressComplaint();
+                if (opt.isEmpty()) continue;
+
+                Complaint complaint = opt.get();
+                handleComplaint(complaint);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -36,86 +43,58 @@ public class BotAgent implements Runnable {
         }
     }
 
-    /**
-     * One atomic complaint processing cycle
-     */
-    private void processNextComplaint() throws Exception {
+    private void handleComplaint(Complaint complaint) throws Exception {
 
-        // 1. Try to claim next complaint
-        boolean claimed = complaintRepo.claimNextComplaint();
-        if (!claimed) {
-            // No complaints waiting for bot
-            return;
-        }
+        String prompt = BotPromptBuilder.build(
+                complaint.getText(),
+                toolRegistry
+        );
 
-        // 2. Fetch the complaint we just claimed
-        Optional<Complaint> optionalComplaint =
-                complaintRepo.getNextInProgressComplaint();
+        String raw = ollama.ask(prompt);
+        BotResponse decision = BotDecisionParser.parse(raw);
+        //TODO: add a while loop
+        switch (decision.action) {
 
-        if (optionalComplaint.isEmpty()) {
-            return;
-        }
-
-        Complaint complaint = optionalComplaint.get();
-
-        // 3. Ask the LLM
-        String prompt = buildPrompt(complaint);
-        String llmRawResponse = ollamaClient.ask(prompt);
-
-        // 4. Decide what to do with the answer
-        if (canBotAnswer(llmRawResponse)) {
-            String finalAnswer = extractAnswer(llmRawResponse);
-
-            complaintRepo.closeWithBotAnswer(
+            case ANSWER -> repo.closeWithBotAnswer(
                     complaint.getId(),
-                    finalAnswer
+                    decision.text
             );
-        } else {
-            complaintRepo.setWaitingForHuman(complaint.getId());
+
+            case ESCALATE -> repo.setWaitingForHuman(
+                    complaint.getId()
+            );
+
+            case CALL_TOOL -> {
+                Optional<BotTool> tool =
+                        toolRegistry.get(decision.toolName);
+
+                if (tool.isEmpty()) {
+                    repo.setWaitingForHuman(complaint.getId());
+                    return;
+                }
+
+                String toolResult =
+                        tool.get().execute(decision.toolArgs);
+
+                // Feed tool result back to bot
+                String followUpPrompt =
+                        prompt + "\n\nTool result:\n" + toolResult;
+
+                String finalAnswer =
+                        ollama.ask(followUpPrompt);
+
+                BotResponse finalDecision =
+                        BotDecisionParser.parse(finalAnswer);
+
+                if (finalDecision.action == BotAction.ANSWER) {
+                    repo.closeWithBotAnswer(
+                            complaint.getId(),
+                            finalDecision.text
+                    );
+                } else {
+                    repo.setWaitingForHuman(complaint.getId());
+                }
+            }
         }
-    }
-
-    /**
-     * Stop bot gracefully
-     */
-    public void stop() {
-        running = false;
-    }
-
-    // -----------------------------
-    // LLM helpers
-    // -----------------------------
-
-    private String buildPrompt(Complaint complaint) {
-        return """
-        You are a customer support assistant for a city map system.
-
-        User complaint:
-        "%s"
-
-        If you cannot answer using system data, reply exactly with:
-        CANNOT_ANSWER
-        """.formatted(complaint.getText());
-    }
-
-    /**
-     * Simple decision rule (can be improved later)
-     */
-    private boolean canBotAnswer(String rawResponse) {
-        return !rawResponse.contains("CANNOT_ANSWER");
-    }
-
-    /**
-     * Extract actual text from Ollama JSON
-     * (very simple version for now)
-     */
-    private String extractAnswer(String rawResponse) {
-        // Ollama returns JSON
-
-        int idx = rawResponse.indexOf("\"response\"");
-        if (idx == -1) return rawResponse;
-
-        int start = rawResponse.indexOf(":", idx) + 1;
-        return rawResponse.substring(start).replace("\"", "").trim();
     }
 }

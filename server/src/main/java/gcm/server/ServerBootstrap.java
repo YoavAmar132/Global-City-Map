@@ -1,7 +1,9 @@
 package gcm.server;
 
 import gcm.server.bot.BotAgent;
+import gcm.server.bot.BotToolRegistry;
 import gcm.server.bot.OllamaClient;
+import gcm.server.bot.tools.*;
 import gcm.server.controllers.RequestHandler;
 import gcm.server.data.*;
 import gcm.server.network.GcmServer;
@@ -27,8 +29,15 @@ public class ServerBootstrap {
         StatsService statsService = new StatsService(statsRepo);
 
         ComplaintRepo complaintRepo = new ComplaintRepo();
+        OllamaClient ollamaClient = new OllamaClient();
+        BotToolRegistry  botToolRegistry = new BotToolRegistry();
+
+
+        //registering all the tools the bot can access
+        botToolRegistry.register(new GetCityExistTool());
+        
         //letting the bot run in the background
-        BotAgent botAgent = new BotAgent();
+        BotAgent botAgent = new BotAgent(complaintRepo,ollamaClient,botToolRegistry);
         Thread botThread = new Thread(botAgent);
         botThread.setDaemon(true);
         botThread.start();

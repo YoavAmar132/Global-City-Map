@@ -1,6 +1,6 @@
 package gcm.server.bot;
 
-public enum BotDecision {
+public enum BotAction {
     ANSWER,
     CALL_TOOL,
     ESCALATE
