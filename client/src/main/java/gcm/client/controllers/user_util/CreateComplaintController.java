@@ -64,8 +64,6 @@ public class CreateComplaintController {
         SubmitComplaintPayload payload = new SubmitComplaintPayload(complaint);
         GcmRequest request = new GcmRequest(RequestType.SUBMIT_COMPLAINT, payload);
         client.sendRequest(request);
-
-        ClientApp.getNavigator().show(MyMapsController.class);
     }
 
 }

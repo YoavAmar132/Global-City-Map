@@ -9,13 +9,19 @@ public class OllamaClient {
     private final HttpClient client = HttpClient.newHttpClient();
 
     public String ask(String prompt) throws Exception {
+        String escapedPrompt = prompt
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r");
+
         String body = """
         {
           "model": "mistral",
           "prompt": "%s",
           "stream": false
         }
-        """.formatted(prompt.replace("\"", "\\\""));
+        """.formatted(escapedPrompt);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(OLLAMA_URL))

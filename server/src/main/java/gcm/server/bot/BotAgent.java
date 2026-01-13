@@ -49,8 +49,13 @@ public class BotAgent implements Runnable {
                 complaint.getText(),
                 toolRegistry
         );
-        System.out.println("-bot agent: asking ollama");
+        System.out.println("-bot agent: asking ollama the following prompt:");
+        System.out.println(prompt);
+
         String raw = ollama.ask(prompt);
+        System.out.println("-bot agent: ollama response:");
+        System.out.println(raw);
+
         System.out.println("-bot agent: analyzing decision");
         BotResponse decision = BotDecisionParser.parse(raw);
         //TODO: add a while loop
@@ -82,14 +87,16 @@ public class BotAgent implements Runnable {
                         tool.get().execute(decision.toolArgs);
 
                 // Feed tool result back to bot
-                System.out.println("-bot agent: answering the bot back");
+                System.out.println("-bot agent: answering the bot back:");
 
                 String followUpPrompt =
                         prompt + "\n\nTool result:\n" + toolResult;
+                System.out.println(followUpPrompt);
 
                 String finalAnswer =
                         ollama.ask(followUpPrompt);
-                System.out.println("-bot agent: bot responded back with: " + finalAnswer);
+                System.out.println("-bot agent: bot responded back with:");
+                System.out.println(finalAnswer);
 
                 System.out.println("-bot agent: parsing his final response");
 

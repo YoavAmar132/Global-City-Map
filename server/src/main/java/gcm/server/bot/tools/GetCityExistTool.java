@@ -13,7 +13,7 @@ public class GetCityExistTool implements BotTool {
 
     @Override
     public String getDescription() {
-        return "Returns whatever or not the city exist";
+        return "get cityName as an argument for the name of the city and returns whatever or not the city exist";
     }
 
     @Override
