@@ -67,19 +67,44 @@ public class ComplaintRepo {
     // 2. Atomically claim next complaint
     public boolean claimNextComplaint() throws SQLException {
         String sql = """
-            UPDATE SupportTickets
-            SET ticketStatus = 'InProgress'
-            WHERE ticketID = (
+        UPDATE SupportTickets st
+        JOIN (
+            SELECT ticketID
+            FROM SupportTickets
+            WHERE ticketStatus = 'WaitingForBot'
+            ORDER BY createdAt
+            LIMIT 1
+        ) next
+        ON st.ticketID = next.ticketID
+        SET st.ticketStatus = 'InProgress'
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+
+    /*
+    *
+        if(!hasComplaintWaitingForBot())
+            return false;
+            * */
+    // 2. Atomically claim next complaint
+    public boolean hasComplaintWaitingForBot() throws SQLException {
+        String sql = """
                 SELECT ticketID FROM SupportTickets
                 WHERE ticketStatus = 'WaitingForBot'
                 ORDER BY createdAt
                 LIMIT 1
-            )
         """;
 
         try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);){
-            return stmt.executeUpdate() == 1;
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery();){
+
+            return rs.next();
         }
     }
 

@@ -1,22 +1,28 @@
-package gcm.client.controllers.menu;
+package gcm.client.controllers.user_util;
 
+import common.model.Complaint;
 import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalogPublic.GuestCatalogController;
-import gcm.client.controllers.user_util.CreateComplaintController;
+import gcm.client.controllers.menu.MessagesController;
+import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert;
-import java.util.ArrayList;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
 
 
-public class UserMenuController {
+public class CreateComplaintController {
+
+    public TextArea complaintText;
+
+    public Button submitComplaintButton;
+
     private GcmClient client;
 
     public void initialize() {
@@ -43,37 +49,23 @@ public class UserMenuController {
 
 
     @FXML
-    private void handleClose(ActionEvent event) {
-        ClientApp.logout();
+    public void handleClose(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
 
 
     @FXML
-    private void onViewCatalogClicked(ActionEvent event) {
-        ClientApp.getNavigator().show(GuestCatalogController.class);
+    private void onSubmitComplaintClicked(ActionEvent event) {
+        System.out.println("sent complaint");
+        Complaint complaint = new Complaint(
+                ClientApp.getCurrentUser().getId(),
+                complaintText.getText()
+                );
+        SubmitComplaintPayload payload = new SubmitComplaintPayload(complaint);
+        GcmRequest request = new GcmRequest(RequestType.SUBMIT_COMPLAINT, payload);
+        client.sendRequest(request);
 
-    }
-
-    @FXML
-    private void onBuyMapClicked(ActionEvent event) {
-        System.out.println("Buy a Map clicked");
-        ClientApp.getNavigator().show(BuyMapCatalogController.class);
-        // TODO: open purchase flow
-    }
-
-    @FXML
-    private void onMyMapsClicked(ActionEvent event) {
-        System.out.println("My Maps clicked");
         ClientApp.getNavigator().show(MyMapsController.class);
     }
 
-    public void onMyMessagesClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(MessagesController.class);
-    }
-
-    @FXML
-    private void onCreateComplaintClicked(ActionEvent event) {
-        System.out.println("Create new complaint clicked");
-        ClientApp.getNavigator().show(CreateComplaintController.class);
-    }
 }

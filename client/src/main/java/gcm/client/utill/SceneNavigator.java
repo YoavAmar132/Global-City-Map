@@ -10,10 +10,7 @@ import gcm.client.controllers.manager_util.ReportsInputController;
 import gcm.client.controllers.map.*;
 import gcm.client.controllers.menu.*;
 
-import gcm.client.controllers.user_util.BuyMapScreenController;
-import gcm.client.controllers.user_util.MyMapsController;
-import gcm.client.controllers.user_util.SubscriptionMapsController;
-import gcm.client.controllers.user_util.UserSubscriptionsController;
+import gcm.client.controllers.user_util.*;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -61,6 +58,7 @@ public class SceneNavigator {
         routes.put(MessagesController.class, "/gcm/client/menu/MessagesScreen.fxml"); //yoav
         routes.put(ManageClientController.class, "/gcm/client/manager_util/ManageClientScreen.fxml");
         routes.put(ClientCardController.class, "/gcm/client/manager_util/ClientCardScreen.fxml");
+        routes.put(CreateComplaintController.class, "/gcm/client/user_util/createComplaint.fxml");
 
 
 

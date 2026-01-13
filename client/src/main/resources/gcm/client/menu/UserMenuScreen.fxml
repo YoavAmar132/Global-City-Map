@@ -82,6 +82,16 @@
                            -fx-cursor: hand;"
                     onAction="#onMyMessagesClicked"/>
 
+            <!-- My messages button -->
+            <Button fx:id="myCreateComplaintButton" text="Create complaint"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onCreateComplaintClicked"/>
+
 
         </VBox>
     </StackPane>
