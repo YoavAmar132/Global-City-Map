@@ -21,17 +21,13 @@ public class CityService {
 
 
     // READ
-    public List<City> getAllCities(int offset, int totalCities, String searchField) throws SQLException {
-        return cityRepo.getAllCities(offset,totalCities,searchField);
+    public List<City> getAllCities() throws SQLException {
+        return cityRepo.getAllCities();
     }
 
-
-    public int getCitiesCount(String searchText) throws SQLException {
-        return cityRepo.getCitiesCount(searchText);
-    }
 
     // CREATE (admin later)
-    public boolean addCity(String cityName,String imagePath) throws SQLException {
+    public boolean addCity(String cityName) throws SQLException {
 
         if (cityName == null || cityName.isBlank()) {
             return false;
@@ -41,7 +37,7 @@ public class CityService {
             return false;
         }
 
-        return cityRepo.insertCity(cityName,imagePath);
+        return cityRepo.insertCity(cityName);
     }
 
     public List<CityPricingItem> getAllCityPrices() throws SQLException {
