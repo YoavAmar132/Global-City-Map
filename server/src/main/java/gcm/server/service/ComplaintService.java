@@ -56,6 +56,13 @@ public class ComplaintService {
         try {
             int id = complaintRepo.createComplaint(complaint.getUserId(), complaint.getText(), complaint.getPreviousComplaintId());
             complaint.setId(id);
+            BotConfig botConfig = BotConfig.getInstance();
+
+            if (!botConfig.isEnabled()) {
+                complaintRepo.setWaitingForHuman(complaint.getId());
+                return GcmResponse.ok(id);
+            }
+            //TODO:remove previousComplaintId
             if (complaint.getPreviousComplaintId() == 0) { //there was no previous complaint
                 System.out.println("setting complaint to wait for bot - there was no previous complaint");
                 complaintRepo.setWaitingForBot(complaint.getId());
@@ -91,4 +98,6 @@ public class ComplaintService {
             return GcmResponse.error("Server Error: " + e.getMessage());
         }
     }
+
+
 }

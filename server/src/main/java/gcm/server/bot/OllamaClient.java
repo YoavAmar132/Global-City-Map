@@ -14,14 +14,17 @@ public class OllamaClient {
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
                 .replace("\r", "\\r");
-
+        BotConfig config = BotConfig.getInstance();
         String body = """
         {
-          "model": "mistral",
+          "model": "%s",
           "prompt": "%s",
-          "stream": false
+          "stream": false,
+          "options": {
+            "num_predict": 64
+          }
         }
-        """.formatted(escapedPrompt);
+        """.formatted(config.getModel(), escapedPrompt);
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(OLLAMA_URL))
@@ -33,5 +36,16 @@ public class OllamaClient {
                 client.send(request, HttpResponse.BodyHandlers.ofString());
 
         return response.body();
+    }
+
+    public void warmUp() {
+        try {
+            ask("ping");
+            System.out.println("[BOT] Ollama is warm");
+        } catch (Exception e) {
+            System.err.println("[BOT] Ollama unavailable, disabling bot");
+            BotConfig botConfig = BotConfig.getInstance();
+            botConfig.setEnabled(false);
+        }
     }
 }

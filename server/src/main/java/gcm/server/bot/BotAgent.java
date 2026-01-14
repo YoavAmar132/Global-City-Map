@@ -24,9 +24,11 @@ public class BotAgent implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("-bot agent: initialized");
+
         while (true) {
             try {
-                if (!repo.claimNextComplaint()) {
+                if (!repo.claimNextComplaint() || repo.hasInProgressComplaint()) {
                     Thread.sleep(1000);
                     continue;
                 }

@@ -62,9 +62,24 @@ public class ComplaintRepo {
         }
     }
 
+    public boolean hasInProgressComplaint() throws SQLException {
+        String sql = """
+                    SELECT 1
+                    FROM SupportTickets
+                    WHERE ticketStatus = 'InProgress'
+                    LIMIT 1       
+        """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery();){
+
+            return rs.next();
+        }
+    }
 
 
-    // 2. Atomically claim next complaint
+        // 2. Atomically claim next complaint
     public boolean claimNextComplaint() throws SQLException {
         String sql = """
         UPDATE SupportTickets st
@@ -86,11 +101,6 @@ public class ComplaintRepo {
     }
 
 
-    /*
-    *
-        if(!hasComplaintWaitingForBot())
-            return false;
-            * */
     // 2. Atomically claim next complaint
     public boolean hasComplaintWaitingForBot() throws SQLException {
         String sql = """
@@ -170,7 +180,20 @@ public class ComplaintRepo {
             return mapRow(rs);
         }
     }
-
+    /**
+    * set all complaints that either in status == WaitingForBot or in status == InProgress to waitForCustomerSupport
+    */
+    public void reassignHangingComplaintsForCustomerSupport() throws SQLException {
+        String sql = """
+            UPDATE SupportTickets
+            SET ticketStatus = 'WaitingForHuman'
+            WHERE ticketStatus = 'WaitingForBot' OR ticketStatus = 'InProgress'
+        """;
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);){
+            stmt.executeUpdate();
+        }
+    }
 
     public ArrayList<Complaint> getComplaintsWaitingForHuman() throws SQLException {
         String sql = """
