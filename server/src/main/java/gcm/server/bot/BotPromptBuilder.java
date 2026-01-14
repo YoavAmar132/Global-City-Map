@@ -58,7 +58,9 @@ public class BotPromptBuilder {
         IMPORTANT:
         Tool names must be used EXACTLY as written above.
         Do NOT pluralize, rename, or reformat tool names.
-
+        If no available tool can answer the question, you MUST output ESCALATE.
+        Do NOT invent tool names.
+        
         User complaint:
         %s
         """.formatted(registry.describeTools(), userMessage);

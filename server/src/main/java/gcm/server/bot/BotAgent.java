@@ -88,9 +88,12 @@ public class BotAgent implements Runnable {
 
                 // Feed tool result back to bot
                 System.out.println("-bot agent: answering the bot back:");
+                /*
+                String followUpPrompt =
+                        prompt + "\n\nTool result:\n" + toolResult;*/
 
                 String followUpPrompt =
-                        prompt + "\n\nTool result:\n" + toolResult;
+                        prompt + "Tool result:" + toolResult;
                 System.out.println(followUpPrompt);
 
                 String finalAnswer =
