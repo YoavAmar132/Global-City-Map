@@ -2,6 +2,7 @@ package gcm.server.controllers;
 
 import common.messages.*;
 import common.model.*;
+import gcm.server.data.RouteRepo;
 import gcm.server.network.GcmServer;
 import gcm.server.service.*;
 import common.messages.CityMapsRequestPayload;
@@ -55,14 +56,14 @@ public class RequestHandler {
             return GcmResponse.ok(null);
         }
 
-
+        /*
         if (type == RequestType.LIST_ROUTES) {
             try {
                 return handleRoute(request);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
-        }
+        }*/
         if (type == RequestType.LOGIN) {
             try {
                 return handleLogin(request);
@@ -96,6 +97,7 @@ public class RequestHandler {
                 throw new RuntimeException("failed to register user", e);
             }
         }
+        /*
         if(type==RequestType.GET_ROUTE_INDEX) {
             System.out.println("route index created");
             try {
@@ -104,7 +106,7 @@ public class RequestHandler {
             }  catch (SQLException e) {
                 throw new RuntimeException("failed to register user", e);
             }
-        }
+        }*/
         if(type==RequestType.GET_MAP) {
             System.out.println("map request proccesed");
             try {
@@ -241,6 +243,66 @@ public class RequestHandler {
 
         }
 
+        if (type == RequestType.SUBMIT_ROUTE) {
+            try {
+                return handleSubmitRoute(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while submitting route");
+            }
+        }
+
+
+        if (type == RequestType.APPROVE_ROUTE) {
+            try {
+                return handleApproveRoute(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.GET_PENDING_ROUTES) {
+            try {
+                return handleGetPendingRoutes(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.GET_ROUTE_SHEET) {
+            return GcmResponse.ok(
+                    mapService.getApprovedRouteSheet(
+                            ((GetRouteSheetPayload) request.getPayload()).getRouteId()
+                    )
+            );
+        }
+
+
+        if (type == RequestType.GET_PENDING_ROUTE_SHEET) {
+            return GcmResponse.ok(
+                    mapService.getPendingRouteSheet(
+                            ((GetRouteSheetPayload) request.getPayload()).getRouteId()
+                    )
+            );
+        }
+
+
+        if (type == RequestType.GET_APPROVED_ROUTES_FOR_CITY) {
+            try {
+                return handleGetApprovedRoutesForCity(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+
+
+
+
+
+
+
 
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
@@ -297,13 +359,26 @@ public class RequestHandler {
 
 
     private GcmResponse handlePoi(GcmRequest request) throws SQLException {
-        System.out.println("get all poi request");
+        System.out.println("LIST_POIS request received");
+
+        Object payload = request.getPayload();
+
+        // 1) city-only
+        if (payload instanceof CityIdPayload cityPayload) {
+            int cityId = cityPayload.getCityId();
+            return GcmResponse.ok(mapService.getPoisForCity(cityId));
+        }
+
+        // 2) all pois (for older screens)
         return GcmResponse.ok(mapService.getpois());
     }
+
+
+    /*
     private GcmResponse handleRoute(GcmRequest request) throws SQLException {
         System.out.println("get all route request");
         return GcmResponse.ok(mapService.getroutes());
-    }
+    }*/
 
 
     private GcmResponse handleGetAllCityPrices(GcmRequest request) throws SQLException {
@@ -420,6 +495,7 @@ public class RequestHandler {
         return GcmResponse.error("faild to pend");
 
     }
+    /*
     private GcmResponse handleRouteIndex(GcmRequest request) throws SQLException {
         System.out.println("route index request received");
         Object rawPayload = request.getPayload();
@@ -430,7 +506,7 @@ public class RequestHandler {
         if(index!=null) {return GcmResponse.ok(index);}
         return GcmResponse.error("faild to pend");
 
-    }
+    }*/
 
     //registration handler (perfect from yoav just added try-catch)
     private GcmResponse handleRegistration(GcmRequest request) throws SQLException {
@@ -640,6 +716,7 @@ public class RequestHandler {
 
 
 
+
         return GcmResponse.ok(messages);
     }
 
@@ -700,6 +777,122 @@ public class RequestHandler {
 
     //yoav
     //adam
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    //Adam
+    private GcmResponse handleSubmitRoute(GcmRequest request) throws SQLException {
+
+        System.out.println("SUBMIT_ROUTE request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof PendingRoute route)) {
+            return GcmResponse.error("Invalid payload for submit route");
+        }
+
+        System.out.println("---- DEBUG PENDING ROUTE ----");
+        System.out.println("isEdit = " + route.isEdit());
+        System.out.println("sourceRouteId = " + route.getSourceRouteId());
+        System.out.println("cityId = " + route.getCityId());
+        System.out.println("name = " + route.getName());
+        System.out.println("-----------------------------");
+
+        boolean success = mapService.submitPendingRoute(route);
+        return success ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to submit route");
+    }
+
+
+
+
+    private GcmResponse handleApproveRoute(GcmRequest request) throws SQLException {
+
+        System.out.println("route approval request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof ApproveRoutePayload payload)) {
+            return GcmResponse.error("Invalid payload for APPROVE_ROUTE");
+        }
+
+        boolean success;
+
+        if (payload.getSourceRouteId() != null) {
+            success = mapService.approveEditedRoute(
+                    payload.getRouteId(),
+                    payload.getSourceRouteId()
+            );
+        } else {
+             success =
+                    mapService.approveRouteWithEditCheck(
+                            payload.getRouteId()
+                    );
+
+        }
+
+
+        if (!success) {
+            return GcmResponse.error("Failed to approve route");
+        }
+
+        return GcmResponse.ok(null);
+    }
+
+
+    private GcmResponse handleGetPendingRoutes(GcmRequest request) throws SQLException {
+
+        System.out.println("GET_PENDING_ROUTES request received");
+
+        List<PendingRoute> routes = mapService.getPendingRoutes();
+
+        if (routes == null) {
+            return GcmResponse.error("Failed to load pending routes");
+        }
+
+        return GcmResponse.ok(routes);
+    }
+
+    private GcmResponse handleGetApprovedRoutesForCity(GcmRequest request) throws SQLException {
+
+        Object raw = request.getPayload();
+        if (!(raw instanceof CityIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for GET_APPROVED_ROUTES_FOR_CITY");
+        }
+
+        List<RouteSheet> routes = mapService.getApprovedRoutesForCity(payload.getCityId());
+        return GcmResponse.ok(routes);
+    }
+
+
+
 
 
 

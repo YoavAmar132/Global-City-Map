@@ -23,38 +23,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MapViewerController {
-    private int poid=0;
-    private int routid=0;
     @FXML
     private StackPane stackPane;
     private boolean submitInProgress = false;
-    private List<Poi> pois = new ArrayList<>();
-    private Route buildingRoute = null;
-    private List<Route> routes = new ArrayList<>();
-    private boolean buildingRouteWaitingFirstPoint = false;
-    private int routeId = 0;
     private String path;
     private MapSheet map;
     private boolean initialized = false;
     private boolean hasVals = false;
     private boolean showDone = false;
+    private final List<Integer> selectedPoiIds = new ArrayList<>();
+    private int tempPoiId = -1;
+    private Integer editedRouteId = null; // null = new route
 
-    public int getPoid()
-    {
-        return this.poid;
-    }
-    public int getRoutid()
-    {
-        return this.routeId;
-    }
-    public void setPoid(int id)
-    {
-        this.poid=id;
-    }
-    public void setRoutid(int id)
-    {
-        this.routeId=id;
-    }
+
+    private enum Mode { VIEW, EDIT_MAP,EDIT_ROUTE ,CREATE_MAP ,ADD_POI, ADD_ROUTE }
+
+    private Mode mode = Mode.VIEW;
+
+    private List<Poi> routePois = new ArrayList<>();
+
+
     public void setMap(MapSheet map)
     {
         this.map=map;
@@ -66,9 +54,14 @@ public class MapViewerController {
     @FXML
     private MapOverlayLayerController overlayLayerController;
     private GcmClient client;
+    private boolean waitingForCityPois = false;
+
+    private boolean editingExistingMap = false;
+    private int baseApprovedVersion = -1;
+    private Mode modeBeforeAddPoi = Mode.VIEW;
+
     @FXML
     private void initialize() {
-        baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
 
@@ -80,7 +73,7 @@ public class MapViewerController {
         //    → Requires a small setter in MapBaseLayerController (see below).
         baseLayerController.setOnViewChanged(() -> overlayLayerController.rerender());
 
-        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW); // optional safety
+        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
         baseLayerController.setZoom(baseLayerController.getZoom());
         overlayLayerController.setOnEmptyMapClick((sx, sy) -> {
             baseLayerController.handleExternalClick(sx, sy);
@@ -96,25 +89,10 @@ public class MapViewerController {
         overlayLayerController.setOnScroll(dy ->
                 baseLayerController.handleExternalScroll(dy)
         );
-        overlayLayerController.setOnEmptyRightClick(this::finishRouteMode);
 
-        overlayLayerController.setOnPoiSelected((poi, node) -> {
-            if (!pois.contains(poi)) {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Add");
-                alert.setContentText("selected poi");
-                alert.showAndWait();
-                pois.add(poi);
-            }else if(pois.contains(poi))
-            {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("remove");
-                alert.setContentText("deselected poi");
-                alert.showAndWait();
-                pois.remove(poi);
-            }
-            showPoiPopover(poi, node);
-        });
+        overlayLayerController.setOnPoiSelected(this::handlePoiSelection);
+        overlayLayerController.setOnPoiInfo(this::showPoiPopover);
+
 
         initialized = true;
         baseLayerController.recenterNow();
@@ -129,38 +107,233 @@ public class MapViewerController {
 
     }
 
-public void setVals(MapSheet map)
-{
-    this.path=map.getPath();
-    setMap(map);
-    hasVals = true;
-    baseLayerController.setTileRoot(path);
-    tryShowMap();
+    private int safePoiCityId(common.model.Poi poi) {
+        if (poi == null) return -1;
+
+        try {
+            var m = poi.getClass().getMethod("getCityID");
+            Object v = m.invoke(poi);
+            if (v instanceof Integer i) return i;
+        } catch (Exception ignored) {}
+
+        try {
+            var m = poi.getClass().getMethod("getCityId");
+            Object v = m.invoke(poi);
+            if (v instanceof Integer i) return i;
+        } catch (Exception ignored) {}
+
+        return -1;
+    }
 
 
+    public void setValsForEdit(MapSheet approvedMap) {
 
-}
-private void tryShowMap() {
-    if (showDone) return;
-    if (!initialized) return;
-    if (!hasVals) return;
-    if (map == null) return;
+        showDone = false;
 
-    Scene scene = stackPane.getScene();
-    if (scene == null) return; // still not attached -> too early
+        approvedMap.setEdit(true);
+        approvedMap.setSourceMapId(approvedMap.getSourceMapId()); // APPROVED MAP ID
 
-    // Defer to next FX pulse (prevents “too early” crashes)
-    Platform.runLater(() -> {
-        if (showDone) return;
-        if (stackPane.getScene() == null) return;
+        this.path = approvedMap.getPath();
+        setMap(approvedMap);
+        hasVals = true;
+
+        editingExistingMap = true;
+        baseApprovedVersion = approvedMap.getVersion();
+        mode = Mode.EDIT_MAP;
+
+        // reset selections
+        selectedPoiIds.clear();
+        overlayLayerController.clearAll();
+
+        // add map POIs (no visual selection yet) ----
+        if (approvedMap.getPois() != null) {
+            for (Poi p : approvedMap.getPois()) {
+                overlayLayerController.addPoi(p);
+                selectedPoiIds.add(p.getId()); // logical selection
+            }
+        }
+
+        // Force overlay to actually create PoiView nodes
+        overlayLayerController.rerender();
+
+        // mark map POIs as selected (GREEN) ----
+        if (approvedMap.getPois() != null) {
+            for (Poi p : approvedMap.getPois()) {
+                overlayLayerController.markPoiSelected(p);
+            }
+        }
+
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+
+        waitingForCityPois = true;
+
+        client.sendRequest(new GcmRequest(
+                RequestType.LIST_POIS,
+                new CityIdPayload(map.getCityID())
+        ));
+
 
         baseLayerController.setTileRoot(path);
-        showMap(map);
-        overlayLayerController.rerender();
-        showDone = true;
+        tryShowMap();
 
-    });
-}
+        showInfo(
+                "Edit Map mode: green POIs are in the map. " +
+                        "Red POIs are approved for the city but not in the map."
+        );
+    }
+
+
+    public void setValsForEditRoute(RouteSheet sheet) {
+
+        System.out.println("MapViewer: entering EDIT_ROUTE mode");
+
+
+        showDone = false;
+        hasVals = true;
+
+        this.mode = Mode.EDIT_ROUTE;
+        this.editedRouteId = sheet.getRouteId();
+
+
+        this.path = sheet.getCityTilePath();
+
+        // reuse MapSheet holder so other logic still works
+        this.map = new MapSheet(
+                1,
+                sheet.getCityId(),
+                sheet.getRoute().getName(),
+                sheet.getRoute().getDescription(),
+                path,
+                new ArrayList<>()   // map POIs not relevant here
+        );
+
+
+        // ---- reset UI state ----
+        selectedPoiIds.clear();
+        routePois.clear();
+        overlayLayerController.clearAll();
+
+        // ---- load base map ----
+        baseLayerController.setTileRoot(path);
+
+        // ---- load APPROVED POIs for city (RED) ----
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+        waitingForCityPois = true;
+
+        client.sendRequest(new GcmRequest(
+                RequestType.LIST_POIS,
+                new CityIdPayload(sheet.getCityId())
+        ));
+
+        // ---- preload ROUTE POIs (ORDER MATTERS) ----
+        if (sheet.getOrderedPois() != null) {
+            for (Poi p : sheet.getOrderedPois()) {
+                overlayLayerController.addPoi(p);
+                selectedPoiIds.add(p.getId());   // order preserved
+                overlayLayerController.markPoiSelected(p);
+            }
+        }
+
+        overlayLayerController.updateRouteNumbers(selectedPoiIds);
+        overlayLayerController.rerender();
+
+        tryShowMap();
+
+        showInfo(
+                "Edit Route mode: numbered POIs are part of the route.\n" +
+                        "Click a POI to remove it or add new ones at the end."
+        );
+    }
+
+
+
+
+
+    public void setVals(MapSheet map) {
+        showDone = false;
+
+        this.path = map.getPath();
+        setMap(map);
+        hasVals = true;
+
+        mode = Mode.VIEW;
+
+        baseLayerController.setTileRoot(path);
+        tryShowMap();
+    }
+
+
+    public void setValsForCreate(City city, String tilePath) {
+        showDone = false;
+
+        this.path = tilePath;
+        this.map = new MapSheet(
+                1,
+                city.getId(),
+                "",
+                "",
+                tilePath,
+                new ArrayList<>()
+        );
+
+        hasVals = true;
+        editingExistingMap = false;
+        mode = Mode.CREATE_MAP;
+
+        selectedPoiIds.clear();
+        overlayLayerController.clearAll();
+
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+
+        waitingForCityPois = true;
+
+        client.sendRequest(new GcmRequest(
+                RequestType.LIST_POIS,
+                new CityIdPayload(map.getCityID())
+        ));
+
+
+        baseLayerController.setTileRoot(tilePath);
+        tryShowMap();
+    }
+
+
+    private void tryShowMap() {
+        if (showDone) return;
+        if (!initialized) return;
+        if (!hasVals) return;
+        if (map == null) return;
+
+        Scene scene = stackPane.getScene();
+        if (scene == null) return; // still not attached -> too early
+
+        // Defer to next FX pulse (prevents “too early” crashes)
+        Platform.runLater(() -> {
+            client = ClientApp.getClient();
+            client.setResponseHandler(this::handleResponse);
+
+            if (showDone) return;
+            if (stackPane.getScene() == null) return;
+
+            baseLayerController.setTileRoot(path);
+            System.out.println("should show map");
+            if (mode == Mode.VIEW) {
+                showMap(map); // VIEW ONLY
+            } else {
+                overlayLayerController.rerender(); // EDIT / CREATE keep prepared state
+            }
+            showDone = true;
+
+
+            System.out.println("stackPane size=" + stackPane.getWidth() + "x" + stackPane.getHeight());
+
+        });
+    }
+
+
 
     /* ===========================
        Toolbar zoom button handlers
@@ -197,66 +370,219 @@ private void tryShowMap() {
 
     @FXML
     private void onAddPoiMode() {
-        System.out.println("added poi");
+        modeBeforeAddPoi = mode;
 
+        System.out.println(mode + "mode ON");
 
-        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.ADD_POI);
+        baseLayerController.setInteractionMode(
+                MapBaseLayerController.InteractionMode.ADD_POI
+        );
 
         baseLayerController.setOnPoiClick(world -> {
+
             int currentZoom = baseLayerController.getZoom();
 
             double worldX = world[0];
             double worldY = world[1];
 
-// convert current zoom coords -> BASE_ZOOM coords
             double scaleUp = Math.pow(2, Poi.BASE_ZOOM - currentZoom);
             double baseWorldX = worldX * scaleUp;
             double baseWorldY = worldY * scaleUp;
-            // ask name
-            try {
-                String name = askPoiName();
-                if (name == null) {
-                    // user cancelled or closed
-                    baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
-                    return;
-                }
-                //ask description
-                String description = askPoiDescription();
-                if (description == null) {
-                    // user cancelled or closed
-                    baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
-                    return;
-                }
-                //ask category
-                POI_Category category = askPoiCategory();
-                if (category == null) return;
 
-                boolean isAccessible = askPoiAccessibility();
-                int cityID = map.getCityID();
+            String name = askPoiName();
+            if (name == null) return;
 
-                Poi poi = new Poi(
-                        poid++,
-                        name,
-                        description,
-                        baseWorldX,
-                        baseWorldY,
-                        category,
-                        isAccessible,
-                        cityID
-                );
+            String description = askPoiDescription();
+            if (description == null) return;
 
-                overlayLayerController.addPoi(poi);
-                pois.add(poi);
+            POI_Category category = askPoiCategory();
+            if (category == null) return;
 
-            }finally {
-                baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
-                //  baseLayerController.setOnPoiClick(null);
-            }
+            boolean isAccessible = askPoiAccessibility();
+
+            tempPoiId--;
+            Poi poi = new Poi(
+                    tempPoiId,
+                    name,
+                    description,
+                    baseWorldX,
+                    baseWorldY,
+                    category,
+                    isAccessible,
+                    map.getCityID(),
+                    false
+            );
+
+            overlayLayerController.addPoi(poi);
+            selectedPoiIds.add(poi.getId());
+            overlayLayerController.markPoiSelected(poi);
 
 
+            mode = modeBeforeAddPoi;
+            baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
 
         });
     }
+
+
+
+    private void handlePoiSelection(Poi poi, Node node) {
+
+        // ROUTE MODE: toggle + numbering (ADD + EDIT)
+        if (mode == Mode.ADD_ROUTE || mode == Mode.EDIT_ROUTE) {
+
+            int id = poi.getId();
+
+            if (selectedPoiIds.contains(id)) {
+                selectedPoiIds.remove((Integer) id);
+                overlayLayerController.setPoiSelected(node, false);
+            } else {
+                selectedPoiIds.add(id);
+                overlayLayerController.setPoiSelected(node, true);
+            }
+
+            overlayLayerController.updateRouteNumbers(selectedPoiIds);
+            return; // IMPORTANT: do not fall through
+        }
+
+        // MAP SELECTION (CREATE or EDIT)
+        if (mode == Mode.CREATE_MAP || mode == Mode.EDIT_MAP) {
+
+            int id = poi.getId();
+
+            if (selectedPoiIds.contains(id)) {
+                selectedPoiIds.remove((Integer) id);
+                overlayLayerController.setPoiSelected(node, false);
+            } else {
+                selectedPoiIds.add(id);
+                overlayLayerController.setPoiSelected(node, true);
+            }
+            return;
+        }
+    }
+
+
+
+
+
+
+
+    @FXML
+    public void onSubmitPois(ActionEvent actionEvent) {
+
+        if (submitInProgress) return;
+        submitInProgress = true;
+
+        List<Poi> selected = overlayLayerController.getAllPois()
+                .stream()
+                .filter(p -> selectedPoiIds.contains(p.getId()))
+                .toList();
+
+        if (selected.isEmpty()) {
+            showInfo("No POIs selected.");
+            submitInProgress = false;
+            return;
+        }
+
+
+        String name = askMapName();
+        if (name == null) {
+            submitInProgress = false;
+            return;
+        }
+
+        String description = askMapDescription();
+        if (description == null) {
+            submitInProgress = false;
+            return;
+        }
+
+        MapSheet payload = new MapSheet(
+                (editingExistingMap ? map.getVersion() + 1 : 1),
+                map.getCityID(),
+                name,
+                description,
+                path,
+                new ArrayList<>(selected)
+        );
+
+        payload.setEdit(map.isEdit());
+        if (map.isEdit()) {
+            payload.setSourceMapId(map.getSourceMapId());
+        }
+
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+        client.sendRequest(new GcmRequest(RequestType.PEND_MAP, payload));
+    }
+
+
+
+    @FXML
+    public void onSubmitRoute(ActionEvent actionEvent) {
+
+
+
+        if (mode != Mode.ADD_ROUTE && mode != Mode.EDIT_ROUTE) {
+            showInfo("Press Add Route or Edit Route first.");
+            return;
+        }
+
+        if (selectedPoiIds.size() < 2) {
+            showInfo("Select at least 2 POIs.");
+            return;
+        }
+
+        String routeName = askRouteName();
+        if (routeName == null) return;
+
+        String routeDesc = askRouteDescription();
+        if (routeDesc == null) return;
+
+        ArrayList<Integer> stops = new ArrayList<>(selectedPoiIds);
+
+        PendingRoute payload;
+
+        if (mode == Mode.EDIT_ROUTE) {
+            payload = new PendingRoute(
+                    0,
+                    routeName,
+                    routeDesc,
+                    map.getCityID(),
+                    stops,
+                    editedRouteId
+            );
+            payload.setEdit(true);
+        } else {
+            payload = new PendingRoute(
+                    0,
+                    routeName,
+                    routeDesc,
+                    map.getCityID(),
+                    stops
+            );
+        }
+
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+        client.sendRequest(new GcmRequest(RequestType.SUBMIT_ROUTE, payload));
+
+        selectedPoiIds.clear();
+        overlayLayerController.clearPoiSelections();
+        overlayLayerController.updateRouteNumbers(selectedPoiIds);
+
+        editedRouteId = null;
+        mode = Mode.VIEW;
+
+
+    }
+
+
+
+
+
+
+
 
 
 
@@ -275,84 +601,8 @@ private void tryShowMap() {
     }
 
 
-    @FXML
-    public void onAddRouteMode(ActionEvent actionEvent) {
-        System.out.println("Add Route mode");
-
-        // start a new route
-        buildingRoute = null;
-        buildingRouteWaitingFirstPoint = true;
-
-        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.ADD_POI);
-
-        baseLayerController.setOnPoiClick(world -> {
-            double worldX = world[0];
-            double worldY = world[1];
-
-            int currentZoom = baseLayerController.getZoom();
-            double scaleUp = Math.pow(2, Poi.BASE_ZOOM - currentZoom);
-
-            double baseWorldX = worldX * scaleUp;
-            double baseWorldY = worldY * scaleUp;
-
-            try {
-                // FIRST point: ask metadata once
-                if (buildingRouteWaitingFirstPoint) {
-                    String name = askRouteName();
-                    if (name == null) return;
-
-                    String description = askRouteDescription();
-                    if (description == null) return;
-
-                    POI_Category category = askPoiCategory();
-                    if (category == null) return;
-
-                    // Create route object (adjust ctor to your Route model)
-                    buildingRoute = new Route(routeId++, name, description, category,null, map.getCityID());
-                    buildingRouteWaitingFirstPoint = false;
-
-                    // Add first point
-                    buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                    Poi start=new Poi(routeId,name,description,baseWorldX,baseWorldY,POI_Category.OTHER,false, map.getCityID());
-                    overlayLayerController.addPoi(start);
-
-                    // Add to overlay immediately so user sees it grow
-                    overlayLayerController.addRoute(buildingRoute);
-                    routes.add(buildingRoute);
-                    overlayLayerController.rerender();
-
-                    System.out.println("Started route: " + name);
-                    return;
-                }
-
-                // NEXT points: only coords
-                if (buildingRoute != null) {
-                    buildingRoute.addBasePoint(baseWorldX, baseWorldY);
-                    overlayLayerController.rerender();
-                }
-
-            } finally {
-                // We do NOT exit route mode after each click.
-                // We stay in ADD_POI mode so user can keep clicking points.
-                // So: no reset here.
-            }
-        });
-
-        // Optional: add a right-click to finish route
-        baseLayerController.setOnRightClick(() -> finishRouteMode());
-    }
-    private void finishRouteMode() {
-
-        buildingRoute = null;
-        buildingRouteWaitingFirstPoint = false;
-
-        baseLayerController.setInteractionMode(MapBaseLayerController.InteractionMode.VIEW);
-        baseLayerController.setOnPoiClick(null);
-
-        // If you added a right-click hook:
-        baseLayerController.setOnRightClick(null);
-    }
     private void showPoiPopover(Poi poi, Node anchor) {
+        System.out.println("should pop");
         ContextMenu menu = new ContextMenu();
 
         MenuItem title = new MenuItem("Name: "+poi.getName());
@@ -364,59 +614,64 @@ private void tryShowMap() {
         MenuItem cat = new MenuItem("Category: " + poi.getCategory());
         cat.setDisable(true);
 
+        String is_accessible = poi.isAccessible() ? "Yes" : "No";
+        MenuItem accessibility = new MenuItem("Accessible: " + is_accessible);
+        accessibility.setDisable(true);
+
         MenuItem close = new MenuItem("Close");
 
-        menu.getItems().addAll(title, desc, cat, new SeparatorMenuItem(), close);
+        menu.getItems().addAll(title, desc, cat, accessibility, new SeparatorMenuItem(), close);
 
         menu.show(anchor, Side.TOP, 0, -10);
     }
 
 
     private void handleResponse(GcmResponse response) {
+
         if (!response.isSuccess()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("pending Failed");
+            alert.setTitle("Request Failed");
             alert.setContentText(response.getErrorMessage());
             alert.showAndWait();
-        }else{
-            Object t =response.getData();
-            if(t instanceof RouteIndexPayload indexPayload)
-            {
-                setRoutid(((RouteIndexPayload) t).getIndex()+1);
-            }else if(t instanceof IndexPayload indexPayload)
-            {
-                setPoid(((IndexPayload)t).getIndex()+1);
-            }
-            System.out.println("sent succsesfuly");
-        }
-
-    }
-
-    public void onSubmitMap(ActionEvent actionEvent) {
-        if (submitInProgress) {
-            System.out.println("tried to dupe");
+            submitInProgress = false;
             return;
         }
-        submitInProgress = true;
 
-        int version = askVersionNum();
-        if (version < 0) { submitInProgress = false; return; }
+        Object data = response.getData();
 
+        // ---------- POI LIST RESPONSE (CREATE or EDIT) ----------
+        if (waitingForCityPois
+                && data instanceof ArrayList<?> list
+                && !list.isEmpty()
+                && list.get(0) instanceof Poi) {
 
-        String name = askMapName();
-        if (name == null) { submitInProgress = false; return; }
+            waitingForCityPois = false;
 
-        String description = askMapDescription();
-        if (description == null) { submitInProgress = false; return; }
+            int cityId = map.getCityID();
 
-        MapSheet map = new MapSheet(version, name, description, path,
-                (ArrayList) routes, (ArrayList) pois, this.map.getCityID());
- client=ClientApp.getClient();
-        GcmRequest request = new GcmRequest(RequestType.PEND_MAP, map);
-        client.sendRequest(request);
+            for (Object o : list) {
+                Poi p = (Poi) o;
+
+                // safety: only POIs of this city
+                int poiCity = safePoiCityId(p);
+                if (poiCity != -1 && poiCity != cityId) continue;
+
+                // skip POIs already shown (map POIs in edit mode)
+                if (overlayLayerController.getPoiView(p.getId()) != null) continue;
+
+                overlayLayerController.addPoi(p);
+                // DO NOT mark selected → stays RED
+            }
+
+            overlayLayerController.rerender();
+            submitInProgress = false;
+            return;
+        }
+
+        // ---------- SUBMIT SUCCESS ----------
+        System.out.println("Map submitted successfully");
+        submitInProgress = false;
     }
-
-
 
 
 
@@ -488,6 +743,32 @@ private void tryShowMap() {
         }
     }
 
+    private void showInfo(String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
+    }
+
+
+
+    @FXML
+    private void onAddRouteMode() {
+
+        if (mode == Mode.EDIT_ROUTE) {
+            showInfo("You are editing an existing route.\n" +
+                    "You can only add/remove POIs, not start a new route.");
+            return;
+        }
+
+        mode = Mode.ADD_ROUTE;
+        showInfo("Route mode: click POIs in order, then Submit Route.");
+    }
+
+
+
+
+
     private boolean askPoiAccessibility() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("POI Accessibility");
@@ -528,42 +809,23 @@ private void tryShowMap() {
         return askNonEmptyString("New Map", "Enter map description", "Description:");
     }
 
-    int askVersionNum() {
-        return askNonNegativeInt("New Map Version", "Enter Map Version", "Version:");
-    }
 
 
     public void showMap(MapSheet map) {
+        selectedPoiIds.clear();
         overlayLayerController.clearAll();
-        List<Poi> pois=map.getPois();
-        List<Route> routes=map.getRoutes();
-        if (pois != null) {
-            for (Poi p : pois) {
-                System.out.println(p.getName()+" x:"+p.getWorldX(13));
-                overlayLayerController.addPoi(p);
+
+        if (map.getPois() == null) return;
+
+        for (Poi p : map.getPois()) {
+            if (p.isApproved()) {
+                overlayLayerController.addPoi(p); // red by default
             }
         }
 
-        if (routes != null) {
-            for (Route r : routes) {
-                List<double[]> pts = r.getBasePoints();
-
-                if (pts != null && !pts.isEmpty() && pts.get(0).length >= 2) {
-                    double firstX = pts.get(0)[0];
-                    double firstY = pts.get(0)[1];
-
-                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false, map.getCityID());
-                    //  overlayLayerController.addPoi(head);
-                }
-                overlayLayerController.addRoute(r);
-
-                overlayLayerController.rerender();
-            }
-        }
-
-        // Once all objects are added, ensure positions are correct
         overlayLayerController.rerender();
     }
+
 
 
     public void handleClose(ActionEvent actionEvent) {
