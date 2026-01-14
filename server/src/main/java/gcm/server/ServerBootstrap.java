@@ -17,7 +17,10 @@ public class ServerBootstrap {
         AuthService authService = new AuthService(userRepo);
 
         MapRepo mapRepo = new MapRepo();
-        MapService mapService = new MapService(mapRepo,userRepo);
+
+        RouteRepo routeRepo = new RouteRepo();
+
+        MapService mapService = new MapService(mapRepo,userRepo,routeRepo);
 
         CityRepo cityRepo = new CityRepo();
         CityService cityService = new CityService(cityRepo);

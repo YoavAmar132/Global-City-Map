@@ -1,10 +1,8 @@
 package gcm.server.data;
 
 import common.messages.ApprovePayload;
-import common.model.Poi;
+import common.model.*;
 import common.model.Route;
-import common.model.MapSheet;
-import common.model.City;
 import gcm.server.data.JsonUtil; // Make sure this import matches your project structure
 
 import java.sql.*;
@@ -15,12 +13,10 @@ import java.util.List;
 public class MapRepo {
 
     private final PoiRepo poirepo;
-    private final RouteRepo routeRepo;
     private final CityRepo cityRepo;
 
     public MapRepo() {
         this.poirepo = new PoiRepo();
-        this.routeRepo = new RouteRepo();
         this.cityRepo = new CityRepo();
         System.out.println("map repo created");
     }
@@ -28,6 +24,10 @@ public class MapRepo {
     // ==========================================
     //  NEW METHODS FOR BUY MAP
     // ==========================================
+
+    public List<Poi> getPoisForCity(int cityId) {
+        return poirepo.loadPoisByCity(cityId);
+    }
 
     public List<City> getPurchasedCitiesByUserId(int userId) {
         List<City> cities = new ArrayList<>();
@@ -70,12 +70,8 @@ public class MapRepo {
 
           return poirepo.loadAllPois(0,10000);
 
-        }
-    public List<Route> getAllRoute() {
-
-        return routeRepo.loadAllRoutes(0,10000);
-
     }
+
 
     // COPY THIS ENTIRE METHOD INTO MapRepo.java
 
@@ -217,30 +213,27 @@ public class MapRepo {
     // ==========================================
     //  YOUR EXISTING METHODS
     // ==========================================
-
     public boolean insertPendingMap(MapSheet map) {
         String sql = """
-            INSERT INTO pending_maps
-            (version, name, description, path, poi_array, route_array)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """;
-
+        INSERT INTO pending_maps
+        (version, cityID, name, description, path, poi_array, is_edit, source_map_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            poirepo.insertAllPoi(map.getPois());
-            routeRepo.insertAllRoutes(map.getRoutes());
 
             stmt.setInt(1, map.getVersion());
-            stmt.setString(2, map.getName());
-            stmt.setString(3, map.getDescription());
-            stmt.setString(4, map.getPath());
-            stmt.setString(5, JsonUtil.poiListToJson(map.getPois()));
-            stmt.setString(6, JsonUtil.routeListToJson(map.getRoutes()));
+            stmt.setInt(2, map.getCityID());
+            stmt.setString(3, map.getName());
+            stmt.setString(4, map.getDescription());
+            stmt.setString(5, map.getPath());
+            stmt.setString(6, JsonUtil.poiListToJson(map.getPois()));
+            stmt.setBoolean(7, map.isEdit());
+            stmt.setObject(8, map.getSourceMapId());
 
 
-            int affected = stmt.executeUpdate();
-            return affected == 1;
+            return stmt.executeUpdate() == 1;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -248,47 +241,54 @@ public class MapRepo {
         }
     }
 
-    public MapSheet loadPendingMap(int version, String name) {
-        String sql = """
-            SELECT version, name, description, path, poi_array, route_array
-            FROM pending_maps
-            WHERE version = ? AND name = ?
-            """;
 
+
+
+
+
+    public MapSheet loadPendingMap(int version, int cityID, String name) {
+        String sql = """
+        SELECT version, cityID, name, description, path, poi_array, is_edit
+        FROM pending_maps
+        WHERE version = ? AND cityID = ? AND name = ?
+    """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, version);
-            stmt.setString(2, name);
+            stmt.setInt(2, cityID);
+            stmt.setString(3, name);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     String poiJson = rs.getString("poi_array");
-                    String routeJson = rs.getString("route_array");
-
                     ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
-                    ArrayList<Route> routes = JsonUtil.jsonToRouteList(routeJson);
 
-                    new MapSheet(
+                    MapSheet map = new MapSheet(
                             rs.getInt("version"),
+                            rs.getInt("cityID"),
                             rs.getString("name"),
                             rs.getString("description"),
                             rs.getString("path"),
-                            routes,
-                            pois,
-                            0
-
+                            pois
                     );
 
+                    map.setEdit(rs.getBoolean("is_edit"));
+                    map.setSourceMapId((Integer) rs.getObject("source_map_id"));
+                    return map;
                 }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return null;
     }
+
+
+
 
     // Fix: Delete using Version AND Name to avoid deleting duplicates
     public boolean deletePendingMap(int version, String name) {
@@ -304,35 +304,83 @@ public class MapRepo {
         }
     }
 
-    public boolean insertApprovedMap(ApprovePayload ApprovedMap) {
-        MapSheet map = ApprovedMap.getMap();
-        String CityName = ApprovedMap.getCityName();
+    public boolean insertApprovedMap(ApprovePayload approvedMap) {
 
-        // 1. Delete from pending first (using Name + Version fix)
-        deletePendingMap(map.getVersion(), map.getName());
+        if (approvedMap == null || approvedMap.getMap() == null)
+            return false;
 
-        if (map == null) return false;
+        MapSheet map = approvedMap.getMap();
+        String cityName = approvedMap.getCityName();
 
-        String sql = """
-            INSERT INTO Maps (cityID, mapName, map, version)
-            VALUES (?, ?, ?, ?)
-        """;
+        String insertMapSql = """
+        INSERT INTO Maps (cityID, mapName, map, version)
+        VALUES (?, ?, ?, ?)
+    """;
 
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
 
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int cityId = cityRepo.idByCityName(cityName);
+            if (cityId == -1) {
+                conn.rollback();
+                return false;
+            }
 
-            int cityId = cityRepo.idByCityName(CityName);
-            String mapName = map.getName();
-            String mapJson = JsonUtil.mapSheetToJsonWithEmbeddedArrays(map);
+            // Ensure POIs exist + fix IDs
+            for (Poi poi : map.getPois()) {
 
-            stmt.setInt(1, cityId);
-            stmt.setString(2, mapName);
-            stmt.setString(3, mapJson);
-            stmt.setInt(4, map.getVersion());
+                if (poi.getId() >= 0) continue;
 
+                Poi approvedPoi = new Poi(
+                        0,
+                        poi.getName(),
+                        poi.getDescription(),
+                        poi.getNWorldX(),
+                        poi.getNWorldY(),
+                        poi.getCategory(),
+                        poi.isAccessible(),
+                        poi.getCityID(),
+                        true
+                );
 
-            return stmt.executeUpdate() > 0;
+                int newPoiId = poirepo.insertPoiAndReturnId(approvedPoi);
+                poi.setId(newPoiId);
+            }
+
+            // Decide version + handle edit replacement
+            int newVersion;
+
+            if (map.isEdit()) {
+                if (map.getSourceMapId() == null) {
+                    conn.rollback();
+                    throw new SQLException("Edit map missing sourceMapId");
+                }
+
+                // Remove old approved map
+                deleteApprovedMapById(conn, map.getSourceMapId());
+
+                // Increment version
+                newVersion = getLatestVersionForCity(cityId) + 1;
+
+            } else {
+                // New map
+                newVersion = 1;
+            }
+
+            // Delete pending map (approval finished)
+            deletePendingMap(map.getVersion(), map.getName());
+
+            // Insert approved map
+            try (PreparedStatement stmt = conn.prepareStatement(insertMapSql)) {
+                stmt.setInt(1, cityId);
+                stmt.setString(2, map.getName());
+                stmt.setString(3, JsonUtil.mapSheetToJsonWithEmbeddedArrays(map));
+                stmt.setInt(4, newVersion);
+                stmt.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -340,14 +388,29 @@ public class MapRepo {
         }
     }
 
+
+
+
+
+
+    private boolean deleteApprovedMapById(Connection conn, int mapId) throws SQLException {
+        String sql = "DELETE FROM Maps WHERE mapID = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, mapId);
+            return stmt.executeUpdate() == 1;
+        }
+    }
+
+
+
     public List<MapSheet> loadAllPendingMaps() {
         List<MapSheet> maps = new ArrayList<>();
-        String sql = """
-            SELECT version, name, description, path, poi_array, route_array
-            FROM pending_maps
-            ORDER BY name, version
-        """;
 
+        String sql = """
+        SELECT version, cityID, name, description, path, poi_array, is_edit, source_map_id
+        FROM pending_maps
+        ORDER BY name, version
+    """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
@@ -355,31 +418,36 @@ public class MapRepo {
 
             while (rs.next()) {
                 String poiJson = rs.getString("poi_array");
-                String routeJson = rs.getString("route_array");
                 ArrayList<Poi> pois = JsonUtil.jsonToPoiList(poiJson);
-                ArrayList<Route> routes = JsonUtil.jsonToRouteList(routeJson);
 
                 MapSheet map = new MapSheet(
                         rs.getInt("version"),
+                        rs.getInt("cityID"),
                         rs.getString("name"),
                         rs.getString("description"),
                         rs.getString("path"),
-                        routes,
-                        pois,
-                        0
+                        pois
                 );
 
+                map.setEdit(rs.getBoolean("is_edit"));
+                map.setSourceMapId((Integer) rs.getObject("source_map_id"));
                 maps.add(map);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return maps;
     }
 
+
+
+
+
     public List<MapSheet> loadAllMapsFromCity(String cityName) {
         List<MapSheet> maps = new ArrayList<>();
-        String sql = "SELECT map FROM maps WHERE cityID = ?";
+        String sql = "SELECT mapID, map FROM maps WHERE cityID = ?";
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -390,8 +458,12 @@ public class MapRepo {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     String mapJson = rs.getString("map");
+                    int mapId = rs.getInt("mapID");
                     MapSheet map = JsonUtil.jsonToMapSheetWithEmbeddedArrays(mapJson);
-                    if (map != null) maps.add(map);
+                    if (map != null){
+                        map.setSourceMapId(mapId);
+                        maps.add(map);
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -402,18 +474,25 @@ public class MapRepo {
 
     // Helper: Get latest version (Required for OTP)
     public int getLatestVersionForCity(int cityId) {
-        // If your Maps table doesn't have a 'version' column yet, this will return 0 or fail.
-        // Ensure you ran: ALTER TABLE Maps ADD COLUMN version INT;
-        String sql = "SELECT MAX(version) as maxVer FROM Maps WHERE cityID = ?";
+        String sql = "SELECT MAX(version) AS maxVer FROM Maps WHERE cityID = ?";
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, cityId);
+
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getInt("maxVer");
+                if (rs.next()) {
+                    return rs.getInt("maxVer"); // returns 0 if NULL
+                }
             }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return 1; // Default to 1 if not found
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
     }
+
 
     // 1. Helper: Loads a specific version of a map (NEW)
     public MapSheet loadMapByVersion(String cityName, int version) {
@@ -602,8 +681,206 @@ public class MapRepo {
     }
 
 
+    public boolean insertPendingRoute(PendingRoute route) throws SQLException {
+
+        Connection conn = null;
+
+        try {
+            conn = DbManager.getConnection();
+            conn.setAutoCommit(false); //
+
+            // Insert into pending_routes
+            String routeSql = """
+            INSERT INTO pending_routes (name, description, cityID, is_edit, sourceRouteID)
+            VALUES (?, ?, ?, ?, ?)
+        """;
+
+            int routeId;
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    routeSql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setString(1, route.getName());
+                ps.setString(2, route.getDescription());
+                ps.setInt(3, route.getCityId());
+                ps.setBoolean(4, route.isEdit());
+                ps.setObject(5, route.getSourceRouteId(), Types.INTEGER);
+
+
+                ps.executeUpdate();
+
+                ResultSet rs = ps.getGeneratedKeys();
+                if (!rs.next()) {
+                    conn.rollback();
+                    return false;
+                }
+
+                routeId = rs.getInt(1);
+            }
+
+            // Insert pending_route_stops
+            String stopSql = """
+            INSERT INTO pending_route_stops
+            (routeID, poiID, stop_order, recommended_minutes)
+            VALUES (?, ?, ?, ?)
+        """;
+
+            try (PreparedStatement ps = conn.prepareStatement(stopSql)) {
+                int order = 1;
+                for (int poiId : route.getStops()) {
+                    ps.setInt(1, routeId);
+                    ps.setInt(2, poiId);
+                    ps.setInt(3, order++);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+            }
+
+            conn.commit(); // success
+            return true;
+
+        } catch (Exception e) {
+            if (conn != null) conn.rollback();
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            if (conn != null) conn.setAutoCommit(true);
+            if (conn != null) conn.close();
+        }
+    }
+
+    public boolean insertApprovedRoute(int routeId) {
+
+        String insertRouteSql = """
+        INSERT INTO routes (cityID, name, description, createdBy)
+        SELECT cityID, name, description, createdBy
+        FROM pending_routes
+        WHERE routeID = ?
+    """;
+
+        String insertStopsSql = """
+        INSERT INTO route_stops (routeID, poiID, stop_order, recommended_minutes)
+        SELECT ?, poiID, stop_order, recommended_minutes
+        FROM pending_route_stops
+        WHERE routeID = ?
+    """;
+
+        String deleteStopsSql = """
+        DELETE FROM pending_route_stops WHERE routeID = ?
+    """;
+
+        String deleteRouteSql = """
+        DELETE FROM pending_routes WHERE routeID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
+
+            int newRouteId;
+
+            // 1️⃣ Insert route
+            try (PreparedStatement ps =
+                         conn.prepareStatement(insertRouteSql, Statement.RETURN_GENERATED_KEYS)) {
+
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
+
+                ResultSet rs = ps.getGeneratedKeys();
+                if (!rs.next()) {
+                    conn.rollback();
+                    return false;
+                }
+                newRouteId = rs.getInt(1);
+            }
+
+            // 2️⃣ Insert stops
+            try (PreparedStatement ps = conn.prepareStatement(insertStopsSql)) {
+                ps.setInt(1, newRouteId);
+                ps.setInt(2, routeId);
+                ps.executeUpdate();
+            }
+
+            // 3️⃣ Cleanup pending
+            try (PreparedStatement ps = conn.prepareStatement(deleteStopsSql)) {
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(deleteRouteSql)) {
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public List<PendingRoute> getPendingRoutes() throws SQLException {
+
+        List<PendingRoute> routes = new ArrayList<>();
+
+        String routesSql = """
+        SELECT routeId, name, description, cityId
+        FROM pending_routes
+        ORDER BY routeId
+    """;
+
+        String stopsSql = """
+        SELECT poiId
+        FROM pending_route_stops
+        WHERE routeId = ?
+        ORDER BY stop_order
+    """;
+
+        try (Connection conn = DbManager.getConnection()) {
+
+            try (PreparedStatement routePs = conn.prepareStatement(routesSql);
+                 ResultSet rs = routePs.executeQuery()) {
+
+                while (rs.next()) {
+
+                    int routeId = rs.getInt("routeId");
+                    String name = rs.getString("name");
+                    String description = rs.getString("description");
+                    int cityId = rs.getInt("cityId");
+
+                    // ---- Load stops (ORDER MATTERS) ----
+                    ArrayList<Integer> stops = new ArrayList<>();
+
+                    try (PreparedStatement stopPs = conn.prepareStatement(stopsSql)) {
+                        stopPs.setInt(1, routeId);
+
+                        try (ResultSet rsStops = stopPs.executeQuery()) {
+                            while (rsStops.next()) {
+                                stops.add(rsStops.getInt("poiId"));
+                            }
+                        }
+                    }
+
+                    routes.add(new PendingRoute(
+                            routeId,
+                            name,
+                            description,
+                            cityId,
+                            stops
+                    ));
+                }
+            }
+        }
+
+        return routes;
+    }
+
+
+
+
 
     // Getters for other repos
-    public RouteRepo getRouteRepo() { return routeRepo; }
     public PoiRepo getPoirepo() { return poirepo; }
 }

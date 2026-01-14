@@ -6,12 +6,13 @@ import java.io.Serializable;
 public class Poi implements Serializable {
     public static final int BASE_ZOOM = 16;
 
-    private final int id;
+    private  int id;
     private final String name;
     private final String description;
     private final POI_Category category;
     private final boolean accessible;
     private final int cityID;
+    private final Boolean is_approved;
 
     // Stored in BASE_ZOOM world-pixels
     private final double baseWorldX;
@@ -20,7 +21,7 @@ public class Poi implements Serializable {
     public Poi(int id, String name, String description,
                double baseWorldX, double baseWorldY,
                POI_Category category,
-               boolean accessible, int cityID) {
+               boolean accessible, int cityID, boolean is_approved) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -29,8 +30,12 @@ public class Poi implements Serializable {
         this.category = category;
         this.accessible = accessible;
         this.cityID = cityID;
+        this.is_approved = is_approved;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public int getId() { return id; }
     public String getName() { return name; }
@@ -40,6 +45,8 @@ public class Poi implements Serializable {
         return accessible;
     }
     public int getCityID() { return cityID; }
+    public boolean isApproved() { return is_approved; }
+
 
 
 
@@ -65,5 +72,6 @@ public class Poi implements Serializable {
     // Optional: if you ever need raw base coords
     public double getBaseWorldX() { return baseWorldX; }
     public double getBaseWorldY() { return baseWorldY; }
+
 }
 

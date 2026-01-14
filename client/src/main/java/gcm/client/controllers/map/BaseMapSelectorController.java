@@ -33,7 +33,6 @@ public class BaseMapSelectorController {
     private VBox Baselist;
     private ArrayList<City> cities; // loaded earlier
     private ArrayList<Poi> pois; // loaded earlier
-    private ArrayList<Route> routes; // loaded earlier
 
     @FXML
     private void initialize() {
@@ -43,10 +42,10 @@ public class BaseMapSelectorController {
         EmptyPayload payload=new EmptyPayload();
         GcmRequest request = new GcmRequest(RequestType.LIST_CITIES, payload);
         client.sendRequest(request);
-        request=new GcmRequest(RequestType.LIST_POIS,null);
+
+        request = new GcmRequest(RequestType.LIST_POIS, null);
         client.sendRequest(request);
-        request=new GcmRequest(RequestType.LIST_ROUTES,null);
-        client.sendRequest(request);
+
     }
 
     public void setCities(ArrayList<City> cities) {
@@ -84,10 +83,8 @@ public class BaseMapSelectorController {
         System.out.println("gets list of cities");
         SceneNavigator.LoadedView<MapViewerController> view =
                 ClientApp.getNavigator().get(MapViewerController.class);
-        MapSheet map=new MapSheet(0,"","",city.getBasemap(), routes, pois, city.getId());
+        view.controller.setValsForCreate(city, city.getBasemap());
 
-        // set values BEFORE showing
-        view.controller.setVals(map);
 
         // now show
         ClientApp.getNavigator().showLoaded(view.root);
@@ -123,12 +120,6 @@ public class BaseMapSelectorController {
                     @SuppressWarnings("unchecked")
                     ArrayList<Poi> Pois = (ArrayList<Poi>) list;
                    this.pois=Pois;
-                    System.out.println("Poi list success");
-                }
-                if (!list.isEmpty() && list.get(0) instanceof Route) {
-                    @SuppressWarnings("unchecked")
-                    ArrayList<Route> Routes = (ArrayList<Route>) list;
-                    this.routes=Routes;
                     System.out.println("Poi list success");
                 }
 

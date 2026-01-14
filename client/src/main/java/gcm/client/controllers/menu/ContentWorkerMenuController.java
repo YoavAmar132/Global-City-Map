@@ -10,6 +10,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 
+
 public class ContentWorkerMenuController {
     private GcmClient client;
 
@@ -24,10 +25,47 @@ public class ContentWorkerMenuController {
 
     @FXML
     public void onViewCatalogClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ContentCatalogController.class);
+
+        var view = ClientApp.getNavigator()
+                .get(ContentCatalogController.class);
+
+        view.controller.setOpenIntent(
+                ContentCatalogController.OpenIntent.VIEW
+        );
+
+        ClientApp.getNavigator().showLoaded(view.root);
     }
+
     @FXML
-    public void onEditButton(ActionEvent actionEvent) {
+    public void onEditExistingMap(ActionEvent actionEvent) {
+
+        var view = ClientApp.getNavigator()
+                .get(ContentCatalogController.class);
+
+        view.controller.setOpenIntent(
+                ContentCatalogController.OpenIntent.EDIT_MAP
+        );
+
+        ClientApp.getNavigator().showLoaded(view.root);
+    }
+
+    @FXML
+    public void onEditExistingRoute(ActionEvent actionEvent) {
+
+        var view = ClientApp.getNavigator()
+                .get(ContentCatalogController.class);
+
+        view.controller.setOpenIntent(
+                ContentCatalogController.OpenIntent.EDIT_ROUTE
+        );
+
+        ClientApp.getNavigator().showLoaded(view.root);
+    }
+
+
+
+    @FXML
+    public void onCreateButton(ActionEvent actionEvent) {
         ClientApp.getNavigator().show(BaseMapSelectorController.class);
     }
     @FXML
@@ -48,8 +86,28 @@ public class ContentWorkerMenuController {
 
 
     }
+
+    @FXML
+    public void onRouteApproveButton(ActionEvent actionEvent) {
+        User current = ClientApp.getCurrentUser();
+
+        if (current.getRole().equals("ContentManager") ||
+                current.getRole().equals("CompanyManager")) {
+
+            ClientApp.getNavigator().show(PendingRouteController.class);
+            return;
+        }
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Restriction Error");
+        alert.setContentText("This Feature is not Accessible for your account");
+        alert.showAndWait();
+    }
+
     @FXML
     public void onEditPricesButton(ActionEvent actionEvent) {
         ClientApp.getNavigator().show(EditPricesController.class);
     }
+
+
 }

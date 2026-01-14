@@ -23,16 +23,21 @@ public enum RequestType {
 
     // POIs
     LIST_POIS,
-    LIST_ROUTES,
     SEARCH_POIS,
     CREATE_POI,      // optional
     UPDATE_POI,      // optional
     GET_POI_INDEX,
-    GET_ROUTE_INDEX,      // optional
+
 
     // Routes
+    SUBMIT_ROUTE,
     LIST_ROUTES_FOR_CITY,
     GET_ROUTE_DETAILS,
+    APPROVE_ROUTE,
+    GET_PENDING_ROUTES,
+    GET_ROUTE_SHEET,
+    GET_PENDING_ROUTE_SHEET,
+    GET_APPROVED_ROUTES_FOR_CITY,
 
     // Purchases / Subscriptions
     BUY_MAP,
