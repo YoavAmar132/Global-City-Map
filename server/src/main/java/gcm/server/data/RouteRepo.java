@@ -389,6 +389,32 @@ public class RouteRepo {
     }
 
 
+    public boolean isPoiUsedInAnyRoute(int poiId) {
+
+        String sql1 = "SELECT 1 FROM route_stops WHERE poiID = ? LIMIT 1";
+        String sql2 = "SELECT 1 FROM pending_route_stops WHERE poiID = ? LIMIT 1";
+
+        try (Connection conn = DbManager.getConnection()) {
+
+            try (PreparedStatement ps = conn.prepareStatement(sql1)) {
+                ps.setInt(1, poiId);
+                if (ps.executeQuery().next()) return true;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql2)) {
+                ps.setInt(1, poiId);
+                if (ps.executeQuery().next()) return true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return true; // FAIL SAFE
+        }
+
+        return false;
+    }
+
+
 
 
 

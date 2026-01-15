@@ -38,6 +38,24 @@ public class MapService {
 
     /* ================= MAPS ================= */
 
+    public boolean deletePoiIfUnused(int poiId) throws SQLException {
+        // is POI used in any approved / pending map?
+        if (mapRepository.isPoiUsedInAnyMap(poiId)) {
+            return false;
+        }
+
+        // is POI used in any approved / pending route?
+        if (routeRepository.isPoiUsedInAnyRoute(poiId)) {
+            return false;
+        }
+
+        // Safe to delete
+        return mapRepository
+                .getPoirepo()
+                .deletePoiById(poiId);
+    }
+
+
     public List<Poi> getpois() {
         return mapRepository.getAllPoi();
     }
@@ -192,6 +210,39 @@ public class MapService {
         // Always approve pending
         return routeRepository.approveRoute(pendingRouteId);
     }
+
+
+    public GcmResponse deletePoiSafely(int poiId) {
+
+        try {
+            if (mapRepository.isPoiUsedInAnyMap(poiId)) {
+                return GcmResponse.error(
+                        "Cannot delete POI: it is used in one or more maps."
+                );
+            }
+
+            if (routeRepository.isPoiUsedInAnyRoute(poiId)) {
+                return GcmResponse.error(
+                        "Cannot delete POI: it is used in one or more routes."
+                );
+            }
+
+            boolean deleted = mapRepository
+                    .getPoirepo()
+                    .deletePoiById(poiId);
+
+            if (!deleted) {
+                return GcmResponse.error("Failed to delete POI.");
+            }
+
+            return GcmResponse.ok(null);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return GcmResponse.error("Server error while deleting POI.");
+        }
+    }
+
 
 
 

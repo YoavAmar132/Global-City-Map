@@ -24,6 +24,7 @@ public enum RequestType {
     CREATE_POI,      // optional
     UPDATE_POI,      // optional
     GET_POI_INDEX,
+    DELETE_POI,
 
 
     // Routes

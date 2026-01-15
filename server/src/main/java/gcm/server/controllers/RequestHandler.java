@@ -296,6 +296,17 @@ public class RequestHandler {
         }
 
 
+        if (type == RequestType.DELETE_POI) {
+            try {
+                return handleDeletePoi(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while deleting POI");
+            }
+        }
+
+
+
 
 
 
@@ -349,6 +360,26 @@ public class RequestHandler {
             e.printStackTrace(); // server log don't really care :D
             return GcmResponse.error("Server error during registration");
         }
+    }
+
+    private GcmResponse handleDeletePoi(GcmRequest request) throws SQLException {
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof PoiIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_POI");
+        }
+
+        int poiId = payload.getPoiId();
+
+        boolean deleted = mapService.deletePoiIfUnused(poiId);
+
+        if (!deleted) {
+            return GcmResponse.error(
+                    "Cannot delete POI. It is used in a map or a route."
+            );
+        }
+
+        return GcmResponse.ok(poiId);
     }
 
     public static synchronized void removeOnlineUser(User user) {

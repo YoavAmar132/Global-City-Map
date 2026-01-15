@@ -878,6 +878,56 @@ public class MapRepo {
     }
 
 
+    public boolean isPoiUsedInAnyMap(int poiId) {
+
+        try (Connection conn = DbManager.getConnection()) {
+
+            String approvedSql = "SELECT map FROM Maps";
+            try (PreparedStatement ps = conn.prepareStatement(approvedSql);
+                 ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    String json = rs.getString("map");
+
+                    MapSheet map =
+                            JsonUtil.jsonToMapSheetWithEmbeddedArrays(json);
+
+                    if (map == null || map.getPois() == null) continue;
+
+                    for (Poi p : map.getPois()) {
+                        if (p.getId() == poiId) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            String pendingSql = "SELECT poi_array FROM pending_maps";
+            try (PreparedStatement ps = conn.prepareStatement(pendingSql);
+                 ResultSet rs = ps.executeQuery()) {
+
+                while (rs.next()) {
+                    String json = rs.getString("poi_array");
+                    ArrayList<Poi> pois = JsonUtil.jsonToPoiList(json);
+
+                    for (Poi p : pois) {
+                        if (p.getId() == poiId) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return true; // FAIL SAFE
+        }
+
+        return false;
+    }
+
+
+
 
 
 

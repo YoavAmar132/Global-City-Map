@@ -25,11 +25,22 @@
 
             <Region prefWidth="20"/>
 
-            <Button text="Add POI" onAction="#onAddPoiMode"/>
-            <Button text="Add Route" onAction="#onAddRouteMode"/>
+            <Button fx:id="addPoiButton"
+                    text="Add Map"
+                    onAction="#onAddPoiMode"/>
 
-            <Button text="Submit Map" onAction="#onSubmitPois"/>
-            <Button text="Submit Route" onAction="#onSubmitRoute"/>
+            <Button fx:id="addRouteButton"
+                    text="Add Route"
+                    onAction="#onAddRouteMode"/>
+
+            <Button fx:id="submitMapButton"
+                    text="Submit Map"
+                    onAction="#onSubmitPois"/>
+
+            <Button fx:id="submitRouteButton"
+                    text="Submit Route"
+                    onAction="#onSubmitRoute"/>
+
 
             <Region prefWidth="20"/>
 

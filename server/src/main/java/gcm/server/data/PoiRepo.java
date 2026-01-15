@@ -204,6 +204,24 @@ public class PoiRepo {
     }
 
 
+    public boolean deletePoiById(int poiId) {
+
+        String sql = "DELETE FROM pois WHERE id = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, poiId);
+            return ps.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+
 
 
 
