@@ -105,6 +105,18 @@
                -fx-cursor: hand;"
                     onAction="#onRouteApproveButton"/>
 
+            <!-- approve pending routes button -->
+            <Button fx:id="PriceApproveButton"
+                    text="Approve Pending Prices"
+                    prefWidth="200.0"
+                    prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+               -fx-text-fill: white;
+               -fx-font-size: 15;
+               -fx-background-radius: 8;
+               -fx-cursor: hand;"
+                    onAction="#onPriceApproveButton"/>
+
             <!-- Manage report button -->
             <Button fx:id="EditPricesButton" text="Edit Prices"
                     prefWidth="200.0" prefHeight="36.0"
@@ -114,6 +126,16 @@
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
                     onAction="#onEditPricesButton"/>
+
+            <!-- Manage report button -->
+            <Button fx:id="CreateCityButton" text="Create City"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onCreateCityButton"/>
 
         </VBox>
     </StackPane>

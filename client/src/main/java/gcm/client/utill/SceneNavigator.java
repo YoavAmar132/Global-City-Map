@@ -1,6 +1,7 @@
 package gcm.client.utill;
 
 import gcm.client.controllers.*;
+import gcm.client.controllers.City.PendingCityPricesController;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalog.ContentCatalogController;
 import gcm.client.controllers.manager_util.ClientCardController;
@@ -67,6 +68,7 @@ public class SceneNavigator {
         routes.put(RouteLoaderController.class, "/gcm/client/map/RouteLoaderScreen.fxml");
 
 
+        routes.put(PendingCityPricesController.class, "/gcm/client/city/PendingCityPricesScreen.fxml");
 
 
         //yoav

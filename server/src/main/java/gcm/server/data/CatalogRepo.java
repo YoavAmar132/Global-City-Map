@@ -135,22 +135,22 @@ public class CatalogRepo {
 
         FROM Cities c
 
-        LEFT JOIN Maps m
+        JOIN Maps m
             ON c.CityID = m.cityID
 
         LEFT JOIN pois p
-            ON c.CityID = p.cityID
-           AND p.is_approved = TRUE
+             ON c.CityID = p.cityID
+            AND p.is_approved = TRUE
 
         LEFT JOIN routes r
             ON c.CityID = r.cityID
-           AND EXISTS (
+            AND EXISTS (
                 SELECT 1
                 FROM route_stops rs
                 JOIN pois rp ON rs.poiID = rp.id
                 WHERE rs.routeID = r.routeID
-                  AND rp.is_approved = TRUE
-           )
+                AND rp.is_approved = TRUE
+            )
 
         WHERE c.CityID IN (
             SELECT DISTINCT subC.CityID
@@ -159,9 +159,9 @@ public class CatalogRepo {
                 ON subC.CityID = subP.cityID
             WHERE
                 subC.CityName LIKE ?
-                OR (
+                OR(
                     subP.is_approved = TRUE
-                    AND (
+                    AND(
                         subP.name LIKE ?
                         OR subP.description LIKE ?
                     )
@@ -174,6 +174,7 @@ public class CatalogRepo {
             c.CityPrice,
             c.SubPrice
         """;
+
 
         List<CityCatalogItem> resultList = new ArrayList<>();
         String searchPattern = "%" + queryText + "%";

@@ -315,26 +315,22 @@ public class MapViewerController {
 
         path = sheet.getCityTilePath();
 
-        // reuse MapSheet holder so other logic still works
         map = new MapSheet(
                 1,
                 sheet.getCityId(),
                 sheet.getRoute().getName(),
                 sheet.getRoute().getDescription(),
                 path,
-                new ArrayList<>()   // map POIs not relevant here
+                new ArrayList<>()
         );
 
 
-        // ---- reset UI state ----
         selectedPoiIds.clear();
         routePois.clear();
         overlayLayerController.clearAll();
 
-        // ---- load base map ----
         baseLayerController.setTileRoot(path);
 
-        // ---- load APPROVED POIs for city (RED) ----
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
         waitingForCityPois = true;
@@ -344,7 +340,6 @@ public class MapViewerController {
                 new CityIdPayload(sheet.getCityId())
         ));
 
-        // ---- preload ROUTE POIs (ORDER MATTERS) ----
         if (sheet.getOrderedPois() != null) {
             for (Poi p : sheet.getOrderedPois()) {
                 overlayLayerController.addPoi(p);
@@ -459,10 +454,6 @@ public class MapViewerController {
 
 
 
-    /* ===========================
-       Toolbar zoom button handlers
-       =========================== */
-
     @FXML
     private void onZoomIn() {
 
@@ -480,16 +471,7 @@ public class MapViewerController {
         overlayLayerController.rerender();
     }
 
-    /* ===========================
-       Public API for the rest of app
-       Called after you get data from server
-       =========================== */
 
-    /**
-     * Show a map with given POIs and routes.
-     * Assumes POI coordinates are in the same "world" coordinate system
-     * that the base layer uses (e.g. tile pixels at current zoom).
-     */
 
 
     @FXML
@@ -585,10 +567,6 @@ public class MapViewerController {
             overlayLayerController.updateRouteNumbers(selectedPoiIds);
         }
     }
-
-
-
-
 
 
 
@@ -870,54 +848,6 @@ public class MapViewerController {
 
     }
 
-
-
-
-
-
-    private int askNonNegativeInt(String title, String header, String label) {
-        while (true) {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle(title);
-            dialog.setHeaderText(header);
-            dialog.setContentText(label);
-
-            Optional<String> result = dialog.showAndWait();
-
-            if (result.isEmpty()) {
-                return -1; // CANCEL
-            }
-
-            try {
-                int value = Integer.parseInt(result.get().trim());
-                if (value >= 0) {
-                    return value;
-                }
-            } catch (NumberFormatException ignored) {}
-        }
-    }
-
-    private double askNonNegativeDouble(String title, String header, String label) {
-        while (true) {
-            TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle(title);
-            dialog.setHeaderText(header);
-            dialog.setContentText(label);
-
-            Optional<String> result = dialog.showAndWait();
-
-            if (result.isEmpty()) {
-                return -1; // CANCEL
-            }
-
-            try {
-                double value = Double.parseDouble(result.get().trim());
-                if (value >= 0) {
-                    return value;
-                }
-            } catch (NumberFormatException ignored) {}
-        }
-    }
 
 
     private String askNonEmptyString(String title, String header, String label) {

@@ -137,6 +137,16 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+
+        if (type == RequestType.LIST_CITIES_WITH_MAPS) {
+            try {
+                return handleListCitiesWithMaps(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
         if (type == RequestType.LIST_MAPS_FOR_CITY) {
             try {
                 return handleAllCityMaps(request);
@@ -305,6 +315,64 @@ public class RequestHandler {
             }
         }
 
+
+        if (type == RequestType.CREATE_CITY) {
+            try {
+                return handleCreateCity(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while creating city");
+            }
+        }
+
+
+        if (type == RequestType.CREATE_CITY_PRICE_CHANGE) {
+            try {
+                return handleCreateCityPriceChange(request);
+            } catch (SQLException e) {
+                return GcmResponse.error("Failed to request city price change");
+            }
+        }
+
+        if (type == RequestType.GET_PENDING_CITY_PRICES) {
+            try {
+                return GcmResponse.ok(cityService.getPendingCityPrices());
+            } catch (SQLException e) {
+                return GcmResponse.error("Failed to load pending city prices");
+            }
+        }
+
+        if (type == RequestType.APPROVE_CITY_PRICE) {
+            try {
+                return cityService.approveCityPrice(
+                        ((CityIdPayload) request.getPayload()).getCityId()
+                )
+                        ? GcmResponse.ok(null)
+                        : GcmResponse.error("Approval failed");
+            } catch (SQLException e) {
+                return GcmResponse.error("Database error");
+            }
+        }
+
+        if (type == RequestType.REJECT_CITY_PRICE) {
+            try {
+                return cityService.rejectCityPrice(
+                        ((CityIdPayload) request.getPayload()).getCityId()
+                )
+                        ? GcmResponse.ok(null)
+                        : GcmResponse.error("Reject failed");
+            } catch (SQLException e) {
+                return GcmResponse.error("Database error");
+            }
+        }
+
+        if (type == RequestType.REQUEST_CITY_PRICE_CHANGE) {
+            CityPricingItem item = (CityPricingItem) request.getPayload();
+            boolean ok = cityService.requestCityPriceChange(item);
+            return ok ? GcmResponse.ok(null) :
+                        GcmResponse.error("There is already a pending price change for this city"
+                        );
+        }
 
 
 
@@ -510,6 +578,17 @@ public class RequestHandler {
             return GcmResponse.error("Invalid payload for map pending request");
         }
         List<City> cities = cityService.getAllCities();
+        if (cities == null) return GcmResponse.error("faild to get list");
+        return GcmResponse.ok(cities);
+
+    }
+    private GcmResponse handleListCitiesWithMaps(GcmRequest request) throws SQLException {
+        System.out.println("list of citis with maps request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof EmptyPayload empty)) {
+            return GcmResponse.error("Invalid payload for map pending request");
+        }
+        List<City> cities = cityService.getAllCitiesWithMaps();
         if (cities == null) return GcmResponse.error("faild to get list");
         return GcmResponse.ok(cities);
 
@@ -922,7 +1001,34 @@ public class RequestHandler {
         return GcmResponse.ok(routes);
     }
 
+    private GcmResponse handleCreateCity(GcmRequest request) throws SQLException {
 
+        Object rawPayload = request.getPayload();
+
+        if (!(rawPayload instanceof CreateCityPayload payload)) {
+            return GcmResponse.error("Invalid payload for CREATE_CITY");
+        }
+
+        boolean success = cityService.createCity(payload);
+
+        return success
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to create city");
+    }
+
+
+    private GcmResponse handleCreateCityPriceChange(GcmRequest request)
+            throws SQLException {
+
+        PendingCityPricePayload payload =
+                (PendingCityPricePayload) request.getPayload();
+
+        boolean ok = cityService.requestCityPriceChange(payload);
+
+        return ok
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to request city price change");
+    }
 
 
 

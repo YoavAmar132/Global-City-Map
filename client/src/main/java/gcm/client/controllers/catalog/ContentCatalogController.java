@@ -43,7 +43,7 @@ public class ContentCatalogController {
         client.setResponseHandler(this::handleResponse);
 
         EmptyPayload payload=new EmptyPayload();
-        GcmRequest request = new GcmRequest(RequestType.LIST_CITIES, payload);
+        GcmRequest request = new GcmRequest(RequestType.LIST_CITIES_WITH_MAPS, payload);
         client.sendRequest(request);
     }
 
