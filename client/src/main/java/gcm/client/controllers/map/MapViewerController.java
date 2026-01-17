@@ -211,7 +211,6 @@ public class MapViewerController {
         showDone = false;
 
         approvedMap.setEdit(true);
-        approvedMap.setSourceMapId(approvedMap.getSourceMapId());
 
         this.path = approvedMap.getPath();
         setMap(approvedMap);
@@ -705,11 +704,7 @@ public class MapViewerController {
         accessibility.setDisable(true);
 
         menu.getItems().addAll(
-                title,
-                desc,
-                cat,
-                time,
-                accessibility
+                title, desc, cat, time, accessibility
         );
 
         if (entryContext == EntryContext.EDIT_MAP) {
@@ -719,14 +714,13 @@ public class MapViewerController {
             MenuItem edit = new MenuItem("Edit POI");
             edit.setOnAction(e -> openEditPoiDialog(poi));
 
-            MenuItem delete = new MenuItem("Delete POI");
-            delete.setOnAction(e -> confirmAndDeletePoi(poi));
 
-            menu.getItems().addAll(edit, delete);
+            menu.getItems().add(edit);
         }
 
         menu.show(anchor, Side.TOP, 0, -10);
     }
+
 
     private void openEditPoiDialog(Poi poi) {
 
@@ -770,41 +764,8 @@ public class MapViewerController {
         overlayLayerController.rerender();
     }
 
-    private void confirmAndDeletePoi(Poi poi) {
 
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Delete POI");
-        alert.setHeaderText("Delete POI: " + poi.getName());
-        alert.setContentText(
-                "This will permanently delete the POI from the city.\n" +
-                        "The POI can be deleted only if it is not used in any map or route.\n\n" +
-                        "Are you sure?"
-        );
 
-        ButtonType delete = new ButtonType("Delete");
-        ButtonType cancel = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-        alert.getButtonTypes().setAll(delete, cancel);
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isEmpty() || result.get() != delete) {
-            return;
-        }
-
-        requestDeletePoi(poi);
-    }
-
-    private void requestDeletePoi(Poi poi) {
-        client = ClientApp.getClient();
-        client.setResponseHandler(this::handleResponse);
-
-        client.sendRequest(
-                new GcmRequest(
-                        RequestType.DELETE_POI,
-                        new PoiIdPayload(poi.getId())
-                )
-        );
-    }
 
 
     private void handleResponse(GcmResponse response) {

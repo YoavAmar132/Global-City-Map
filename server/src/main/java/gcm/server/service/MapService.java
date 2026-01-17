@@ -38,22 +38,8 @@ public class MapService {
 
     /* ================= MAPS ================= */
 
-    public boolean deletePoiIfUnused(int poiId) throws SQLException {
-        // is POI used in any approved / pending map?
-        if (mapRepository.isPoiUsedInAnyMap(poiId)) {
-            return false;
-        }
 
-        // is POI used in any approved / pending route?
-        if (routeRepository.isPoiUsedInAnyRoute(poiId)) {
-            return false;
-        }
 
-        // Safe to delete
-        return mapRepository
-                .getPoirepo()
-                .deletePoiById(poiId);
-    }
 
 
     public List<Poi> getpois() {
@@ -211,39 +197,101 @@ public class MapService {
         return routeRepository.approveRoute(pendingRouteId);
     }
 
+    public List<MapSheet> getApprovedMapsForCity(int cityId) throws SQLException {
+        return mapRepository.getApprovedMapsForCity(cityId);
+    }
 
-    public GcmResponse deletePoiSafely(int poiId) {
+    public boolean deleteMap(int mapId) throws SQLException {
 
-        try {
-            if (mapRepository.isPoiUsedInAnyMap(poiId)) {
-                return GcmResponse.error(
-                        "Cannot delete POI: it is used in one or more maps."
-                );
-            }
+        // delete approved map
+        mapRepository.deleteApprovedMap(mapId);
 
-            if (routeRepository.isPoiUsedInAnyRoute(poiId)) {
-                return GcmResponse.error(
-                        "Cannot delete POI: it is used in one or more routes."
-                );
-            }
+        // delete all pending versions (if exist)
+        mapRepository.deletePendingMapsBySourceMapId(mapId);
 
-            boolean deleted = mapRepository
-                    .getPoirepo()
-                    .deletePoiById(poiId);
+        return true;
+    }
 
-            if (!deleted) {
-                return GcmResponse.error("Failed to delete POI.");
-            }
+    public boolean deleteRoute(int routeId) throws SQLException {
 
-            return GcmResponse.ok(null);
+        // delete approved route
+        routeRepository.deleteApprovedRoute2(routeId);
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            return GcmResponse.error("Server error while deleting POI.");
+        // delete pending edits if exist
+        routeRepository.deletePendingRouteBySourceRouteId(routeId);
+
+        return true;
+    }
+
+    public boolean deletePoiIfUnused2(int poiId) throws SQLException {
+
+        // used in maps?
+        if (mapRepository.isPoiUsedInAnyMap(poiId)) {
+            return false;
         }
+
+        // used in routes?
+        if (routeRepository.isPoiUsedInAnyRoute(poiId)) {
+            return false;
+        }
+
+        // safe to delete
+        return mapRepository
+                .getPoirepo()
+                .deletePoiById(poiId);
     }
 
 
+
+    public boolean deletePoiIfUnused(int poiId) throws SQLException {
+
+        if (mapRepository.isPoiUsedInAnyMap(poiId)) {
+            return false;
+        }
+
+        if (routeRepository.isPoiUsedInAnyRoute(poiId)) {
+            return false;
+        }
+
+        return mapRepository
+                .getPoirepo()
+                .deletePoiById(poiId);
+    }
+
+
+    public boolean deleteRoute2(int routeId) throws SQLException {
+
+        // delete pending edits
+        routeRepository.deletePendingRouteBySourceRouteId(routeId);
+
+        // delete approved route
+        routeRepository.deleteApprovedRoute(routeId);
+
+        return true;
+    }
+
+    public List<MapSheet> getApprovedMapsForCity2(int cityId)
+            throws SQLException {
+
+        return mapRepository.getApprovedMapsForCity(cityId);
+    }
+
+
+    public List<MapDeleteItem> getApprovedMapsForDelete(int cityId) {
+        return mapRepository.getApprovedMapsForDelete(cityId);
+    }
+
+    public boolean rejectPendingRoute(int routeId) throws SQLException {
+        return routeRepository.deletePendingRoute(routeId);
+    }
+
+    public boolean rejectPendingMap(MapSheet map) throws SQLException {
+        return mapRepository.deletePendingMap(
+                map.getCityID(),
+                map.getName(),
+                map.getVersion()
+        );
+    }
 
 
 }

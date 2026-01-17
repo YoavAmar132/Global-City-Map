@@ -306,14 +306,6 @@ public class RequestHandler {
         }
 
 
-        if (type == RequestType.DELETE_POI) {
-            try {
-                return handleDeletePoi(request);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                return GcmResponse.error("Database error while deleting POI");
-            }
-        }
 
 
         if (type == RequestType.CREATE_CITY) {
@@ -376,6 +368,54 @@ public class RequestHandler {
 
 
 
+        if (type == RequestType.DELETE_POI) {
+            try {
+                return handleDeletePoi(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while deleting POI");
+            }
+        }
+
+        if (type == RequestType.DELETE_MAP) {
+            try {
+                return handleDeleteMap(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while deleting map");
+            }
+        }
+
+        if (type == RequestType.DELETE_ROUTE) {
+            try {
+                return handleDeleteRoute(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while deleting route");
+            }
+        }
+
+        if (type == RequestType.DELETE_GET_CITY_MAPS) {
+            return handleDeleteGetCityMaps(request);
+        }
+
+        if (type == RequestType.REJECT_PENDING_ROUTE) {
+            System.out.println("reject pending route request processed");
+            try {
+                return handleRejectPendingRoute(request);
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to reject pending route", e);
+            }
+        }
+
+        if (type == RequestType.REJECT_PENDING_MAP) {
+            System.out.println("reject pending map request processed");
+            try {
+                return handleRejectPendingMap(request);
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to reject pending map", e);
+            }
+        }
 
 
 
@@ -430,25 +470,8 @@ public class RequestHandler {
         }
     }
 
-    private GcmResponse handleDeletePoi(GcmRequest request) throws SQLException {
 
-        Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof PoiIdPayload payload)) {
-            return GcmResponse.error("Invalid payload for DELETE_POI");
-        }
 
-        int poiId = payload.getPoiId();
-
-        boolean deleted = mapService.deletePoiIfUnused(poiId);
-
-        if (!deleted) {
-            return GcmResponse.error(
-                    "Cannot delete POI. It is used in a map or a route."
-            );
-        }
-
-        return GcmResponse.ok(poiId);
-    }
 
     public static synchronized void removeOnlineUser(User user) {
         online_users.removeIf(u ->
@@ -1031,6 +1054,109 @@ public class RequestHandler {
     }
 
 
+    private GcmResponse handleDeletePoi(GcmRequest request) throws SQLException {
+
+        System.out.println("DELETE_POI request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof PoiIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_POI");
+        }
+
+        int poiId = payload.getPoiId();
+
+        System.out.println("Deleting POI id = " + poiId);
+
+        boolean success = mapService.deletePoiIfUnused2(poiId);
+
+        return success
+                ? GcmResponse.ok(poiId)
+                : GcmResponse.error("Cannot delete POI. It is used in a map or route");
+    }
+
+
+
+    private GcmResponse handleDeleteRoute(GcmRequest request) throws SQLException {
+
+        System.out.println("DELETE_ROUTE request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof RouteIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_ROUTE");
+        }
+
+        int routeId = payload.getRouteId();
+
+        System.out.println("Deleting route id = " + routeId);
+
+        boolean success = mapService.deleteRoute2(routeId);
+
+        return success
+                ? GcmResponse.ok(routeId)
+                : GcmResponse.error("Failed to delete route");
+    }
+
+
+    private GcmResponse handleDeleteGetCityMaps(GcmRequest request) {
+
+        if (!(request.getPayload() instanceof CityIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_GET_CITY_MAPS");
+        }
+
+        List<MapDeleteItem> maps =
+                mapService.getApprovedMapsForDelete(payload.getCityId());
+
+        return GcmResponse.ok(maps);
+    }
+
+    private GcmResponse handleDeleteMap(GcmRequest request) throws SQLException {
+
+        System.out.println("DELETE_MAP request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MapIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_MAP");
+        }
+
+        int mapId = payload.getMapId();
+
+        System.out.println("Deleting map id = " + mapId);
+
+        boolean success = mapService.deleteMap(mapId);
+
+        return success
+                ? GcmResponse.ok(mapId)
+                : GcmResponse.error("Failed to delete map");
+    }
+
+
+    private GcmResponse handleRejectPendingRoute(GcmRequest request) throws SQLException {
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof RouteIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for REJECT_PENDING_ROUTE");
+        }
+
+        boolean success = mapService.rejectPendingRoute(payload.getRouteId());
+
+        return success
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to reject pending route");
+    }
+
+    private GcmResponse handleRejectPendingMap(GcmRequest request) throws SQLException {
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MapSheet map)) {
+            return GcmResponse.error("Invalid payload for REJECT_PENDING_MAP");
+        }
+
+        boolean success = mapService.rejectPendingMap(map);
+
+        return success
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to reject pending map");
+    }
 
 
 }

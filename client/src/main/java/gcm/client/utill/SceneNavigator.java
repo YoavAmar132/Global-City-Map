@@ -1,7 +1,7 @@
 package gcm.client.utill;
 
 import gcm.client.controllers.*;
-import gcm.client.controllers.City.PendingCityPricesController;
+import gcm.client.controllers.City.*;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalog.ContentCatalogController;
 import gcm.client.controllers.manager_util.ClientCardController;
@@ -71,6 +71,11 @@ public class SceneNavigator {
         routes.put(PendingCityPricesController.class, "/gcm/client/city/PendingCityPricesScreen.fxml");
 
 
+        routes.put(DeleteContentMenuController.class, "/gcm/client/city/DeleteContentMenu.fxml");
+        routes.put(DeletePoiController.class, "/gcm/client/city/DeletePoiScreen.fxml");
+        routes.put(DeleteRouteController.class, "/gcm/client/city/DeleteRouteScreen.fxml");
+        routes.put(DeleteMapController.class, "/gcm/client/city/DeleteMapScreen.fxml");
+        routes.put(CitySelectionController.class, "/gcm/client/city/CitySelection.fxml");
         //yoav
         //adam
 

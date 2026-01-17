@@ -415,6 +415,80 @@ public class RouteRepo {
     }
 
 
+    public void deletePendingRouteBySourceRouteId(int sourceRouteId)
+            throws SQLException {
+
+        String sql = "DELETE FROM pending_routes WHERE sourceRouteID = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, sourceRouteId);
+            ps.executeUpdate();
+        }
+    }
+
+
+    public void deleteApprovedRoute2(int routeId) throws SQLException {
+
+        String sql = "DELETE FROM routes WHERE id = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, routeId);
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean deletePoiById(int poiId) {
+
+        String sql = "DELETE FROM pois WHERE id = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, poiId);
+            return ps.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public boolean deletePendingRoute(int routeId) throws SQLException {
+
+        String deleteStopsSql =
+                "DELETE FROM pending_route_stops WHERE routeID = ?";
+
+        String deleteRouteSql =
+                "DELETE FROM pending_routes WHERE routeID = ?";
+
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (
+                    PreparedStatement psStops =
+                            conn.prepareStatement(deleteStopsSql);
+                    PreparedStatement psRoute =
+                            conn.prepareStatement(deleteRouteSql)
+            ) {
+                psStops.setInt(1, routeId);
+                psStops.executeUpdate();
+
+                psRoute.setInt(1, routeId);
+                int affected = psRoute.executeUpdate();
+
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        }
+    }
 
 
 

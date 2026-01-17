@@ -3,7 +3,8 @@ package common.messages;
 import java.io.Serializable;
 
 public class PoiIdPayload implements Serializable {
-    private int poiId;
+
+    private final int poiId;
 
     public PoiIdPayload(int poiId) {
         this.poiId = poiId;
@@ -13,4 +14,3 @@ public class PoiIdPayload implements Serializable {
         return poiId;
     }
 }
-

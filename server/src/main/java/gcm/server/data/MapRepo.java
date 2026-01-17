@@ -305,6 +305,29 @@ public class MapRepo {
         }
     }
 
+    public boolean deletePendingMap(int cityId, String name, int version)
+            throws SQLException {
+
+        String sql = """
+        DELETE FROM pending_maps
+        WHERE cityID = ?
+          AND name = ?
+          AND version = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, cityId);
+            ps.setString(2, name);
+            ps.setInt(3, version);
+
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+
+
     public boolean insertApprovedMap(ApprovePayload approvedMap) {
 
         if (approvedMap == null || approvedMap.getMap() == null)
@@ -884,6 +907,57 @@ public class MapRepo {
         return routes;
     }
 
+    public List<MapSheet> getApprovedMapsForCity(int cityId) throws SQLException {
+
+        List<MapSheet> result = new ArrayList<>();
+
+        String sql = "SELECT map FROM Maps WHERE cityID = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, cityId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String json = rs.getString("map");
+
+                    MapSheet map =
+                            JsonUtil.jsonToMapSheetWithEmbeddedArrays(json);
+
+                    if (map != null) {
+                        result.add(map);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public void deleteApprovedMap(int mapId) throws SQLException {
+
+        String sql = "DELETE FROM Maps WHERE mapID = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, mapId);
+            ps.executeUpdate();
+        }
+    }
+
+    public void deletePendingMapsBySourceMapId(int sourceMapId) throws SQLException {
+
+        String sql = "DELETE FROM pending_maps WHERE source_map_id = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, sourceMapId);
+            ps.executeUpdate();
+        }
+    }
 
     public boolean isPoiUsedInAnyMap(int poiId) {
 
@@ -915,7 +989,11 @@ public class MapRepo {
 
                 while (rs.next()) {
                     String json = rs.getString("poi_array");
-                    ArrayList<Poi> pois = JsonUtil.jsonToPoiList(json);
+
+                    ArrayList<Poi> pois =
+                            JsonUtil.jsonToPoiList(json);
+
+                    if (pois == null) continue;
 
                     for (Poi p : pois) {
                         if (p.getId() == poiId) {
@@ -927,14 +1005,41 @@ public class MapRepo {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return true; // FAIL SAFE
+            return true;
         }
 
         return false;
     }
 
+    public List<MapDeleteItem> getApprovedMapsForDelete(int cityId) {
 
+        List<MapDeleteItem> result = new ArrayList<>();
 
+        String sql = """
+        SELECT mapID, mapName, version
+        FROM Maps
+        WHERE cityID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, cityId);
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+                result.add(new MapDeleteItem(
+                        rs.getInt("mapID"),
+                        rs.getString("mapName"),
+                        rs.getInt("version")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
 
 
 

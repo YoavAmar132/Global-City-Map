@@ -1,5 +1,6 @@
 package gcm.client.controllers.menu;
 import common.model.User;
+import gcm.client.controllers.City.DeleteContentMenuController;
 import gcm.client.controllers.City.PendingCityPricesController;
 import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.catalog.ContentCatalogController;
@@ -73,6 +74,12 @@ public class ContentWorkerMenuController {
     public void onCreateButton(ActionEvent actionEvent) {
         ClientApp.getNavigator().show(BaseMapSelectorController.class);
     }
+
+    @FXML
+    public void onDeleteButton(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(DeleteContentMenuController.class);
+    }
+
     @FXML
     public void onMapApproveButton(ActionEvent actionEvent) {
         User current=ClientApp.getCurrentUser();
@@ -121,6 +128,7 @@ public class ContentWorkerMenuController {
         ClientApp.getNavigator().show(EditPricesController.class);
     }
 
+    /* lazy af sorry */
     @FXML
     public void onCreateCityButton(ActionEvent actionEvent) {
         String cityName = askNonEmptyString(

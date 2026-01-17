@@ -25,8 +25,15 @@ public enum RequestType {
     CREATE_POI,      // optional
     UPDATE_POI,      // optional
     GET_POI_INDEX,
-    DELETE_POI,
 
+
+    DELETE_POI,
+    DELETE_MAP,
+    DELETE_ROUTE,
+    DELETE_GET_CITY_MAPS,
+
+    REJECT_PENDING_ROUTE,
+    REJECT_PENDING_MAP,
 
     // Routes
     SUBMIT_ROUTE,
