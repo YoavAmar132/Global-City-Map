@@ -93,6 +93,9 @@ public class ComplaintService {
     public GcmResponse getAllComplaintsForCustomerSupport() throws SQLException {
         try {
             ArrayList<Complaint> complaints = complaintRepo.getComplaintsWaitingForHuman();
+            if(complaints.isEmpty()){
+                return GcmResponse.error("Failed to load complaint catalog");
+            }
             return GcmResponse.ok(complaints); // Returns ArrayList<Complaint>
         } catch (Exception e) {
             return GcmResponse.error("Server Error: " + e.getMessage());
@@ -100,4 +103,8 @@ public class ComplaintService {
     }
 
 
+    public ArrayList<Complaint> getUserComplaints(int id) throws SQLException{
+
+        return complaintRepo.getUserComplaint(id);
+    }
 }

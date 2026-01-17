@@ -31,7 +31,7 @@ public class BotPromptBuilder {
             
             User: does the city of paris exist in the system
             Output:
-            CALL_TOOL cityExist name=paris
+            CALL_TOOL cityExist cityName=paris
             
             User: what is a map subscription
             Output:

@@ -194,6 +194,13 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+        if (type == RequestType.LIST_USER_COMPLAINTS) {
+            try {
+                return handleGetUserComplaint(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
 
         if (type == RequestType.LIST_USER_PURCHASES) {
@@ -318,6 +325,34 @@ public class RequestHandler {
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
     }
+
+    private GcmResponse handleGetUserComplaint(GcmRequest request) throws SQLException {
+        System.out.println("LIST_USER_COMPLAINT received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof User)) {
+            return GcmResponse.error("Invalid payload for complaint catalog");
+        }
+
+        try{
+            List<Complaint> complaints =
+                    complaintService.getUserComplaints(((User) rawPayload).getId());
+
+            if (complaints == null) {
+                return GcmResponse.error("no complaints found");
+            }
+
+            return GcmResponse.ok(complaints);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return GcmResponse.error("server error");
+        }
+
+
+    }
+
     /**
      * Handles LOGIN requests.
      * Expects payload = LoginPayload

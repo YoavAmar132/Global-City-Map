@@ -28,7 +28,7 @@ public class BotAgent implements Runnable {
 
         while (true) {
             try {
-                if (!repo.claimNextComplaint() || repo.hasInProgressComplaint()) {
+                if (!repo.claimNextComplaint() && !repo.hasInProgressComplaint()) {
                     Thread.sleep(1000);
                     continue;
                 }

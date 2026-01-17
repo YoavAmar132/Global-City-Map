@@ -3,6 +3,7 @@ package gcm.client.controllers.menu;
 import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalogPublic.GuestCatalogController;
+import gcm.client.controllers.user_util.ComplaintHistoryController;
 import gcm.client.controllers.user_util.CreateComplaintController;
 import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
@@ -72,8 +73,8 @@ public class UserMenuController {
     }
 
     @FXML
-    private void onCreateComplaintClicked(ActionEvent event) {
-        System.out.println("Create new complaint clicked");
-        ClientApp.getNavigator().show(CreateComplaintController.class);
+    private void onViewComplaintHistoryClicked(ActionEvent event) {
+        System.out.println("View previous complaints");
+        ClientApp.getNavigator().show(ComplaintHistoryController.class);
     }
 }

@@ -195,6 +195,25 @@ public class ComplaintRepo {
         }
     }
 
+    public ArrayList<Complaint> getUserComplaint(int id) throws SQLException{
+        String sql = """
+            SELECT * FROM SupportTickets
+            WHERE userID = ?
+            ORDER BY createdAt
+        """;
+        ArrayList<Complaint> resultList = new ArrayList<>();;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);){
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                resultList.add(mapRow(rs));
+            }
+            return resultList;
+        }
+    }
+
     public ArrayList<Complaint> getComplaintsWaitingForHuman() throws SQLException {
         String sql = """
             SELECT * FROM SupportTickets
@@ -226,4 +245,5 @@ public class ComplaintRepo {
 
         return complaint;
     }
+
 }

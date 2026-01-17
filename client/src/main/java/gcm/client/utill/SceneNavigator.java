@@ -58,7 +58,8 @@ public class SceneNavigator {
         routes.put(MessagesController.class, "/gcm/client/menu/MessagesScreen.fxml"); //yoav
         routes.put(ManageClientController.class, "/gcm/client/manager_util/ManageClientScreen.fxml");
         routes.put(ClientCardController.class, "/gcm/client/manager_util/ClientCardScreen.fxml");
-        routes.put(CreateComplaintController.class, "/gcm/client/user_util/createComplaint.fxml");
+        routes.put(CreateComplaintController.class, "/gcm/client/user_util/CreateComplaint.fxml");
+        routes.put(ComplaintHistoryController.class, "/gcm/client/user_util/ComplaintHistory.fxml");
 
 
         routes.put(PendingRouteController.class, "/gcm/client/map/PendingRouteScreen.fxml");
