@@ -97,16 +97,6 @@ public class RequestHandler {
                 throw new RuntimeException("failed to register user", e);
             }
         }
-        /*
-        if(type==RequestType.GET_ROUTE_INDEX) {
-            System.out.println("route index created");
-            try {
-                System.out.println("request detected");
-                return handleRouteIndex(request);
-            }  catch (SQLException e) {
-                throw new RuntimeException("failed to register user", e);
-            }
-        }*/
         if(type==RequestType.GET_MAP) {
             System.out.println("map request proccesed");
             try {
@@ -303,6 +293,16 @@ public class RequestHandler {
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        if (type == RequestType.GET_USER_BY_ID) {
+            try {
+                System.out.println("called get user info");
+                return handleUserInfo(request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
         }
 
 
@@ -715,36 +715,22 @@ public class RequestHandler {
         }
 
         try {
-            boolean alreadyOwns = false;
-
+            boolean alreadySub = false;
+            boolean alreadyOTP = false;
+            alreadySub = mapService.isUserSubscribed(payload.getUserId(), payload.getCityName());
+            alreadyOTP = mapService.isCityPurchased(payload.getUserId(), payload.getCityName());
             if (payload.isSubscription()) {
-                // Check for active subscription
-                alreadyOwns = mapService.isUserSubscribed(payload.getUserId(), payload.getCityName());
-            } else {
-                // OTP: Check specific version
-                int versionToCheck = payload.getVersion();
-
-                // If client sent 0 (standard buy), we need to check against the LATEST version
-                // (Assuming standard buy always targets the latest)
-                if (versionToCheck == 0) {
-                    // We need to resolve the version to check ownership correctly
-                    // Ideally, MapService should expose getLatestVersionForCity(cityName)
-                    // For now, let's assume if they send 0, we rely on the repo's internal check or assume they want the latest.
-                    // A safer way:
-                    // alreadyOwns = mapService.isCityPurchased(...); // BLOCKS DUPLICATES
-
-                    // BUT, since we want to allow V1 and V2, we should ideally resolve the version here.
-                    // Simplified Logic: If version is 0, we fall back to "Do you own the city?" to prevent accidental double buys of the "main" map.
-                    alreadyOwns = mapService.isCityPurchased(payload.getUserId(), payload.getCityName());
-                } else {
-                    // Client requested a specific version (e.g. from Subscription Claim)
-                    alreadyOwns = mapService.isMapVersionPurchased(payload.getUserId(), payload.getCityName(), versionToCheck);
+                if (alreadySub) {
+                    return GcmResponse.error("You have this City Subscription");
                 }
             }
-
-            if (alreadyOwns) {
-                return GcmResponse.error("You already own this specific map version!");
+            if (alreadySub) {
+                return GcmResponse.error("You ARE Subscribed to this City, all City content is Available in my maps");
             }
+            if (alreadyOTP) {
+                    return GcmResponse.error("You have Purchase this City Before try a Subscription");
+                }
+
 
             boolean success = mapService.addPurchase(
                     payload.getUserId(),
@@ -754,7 +740,7 @@ public class RequestHandler {
                     payload.getVersion() // Pass the version
             );
 
-            return success ? GcmResponse.ok("Success") : GcmResponse.error("Database Error");
+            return success ? GcmResponse.ok(payload) : GcmResponse.error("Database Error");
 
         } catch (Exception e) {
             return GcmResponse.error("Server Error: " + e.getMessage());
@@ -785,7 +771,12 @@ public class RequestHandler {
 
             // 2. Fetch maps using the service method we created
             // (This gets both OTP maps and Subscription maps)
-            List<MapSheet> maps = mapService.getPurchasedMaps(userId);
+            ArrayList<MapSheet> maps = mapService.getPurchasedMaps(userId);
+            if(maps.isEmpty())
+            {
+                System.out.println("got the maps");
+            }
+
 
             // 3. Return the list
             return GcmResponse.ok(maps);
@@ -1022,6 +1013,30 @@ public class RequestHandler {
 
         List<RouteSheet> routes = mapService.getApprovedRoutesForCity(payload.getCityId());
         return GcmResponse.ok(routes);
+    }
+    private GcmResponse handleUserInfo(GcmRequest request) throws SQLException {
+
+        Object raw = request.getPayload();
+        if (!(raw instanceof Integer id)) {
+            System.out.println("faild x");
+            return GcmResponse.error("Invalid payload for get user info");
+        }
+        GcmResponse response=authService.getUsers();
+        if(response.isSuccess())
+        {
+            Object t=response.getData();
+            ArrayList<RegisterPayload> users= (ArrayList<RegisterPayload>)t;
+            for (RegisterPayload rp : users) {
+                if (rp.getUserid() == id) {
+                   return GcmResponse.ok(rp);
+
+                }
+            }
+
+        }
+        return GcmResponse.error("Invalid payload for get user info");
+
+
     }
 
     private GcmResponse handleCreateCity(GcmRequest request) throws SQLException {

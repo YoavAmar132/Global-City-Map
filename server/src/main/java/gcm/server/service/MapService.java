@@ -86,15 +86,15 @@ public class MapService {
     }
 
     public boolean addPurchase(int userId, String cityName, double price,
-                               boolean isSubscription, int version) throws SQLException {
-        return mapRepository.addPurchase(userId, cityName, price, isSubscription, version);
+                               boolean isSubscription, int months) throws SQLException {
+        return mapRepository.addPurchase(userId, cityName, price, isSubscription, months);
     }
 
     public List<City> getSubscribedCities(int userId) {
         return mapRepository.getSubscribedCities(userId);
     }
 
-    public List<MapSheet> getPurchasedMaps(int userId) {
+    public ArrayList<MapSheet> getPurchasedMaps(int userId) {
         return mapRepository.getPurchasedMapsByUserId(userId);
     }
 
