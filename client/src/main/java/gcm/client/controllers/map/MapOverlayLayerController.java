@@ -387,4 +387,41 @@ public class MapOverlayLayerController {
                 view.setOrderIndex(i); // keeping your existing behavior
         }
     }
+
+    public void replacePoi(Poi newPoi) {
+        if (newPoi == null) return;
+
+        PoiView oldView = poiViews.get(newPoi.getId());
+        if (oldView == null) return;
+
+        boolean wasSelected = oldView == null ? false : oldView.isFocused() || true;
+
+        poiPane.getChildren().remove(oldView);
+
+        PoiView newView = new PoiView(newPoi);
+
+        poiViews.put(newPoi.getId(), newView);
+
+        poiPane.getChildren().add(newView);
+
+        if (wasSelected) {
+            newView.setSelected(true);
+        }
+
+        if (mapper != null && zoomSupplier != null) {
+            int z = zoomSupplier.getAsInt();
+            double[] xy = mapper.mapLonLatToView(
+                    newPoi.getWorldX(z),
+                    newPoi.getWorldY(z)
+            );
+
+            if (xy != null && xy.length >= 2) {
+                double w = newView.getWidth() > 0 ? newView.getWidth() : 30;
+                double h = newView.getHeight() > 0 ? newView.getHeight() : 30;
+                newView.setLayoutX(xy[0] - w / 2.0);
+                newView.setLayoutY(xy[1] - h / 2.0);
+            }
+        }
+    }
+
 }

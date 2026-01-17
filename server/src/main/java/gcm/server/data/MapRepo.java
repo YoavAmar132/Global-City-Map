@@ -327,29 +327,38 @@ public class MapRepo {
                 return false;
             }
 
-            // Ensure POIs exist + fix IDs
             for (Poi poi : map.getPois()) {
 
-                if (poi.getId() >= 0) continue;
+                if (poi.getId() < 0) {
+                    Poi approvedPoi = new Poi(
+                            0,
+                            poi.getName(),
+                            poi.getDescription(),
+                            poi.getNWorldX(),
+                            poi.getNWorldY(),
+                            poi.getCategory(),
+                            poi.isAccessible(),
+                            poi.getCityID(),
+                            true,
+                            poi.getRecommendedMinutes()
+                    );
 
-                Poi approvedPoi = new Poi(
-                        0,
-                        poi.getName(),
-                        poi.getDescription(),
-                        poi.getNWorldX(),
-                        poi.getNWorldY(),
-                        poi.getCategory(),
-                        poi.isAccessible(),
-                        poi.getCityID(),
-                        true,
-                        poi.getRecommendedMinutes()
-                );
+                    int newPoiId = poirepo.insertPoiAndReturnId(approvedPoi);
+                    poi.setId(newPoiId);
 
-                int newPoiId = poirepo.insertPoiAndReturnId(approvedPoi);
-                poi.setId(newPoiId);
+                } else {
+                    poirepo.updatePoiContent(
+                            conn,
+                            poi.getId(),
+                            poi.getName(),
+                            poi.getDescription(),
+                            poi.getCategory(),
+                            poi.isAccessible(),
+                            poi.getRecommendedMinutes()
+                    );
+                }
             }
 
-            // Decide version + handle edit replacement
             int newVersion;
 
             if (map.isEdit()) {
@@ -358,21 +367,15 @@ public class MapRepo {
                     throw new SQLException("Edit map missing sourceMapId");
                 }
 
-                // Remove old approved map
                 deleteApprovedMapById(conn, map.getSourceMapId());
-
-                // Increment version
                 newVersion = getLatestVersionForCity(cityId) + 1;
 
             } else {
-                // New map
                 newVersion = 1;
             }
 
-            // Delete pending map (approval finished)
             deletePendingMap(map.getVersion(), map.getName());
 
-            // Insert approved map
             try (PreparedStatement stmt = conn.prepareStatement(insertMapSql)) {
                 stmt.setInt(1, cityId);
                 stmt.setString(2, map.getName());
@@ -389,6 +392,7 @@ public class MapRepo {
             return false;
         }
     }
+
 
 
 

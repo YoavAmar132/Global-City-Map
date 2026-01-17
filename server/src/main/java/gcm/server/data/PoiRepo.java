@@ -20,6 +20,40 @@ public class PoiRepo {
             return 0;
         }
     }
+
+    public void updatePoiContent(
+            Connection conn,
+            int poiId,
+            String name,
+            String description,
+            POI_Category category,
+            boolean accessible,
+            int recommendedMinutes
+    ) throws SQLException {
+
+        String sql = """
+        UPDATE pois
+        SET
+            name = ?,
+            description = ?,
+            category = ?,
+            is_accessible = ?,
+            recommended_minutes = ?
+        WHERE id = ?
+    """;
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            stmt.setString(2, description);
+            stmt.setString(3, category.name());
+            stmt.setBoolean(4, accessible);
+            stmt.setInt(5, recommendedMinutes);
+            stmt.setInt(6, poiId);
+            stmt.executeUpdate();
+        }
+    }
+
+
     public boolean insertPoi(Poi poi) throws SQLException {
         String sql = """
         INSERT INTO pois (name, description, category, x, y, is_accessible,cityID,is_approved, recommended_minutes)
