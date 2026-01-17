@@ -75,8 +75,8 @@ public class MapRepo {
 
     // COPY THIS ENTIRE METHOD INTO MapRepo.java
 
-    public List<MapSheet> getPurchasedMapsByUserId(int userId) {
-        List<MapSheet> userMaps = new ArrayList<>();
+    public ArrayList<MapSheet> getPurchasedMapsByUserId(int userId) {
+        ArrayList<MapSheet> userMaps = new ArrayList<>();
         System.out.println("--- DEBUG: Fetching maps for User " + userId + " ---");
 
         // 1. FETCH SUBSCRIPTIONS (Get Latest Version)
@@ -87,54 +87,18 @@ public class MapRepo {
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     int cityId = rs.getInt("CityID");
-                    String cityName = cityRepo.cityNameById(cityId);
-                    int maxVer = getLatestVersionForCity(cityId);
 
-                    System.out.println("DEBUG: Found Subscription -> CityID: " + cityId + " (" + cityName + ")");
 
-                    if (cityName != null && maxVer > 0) {
-                        MapSheet map = loadMapByVersion(cityName, maxVer);
-                        if (map != null) userMaps.add(map);
-                    }
+                       ArrayList <MapSheet> map = (ArrayList<MapSheet>) loadAllMapsFromCityid(cityId);
+                       for(MapSheet m:map)
+                       {
+                           userMaps.add(m);
+                           System.out.println(m.getName());
+                       }
+
                 }
             }
         } catch (SQLException e) { e.printStackTrace(); }
-
-        // 2. FETCH ONE-TIME PURCHASES (Get Specific Version)
-        String otpSql = "SELECT CityName, mapVersion FROM Purchases WHERE UserID = ?";
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(otpSql)) {
-            stmt.setInt(1, userId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    String cityName = rs.getString("CityName");
-                    int version = rs.getInt("mapVersion");
-
-                    // Safety fix for null/0 versions
-                    if (version <= 0) version = 1;
-
-                    System.out.println("DEBUG: Found OTP Purchase -> City: " + cityName + ", Version: " + version);
-
-                    // --- DIAGNOSTIC CHECK ---
-                    int cityId = cityRepo.idByCityName(cityName);
-                    if (cityId == -1) {
-                        System.out.println("CRITICAL ERROR: 'idByCityName' returned -1 for " + cityName);
-                        System.out.println("Action: Check your Cities table. Does '" + cityName + "' exist exactly?");
-                    }
-                    // ------------------------
-
-                    MapSheet map = loadMapByVersion(cityName, version);
-                    if (map != null) {
-                        System.out.println("DEBUG: Successfully loaded map: " + map.getName());
-                        userMaps.add(map);
-                    } else {
-                        System.out.println("ERROR: Map NOT found in DB. Verify 'Maps' table has CityID=" + cityId + " and Version=" + version);
-                    }
-                }
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-
-        System.out.println("DEBUG: Returning " + userMaps.size() + " maps to client.");
         return userMaps;
     }
 
@@ -158,37 +122,44 @@ public class MapRepo {
     }
 
     // 2. Updated Add Purchase: Handle explicit versions
-    public boolean addPurchase(int userId, String cityName, double price, boolean isSubscription, int requestedVersion) throws SQLException {
+    public boolean addPurchase(int userId, String cityName, double price, boolean isSubscription, int months) throws SQLException {
         int cityId = cityRepo.idByCityName(cityName);
         if (cityId == -1) return false;
 
         if (isSubscription) {
             // Subscription Logic (Unchanged)
-            String sql = "INSERT INTO Subscriptions (UserID, CityID, StartDate, EndDate) VALUES (?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 6 MONTH))";
-            try (Connection conn = DbManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            String sql = """
+    INSERT INTO Subscriptions (UserID, CityID, StartDate, EndDate)
+    VALUES (?, ?, NOW(), DATE_ADD(NOW(), INTERVAL ? MONTH))
+""";
+
+            try (Connection conn = DbManager.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+
                 stmt.setInt(1, userId);
                 stmt.setInt(2, cityId);
+                stmt.setInt(3, months);
+
                 return stmt.executeUpdate() > 0;
             } catch (SQLException e) { e.printStackTrace(); return false; }
 
-        } else {
-            // OTP Logic
-            int versionToBuy = requestedVersion;
+        }
 
-            // If version is 0 (Normal Buy), fetch the latest one
-            if (versionToBuy == 0) {
-                versionToBuy = getLatestVersionForCity(cityId);
-            }
+
+
+               int  versionToBuy = getLatestVersionForCity(cityId);
 
             String sql = "INSERT INTO Purchases (UserID, CityName, PurchaseDate, mapVersion) VALUES (?, ?, NOW(), ?)";
             try (Connection conn = DbManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, userId);
                 stmt.setString(2, cityName);
                 stmt.setInt(3, versionToBuy);
+                writeMessage(userId,"We Thank you for your purchase of :"+cityName+" Maps . you can download them here->");
                 return stmt.executeUpdate() > 0;
             } catch (SQLException e) { e.printStackTrace(); return false; }
-        }
+
     }
+
 
     /**
      * Checks if a user already owns a city
@@ -364,7 +335,7 @@ public class MapRepo {
 
             } else {
                 // New map
-                newVersion = 1;
+                newVersion =getLatestVersionForCity(cityId) + 1;
             }
 
             // Delete pending map (approval finished)
@@ -443,7 +414,32 @@ public class MapRepo {
 
 
 
+    public List<MapSheet> loadAllMapsFromCityid(int cityid) {
+        List<MapSheet> maps = new ArrayList<>();
+        String sql = "SELECT mapID, map FROM maps WHERE cityID = ?";
 
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+
+            stmt.setInt(1, cityid);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String mapJson = rs.getString("map");
+                    int mapId = rs.getInt("mapID");
+                    MapSheet map = JsonUtil.jsonToMapSheetWithEmbeddedArrays(mapJson);
+                    if (map != null){
+                        map.setSourceMapId(mapId);
+                        maps.add(map);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return maps;
+    }
 
     public List<MapSheet> loadAllMapsFromCity(String cityName) {
         List<MapSheet> maps = new ArrayList<>();
@@ -453,6 +449,7 @@ public class MapRepo {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             int cityId = cityRepo.idByCityName(cityName);
+            System.out.println(cityId);
             stmt.setInt(1, cityId);
 
             try (ResultSet rs = stmt.executeQuery()) {
@@ -495,68 +492,10 @@ public class MapRepo {
 
 
     // 1. Helper: Loads a specific version of a map (NEW)
-    public MapSheet loadMapByVersion(String cityName, int version) {
-        String sql = "SELECT map FROM maps WHERE cityID = ? AND version = ?";
-        // Note: You need to ensure your 'maps' table has a 'version' column!
-        // If it doesn't, you have to extract it from the JSON, which is slower.
 
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            int cityId = cityRepo.idByCityName(cityName);
-            stmt.setInt(1, cityId);
-            stmt.setInt(2, version);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String mapJson = rs.getString("map");
-                    return JsonUtil.jsonToMapSheetWithEmbeddedArrays(mapJson);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     // 2. Main Logic: Decides which map to give the user (NEW)
-    public List<MapSheet> loadMapsForUser(int userId, String cityName) throws SQLException {
-        List<MapSheet> result = new ArrayList<>();
-        int cityId = cityRepo.idByCityName(cityName);
 
-        // A. Check Subscription (Highest Priority)
-        boolean isSubscribed = false;
-        String subSql = "SELECT 1 FROM Subscriptions WHERE UserID = ? AND CityID = ? AND ExpirationDate > NOW()";
-        try (Connection conn = DbManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(subSql)) {
-            stmt.setInt(1, userId);
-            stmt.setInt(2, cityId);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) isSubscribed = true;
-        } catch (SQLException e) { e.printStackTrace(); }
-
-        if (isSubscribed) {
-            // User is subscribed -> Give them ALL versions (or just the latest)
-            return loadAllMapsFromCity(cityName);
-        }
-
-        // B. Check OTP Purchase
-        // If they aren't subscribed, check which specific versions they bought
-        String otpSql = "SELECT mapVersion FROM Purchases WHERE UserID = ? AND CityName = ?";
-        try (Connection conn = DbManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(otpSql)) {
-            stmt.setInt(1, userId);
-            stmt.setString(2, cityName);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                int boughtVersion = rs.getInt("mapVersion");
-                // Load ONLY the version they paid for
-                MapSheet map = loadMapByVersion(cityName, boughtVersion);
-                if (map != null) result.add(map);
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-
-        return result;
-    }
 
     // Helper: Check if subscription exists and is active
     public boolean isUserSubscribed(int userId, String cityName) throws SQLException {

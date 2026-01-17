@@ -51,6 +51,7 @@ public enum RequestType {
     APPROVE_MAP_VERSION,
     GET_ACTIVITY_REPORT,
     LIST_ALL_USERS,
+    GET_USER_BY_ID,
     LIST_ALL_WORKERS,
     // Utility
     PING,

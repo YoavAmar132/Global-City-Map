@@ -2,6 +2,8 @@ package gcm.client.controllers.manager_util;
 
 import common.messages.RegisterPayload;
 import common.messages.RequestType;
+import gcm.client.controllers.menu.MessagesController;
+import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.utill.ClientApp;
 import gcm.client.utill.SceneNavigator;
 import javafx.application.Platform;
@@ -86,6 +88,14 @@ public class ClientCardController {
 
     @FXML
     public void onBackClicked(ActionEvent actionEvent) {
+        if(type==RequestType.GET_USER_BY_ID)
+        {
+            System.out.println("user type");
+            Platform.runLater(() ->  ClientApp.getNavigator().show(UserMenuController.class));
+            return;
+
+        }
+
         SceneNavigator.LoadedView<ManageClientController> view =
                 ClientApp.getNavigator().get(ManageClientController.class);
         view.controller.initialize(type);
