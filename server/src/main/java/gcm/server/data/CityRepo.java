@@ -15,11 +15,11 @@ public class CityRepo {
 
 
 
-    public boolean createCity(String cityName, String baseMapPath) throws SQLException {
+    public boolean createCity(String cityName, String baseMapPath, String description) throws SQLException {
 
         String sql = """
-        INSERT INTO Cities (CityName, baseMap, CityPrice, SubPrice)
-        VALUES (?, ?, 0, 0)
+        INSERT INTO Cities (CityName, baseMap, CityPrice, SubPrice, Description)
+        VALUES (?, ?, 0, 0, ?)
     """;
 
         try (Connection conn = DbManager.getConnection();
@@ -27,6 +27,7 @@ public class CityRepo {
 
             ps.setString(1, cityName);
             ps.setString(2, baseMapPath);
+            ps.setString(3, description);
 
             return ps.executeUpdate() == 1;
         }
@@ -73,7 +74,7 @@ public class CityRepo {
 
     public List<City> getAllCities() throws SQLException {
         // הוספנו את SubPrice לשאילתה
-        String sql = "SELECT CityID, CityName, baseMap, CityPrice, SubPrice FROM Cities ORDER BY CityName";
+        String sql = "SELECT CityID, CityName, baseMap, CityPrice, SubPrice, description FROM Cities ORDER BY CityName";
 
         List<City> cities = new ArrayList<>();
 
@@ -87,7 +88,8 @@ public class CityRepo {
                         rs.getString("CityName"),
                         rs.getString("baseMap"),
                         rs.getDouble("CityPrice"),
-                        rs.getDouble("SubPrice") // עכשיו זה יעבוד כי ביקשנו את העמודה בשאילתה
+                        rs.getDouble("SubPrice"),
+                        rs.getString("description")
                 ));
             }
         }
@@ -97,7 +99,7 @@ public class CityRepo {
     public List<City> getAllCitiesWithMaps() throws SQLException {
 
         String sql = """
-        SELECT c.CityID, c.CityName, c.baseMap, c.CityPrice, c.SubPrice
+        SELECT c.CityID, c.CityName, c.baseMap, c.CityPrice, c.SubPrice, c.Description
         FROM Cities c
         WHERE EXISTS (
             SELECT 1
@@ -119,7 +121,8 @@ public class CityRepo {
                         rs.getString("CityName"),
                         rs.getString("baseMap"),
                         rs.getDouble("CityPrice"),
-                        rs.getDouble("SubPrice")
+                        rs.getDouble("SubPrice"),
+                        rs.getString("description")
                 ));
             }
         }

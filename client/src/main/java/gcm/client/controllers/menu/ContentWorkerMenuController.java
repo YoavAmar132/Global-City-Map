@@ -139,8 +139,16 @@ public class ContentWorkerMenuController {
 
         if (baseMapPath == null) return;
 
+        String cityDescription = askNonEmptyString(
+                "Add City",
+                "Create New City",
+                "City description:"
+        );
+
+        if (cityDescription == null) return;
+
         CreateCityPayload payload =
-                new CreateCityPayload(cityName, baseMapPath);
+                new CreateCityPayload(cityName, baseMapPath,cityDescription);
 
         GcmClient client = ClientApp.getClient();
         client.setResponseHandler(this::handleCreateCityResponse);

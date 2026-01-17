@@ -34,7 +34,7 @@ public class MapRepo {
 
         // עדכון השאילתה לשליפת עמודות ספציפיות כולל SubPrice
         String sql = """
-            SELECT c.CityID, c.CityName, c.baseMap, c.CityPrice, c.SubPrice 
+            SELECT c.CityID, c.CityName, c.baseMap, c.CityPrice, c.SubPrice, c.description
             FROM Cities c
             WHERE c.CityName IN (
                 SELECT p.CityName FROM Purchases p WHERE p.UserID = ?
@@ -54,7 +54,8 @@ public class MapRepo {
                             rs.getString("CityName"),
                             rs.getString("baseMap"),
                             rs.getDouble("CityPrice"),
-                            rs.getDouble("SubPrice") // **הוספה חדשה**
+                            rs.getDouble("SubPrice"),
+                            rs.getString("description")
                     );
                     cities.add(city);
                 }
@@ -583,7 +584,7 @@ public class MapRepo {
         List<City> cities = new ArrayList<>();
         // Select the EndDate as well
         String sql = """
-        SELECT c.CityID, c.CityName, c.baseMap, c.CityPrice, c.SubPrice, s.EndDate
+        SELECT c.CityID, c.CityName, c.baseMap, c.CityPrice, c.SubPrice, c.description s.EndDate
         FROM Cities c
         JOIN Subscriptions s ON c.CityID = s.CityID
         WHERE s.UserID = ? AND s.EndDate > NOW()
@@ -599,7 +600,8 @@ public class MapRepo {
                             rs.getString("CityName"),
                             rs.getString("baseMap"),
                             rs.getDouble("CityPrice"),
-                            rs.getDouble("SubPrice")
+                            rs.getDouble("SubPrice"),
+                            rs.getString("description")
                     );
 
                     // HACK: Store the date string in the 'Description' field to avoid new classes

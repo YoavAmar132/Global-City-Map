@@ -12,12 +12,13 @@ public class City implements Serializable {
     private String description = "";//
 
     // עדכון הבנאי (Constructor) לקבלת המחיר החדש
-    public City(int id, String name, String baseMap, double price, double subPrice) {
+    public City(int id, String name, String baseMap, double price, double subPrice,String description) {
         this.id = id;
         this.name = name;
         this.basemap = baseMap;
         this.price = price;
         this.subPrice = subPrice;
+        this.description = description;
     }
 
     // Getters and Setters

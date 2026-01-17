@@ -17,7 +17,8 @@ public class CityService {
     public boolean createCity(CreateCityPayload payload) throws SQLException {
         return cityRepo.createCity(
                 payload.getCityName(),
-                payload.getBaseMapPath()
+                payload.getBaseMapPath(),
+                payload.getDescription()
         );
     }
 
