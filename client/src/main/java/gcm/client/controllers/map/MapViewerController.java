@@ -257,6 +257,8 @@ public class MapViewerController {
 
             boolean isAccessible = askPoiAccessibility();
 
+            int recommended_mins = askPoiRecommendedMinutes();
+
             tempPoiId--;
             Poi poi = new Poi(
                     tempPoiId,
@@ -267,7 +269,9 @@ public class MapViewerController {
                     category,
                     isAccessible,
                     map.getCityID(),
-                    false
+                    false,
+                    recommended_mins
+
             );
 
             overlayLayerController.addPoi(poi);
@@ -511,6 +515,8 @@ public class MapViewerController {
             POI_Category category = askPoiCategory();
             if (category == null) return;
 
+            int recommended_mins = askPoiRecommendedMinutes();
+
             boolean isAccessible = askPoiAccessibility();
 
             tempPoiId--;
@@ -523,7 +529,8 @@ public class MapViewerController {
                     category,
                     isAccessible,
                     map.getCityID(),
-                    false
+                    false,
+                    recommended_mins
             );
 
             overlayLayerController.addPoi(poi);
@@ -734,6 +741,8 @@ public class MapViewerController {
 
         MenuItem cat = new MenuItem("Category: " + poi.getCategory());
         cat.setDisable(true);
+        MenuItem time = new MenuItem("Recommended mins: " + poi.getRecommendedMinutes());
+        time.setDisable(true);
 
         MenuItem accessibility = new MenuItem(
                 "Accessible: " + (poi.isAccessible() ? "Yes" : "No")
@@ -744,10 +753,11 @@ public class MapViewerController {
                 title,
                 desc,
                 cat,
+                time,
                 accessibility
         );
 
-        // ---- DELETE OPTION (ONLY IN EDIT MAP) ----
+        // DELETE OPTION (ONLY IN EDIT MAP)
         if (entryContext == EntryContext.EDIT_MAP) {
 
             menu.getItems().add(new SeparatorMenuItem());
@@ -904,6 +914,39 @@ public class MapViewerController {
     }
 
 
+
+    private int askPoiRecommendedMinutes() {
+        while (true) {
+            TextInputDialog dialog = new TextInputDialog("30");
+            dialog.setTitle("POI Recommended Time");
+            dialog.setHeaderText("Recommended Visit Duration");
+            dialog.setContentText("Enter recommended time in minutes (positive number):");
+
+            Optional<String> result = dialog.showAndWait();
+
+            // user pressed Cancel / closed dialog
+            if (result.isEmpty()) {
+                throw new RuntimeException("POI creation cancelled by user");
+            }
+
+            try {
+                int minutes = Integer.parseInt(result.get().trim());
+
+                if (minutes <= 0) {
+                    throw new NumberFormatException();
+                }
+
+                return minutes;
+
+            } catch (NumberFormatException e) {
+                Alert error = new Alert(Alert.AlertType.ERROR);
+                error.setTitle("Invalid Input");
+                error.setHeaderText("Invalid Recommended Time");
+                error.setContentText("Please enter a positive integer (e.g. 15, 30, 60).");
+                error.showAndWait();
+            }
+        }
+    }
 
 
 

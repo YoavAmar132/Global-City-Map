@@ -341,7 +341,8 @@ public class MapRepo {
                         poi.getCategory(),
                         poi.isAccessible(),
                         poi.getCityID(),
-                        true
+                        true,
+                        poi.getRecommendedMinutes()
                 );
 
                 int newPoiId = poirepo.insertPoiAndReturnId(approvedPoi);

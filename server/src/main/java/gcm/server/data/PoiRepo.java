@@ -22,8 +22,8 @@ public class PoiRepo {
     }
     public boolean insertPoi(Poi poi) throws SQLException {
         String sql = """
-        INSERT INTO pois (name, description, category, x, y, is_accessible,cityID,is_approved)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO pois (name, description, category, x, y, is_accessible,cityID,is_approved, recommended_minutes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """;
 
 
@@ -38,6 +38,7 @@ public class PoiRepo {
             stmt.setBoolean(6, poi.isAccessible());
             stmt.setInt(7,poi.getCityID());
             stmt.setBoolean(8, poi.isApproved());
+            stmt.setInt(9, poi.getRecommendedMinutes());
 
             int rows = stmt.executeUpdate();
             return rows > 0;
@@ -65,7 +66,7 @@ public class PoiRepo {
         ArrayList<Poi> pois = new ArrayList<>();
 
         String sql = """
-        SELECT id, name, description, category, x, y, is_accessible, cityID,is_approved
+        SELECT id, name, description, category, x, y, is_accessible, cityID,is_approved, recommended_minutes
         FROM pois
         WHERE id BETWEEN ? AND ?
         ORDER BY id
@@ -90,7 +91,8 @@ public class PoiRepo {
                             category,
                             rs.getBoolean("is_accessible"),
                             rs.getInt("cityID"),
-                            rs.getBoolean("is_approved")
+                            rs.getBoolean("is_approved"),
+                            rs.getInt("recommended_minutes")
                     );
 
 
@@ -113,7 +115,7 @@ public class PoiRepo {
         String sql = """
         SELECT id, name, description, category,
                x, y,
-               is_accessible, cityID, is_approved
+               is_accessible, cityID, is_approved, recommended_minutes
         FROM pois
         WHERE cityID = ? AND is_approved = 1
     """;
@@ -137,7 +139,8 @@ public class PoiRepo {
                             POI_Category.valueOf(rs.getString("category")),
                             rs.getBoolean("is_accessible"),
                             rs.getInt("cityID"),
-                            rs.getBoolean("is_approved")
+                            rs.getBoolean("is_approved"),
+                            rs.getInt("recommended_minutes")
                     );
 
                     pois.add(poi);
@@ -164,7 +167,8 @@ public class PoiRepo {
                 POI_Category.valueOf(rs.getString("category")),
                 rs.getBoolean("is_accessible"),
                 rs.getInt("cityID"),
-                rs.getBoolean("is_approved")
+                rs.getBoolean("is_approved"),
+                rs.getInt("recommended_minutes")
         );
     }
 
@@ -172,8 +176,8 @@ public class PoiRepo {
 
         String sql = """
         INSERT INTO pois
-        (name, description, category, x, y, is_accessible, cityID, is_approved)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        (name, description, category, x, y, is_accessible, cityID, is_approved,recommended_minutes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
     """;
 
         try (Connection conn = DbManager.getConnection();
@@ -190,6 +194,7 @@ public class PoiRepo {
             ps.setBoolean(6, poi.isAccessible());
             ps.setInt(7, poi.getCityID());
             ps.setBoolean(8, true);              // approved POI
+            ps.setInt(9, poi.getRecommendedMinutes());
 
             ps.executeUpdate();
 

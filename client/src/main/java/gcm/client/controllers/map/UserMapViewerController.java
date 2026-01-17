@@ -308,13 +308,16 @@ public class UserMapViewerController {
         MenuItem cat = new MenuItem("Category: " + poi.getCategory());
         cat.setDisable(true);
 
+        MenuItem time = new MenuItem("Recommended mins: " + poi.getRecommendedMinutes());
+        time.setDisable(true);
+
         String is_accessible = poi.isAccessible() ? "Yes" : "No";
         MenuItem accessibility = new MenuItem("Accessible: " + is_accessible);
         accessibility.setDisable(true);
 
         MenuItem close = new MenuItem("Close");
 
-        menu.getItems().addAll(title, desc, cat, accessibility, new SeparatorMenuItem(), close);
+        menu.getItems().addAll(title, desc, cat, time,accessibility, new SeparatorMenuItem(), close);
 
         menu.show(anchor, Side.TOP, 0, -10);
     }
