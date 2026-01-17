@@ -123,15 +123,15 @@ public class MapRepo {
     }
 
     // 2. Updated Add Purchase: Handle explicit versions
-    public boolean addPurchase(int userId, String cityName, double price, boolean isSubscription, int months) throws SQLException {
+    public boolean addPurchase(int userId, String cityName, double price, boolean isSubscription, int months,String credit) throws SQLException {
         int cityId = cityRepo.idByCityName(cityName);
         if (cityId == -1) return false;
 
         if (isSubscription) {
             // Subscription Logic (Unchanged)
             String sql = """
-    INSERT INTO Subscriptions (UserID, CityID, StartDate, EndDate)
-    VALUES (?, ?, NOW(), DATE_ADD(NOW(), INTERVAL ? MONTH))
+    INSERT INTO Subscriptions (UserID, CityID, StartDate, EndDate,PaymentLast4)
+    VALUES (?, ?, NOW(), DATE_ADD(NOW(), INTERVAL ? MONTH),?)
 """;
 
             try (Connection conn = DbManager.getConnection();
@@ -140,6 +140,7 @@ public class MapRepo {
                 stmt.setInt(1, userId);
                 stmt.setInt(2, cityId);
                 stmt.setInt(3, months);
+                stmt.setString(4, credit);
 
                 return stmt.executeUpdate() > 0;
             } catch (SQLException e) { e.printStackTrace(); return false; }
@@ -150,11 +151,12 @@ public class MapRepo {
 
                int  versionToBuy = getLatestVersionForCity(cityId);
 
-            String sql = "INSERT INTO Purchases (UserID, CityName, PurchaseDate, mapVersion) VALUES (?, ?, NOW(), ?)";
+            String sql = "INSERT INTO Purchases (UserID, CityName, PurchaseDate, mapVersion,PaymentLast4) VALUES (?, ?, NOW(), ?,?)";
             try (Connection conn = DbManager.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, userId);
                 stmt.setString(2, cityName);
                 stmt.setInt(3, versionToBuy);
+                stmt.setString(4, credit);
                 writeMessage(userId,"We Thank you for your purchase of :"+cityName+" Maps . you can download them here->");
                 return stmt.executeUpdate() > 0;
             } catch (SQLException e) { e.printStackTrace(); return false; }

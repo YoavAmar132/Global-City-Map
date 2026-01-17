@@ -86,8 +86,8 @@ public class MapService {
     }
 
     public boolean addPurchase(int userId, String cityName, double price,
-                               boolean isSubscription, int months) throws SQLException {
-        return mapRepository.addPurchase(userId, cityName, price, isSubscription, months);
+                               boolean isSubscription, int months,String credit) throws SQLException {
+        return mapRepository.addPurchase(userId, cityName, price, isSubscription, months,credit);
     }
 
     public List<City> getSubscribedCities(int userId) {

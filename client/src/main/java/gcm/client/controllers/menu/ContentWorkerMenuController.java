@@ -116,10 +116,7 @@ public class ContentWorkerMenuController {
         alert.showAndWait();
     }
 
-    @FXML
-    public void onPriceApproveButton(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(PendingCityPricesController.class);
-    }
+
 
 
 

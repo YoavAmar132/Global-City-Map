@@ -38,7 +38,7 @@
             </padding>
 
             <!-- Title -->
-            <Text text="But City content" fill="white">
+            <Text text="Buy City content" fill="white">
                 <font>
                     <Font name="Segoe UI Semibold" size="28.0"/>
                 </font>

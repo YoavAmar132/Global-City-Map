@@ -723,13 +723,14 @@ public class RequestHandler {
                 if (alreadySub) {
                     return GcmResponse.error("You have this City Subscription");
                 }
-            }
-            if (alreadySub) {
-                return GcmResponse.error("You ARE Subscribed to this City, all City content is Available in my maps");
-            }
-            if (alreadyOTP) {
+            }else { // trying to otp
+                if (alreadySub) {
+                    return GcmResponse.error("You ARE Subscribed to this City, all City content is Available in my maps");
+                }
+                if (alreadyOTP) {
                     return GcmResponse.error("You have Purchase this City Before try a Subscription");
                 }
+            }
 
 
             boolean success = mapService.addPurchase(
@@ -737,7 +738,8 @@ public class RequestHandler {
                     payload.getCityName(),
                     payload.getPrice(),
                     payload.isSubscription(),
-                    payload.getVersion() // Pass the version
+                    payload.getVersion(), // Pass the version
+                    payload.getCredit()
             );
 
             return success ? GcmResponse.ok(payload) : GcmResponse.error("Database Error");

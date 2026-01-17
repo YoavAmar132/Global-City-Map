@@ -20,6 +20,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +59,7 @@ public class BuyMapScreenController {
         Label name = new Label(city.getName());
         name.setStyle("-fx-text-fill: white; -fx-font-size: 14;");
 
-        Button open = new Button("Open");
+        Button open = new Button("buy");
         open.setPrefSize(90, 30);
         open.setStyle(
                 "-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); " +
@@ -105,8 +108,8 @@ public class BuyMapScreenController {
                 if(!subscription)
                 {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("your transaction is compleate check your Messages");
-                    alert.setContentText(response.getErrorMessage());
+                    alert.setTitle("Thank you for your purchase");
+                    alert.setContentText("your transaction is complete. check your Messages");
                     alert.showAndWait();
                 }
             }
@@ -221,9 +224,9 @@ public class BuyMapScreenController {
 
         // === Actions ===
         purchaseBtn.setOnAction(e -> {
+
             BuyMapPayload payload=new BuyMapPayload(ClientApp.getCurrentUser().getId(),this.cityname,otpPrice,false,0);
-            GcmRequest request  = new GcmRequest(RequestType.BUY_MAP, payload);
-            client.sendRequest(request);
+            showTransactionPopup(payload);
 
             System.out.println("Bought " + this.cityname + " For Total: ₪" + otpPrice);
 
@@ -234,9 +237,9 @@ public class BuyMapScreenController {
             int months = monthsBox.getValue(); // 🔥 selected months (1–6)
             double totalPrice = months * subscriptionPrice;
 
+
             BuyMapPayload payload=new BuyMapPayload(ClientApp.getCurrentUser().getId(),this.cityname,totalPrice,true,months);
-            GcmRequest request  = new GcmRequest(RequestType.BUY_MAP, payload);
-            client.sendRequest(request);
+            showTransactionPopup(payload);
 
             System.out.println("Subscribe for " + months + " months. Total: ₪" + totalPrice);
 
@@ -265,5 +268,144 @@ public class BuyMapScreenController {
         popup.setScene(new Scene(root, 420, 500));
         popup.showAndWait();
     }
+
+    //-- lazy transaction pop up no fxml
+    public  void showTransactionPopup(BuyMapPayload payload) {
+
+        Stage popup = new Stage();
+        popup.initModality(Modality.APPLICATION_MODAL);
+        popup.setTitle("Payment Details");
+
+        // === Input fields ===
+        TextField cardNumberField = new TextField();
+        cardNumberField.setPromptText("Credit Card Number");
+
+        TextField expiryField = new TextField();
+        expiryField.setPromptText("MM/YY");
+
+        PasswordField pinField = new PasswordField();
+        pinField.setPromptText("PIN");
+
+        // === Buttons ===
+        Button confirmBtn = new Button("Confirm Payment");
+        Button cancelBtn = new Button("Cancel");
+
+        // === Styling ===
+        String fieldStyle = """
+        -fx-background-color: #2f2f2f;
+        -fx-text-fill: white;
+        -fx-prompt-text-fill: #aaaaaa;
+        -fx-background-radius: 6;
+        -fx-border-color: #444;
+        -fx-border-radius: 6;
+        -fx-padding: 8;
+    """;
+
+        String confirmStyle = """
+        -fx-background-color: #3f8cff;
+        -fx-text-fill: white;
+        -fx-font-weight: bold;
+        -fx-background-radius: 6;
+        -fx-padding: 8 18;
+    """;
+
+        String cancelStyle = """
+        -fx-background-color: #555555;
+        -fx-text-fill: white;
+        -fx-background-radius: 6;
+        -fx-padding: 8 18;
+    """;
+
+        cardNumberField.setStyle(fieldStyle);
+        expiryField.setStyle(fieldStyle);
+        pinField.setStyle(fieldStyle);
+        confirmBtn.setStyle(confirmStyle);
+        cancelBtn.setStyle(cancelStyle);
+
+        // === Actions ===
+        confirmBtn.setOnAction(e -> {
+            String cardNumber = cardNumberField.getText().trim();
+            String expiry = expiryField.getText().trim();
+            String pin = pinField.getText().trim();
+
+            // 🔒 Basic validation (you can expand this)
+            if (!validateCard(cardNumber,expiry,pin)) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error in Payment method");
+                alert.setContentText("your transaction is  not complete. check your Payment details and insert again correctly");
+                alert.showAndWait();
+                return;
+            }
+            String normalizedCard = cardNumber.replaceAll("[ -]", "");
+            String last4 = normalizedCard.substring(normalizedCard.length() - 4);
+            payload.setCredit(last4);
+
+            GcmRequest request  = new GcmRequest(RequestType.BUY_MAP, payload);
+            client.sendRequest(request);
+            System.out.println("Payment confirmed:");
+            System.out.println("Card: " + cardNumber);
+            System.out.println("Expiry: " + expiry);
+            System.out.println("PIN: " + pin);
+
+            popup.close();
+        });
+
+        cancelBtn.setOnAction(e -> popup.close());
+
+        // === Layout ===
+        VBox fieldsBox = new VBox(10,
+                cardNumberField,
+                expiryField,
+                pinField
+        );
+
+        HBox buttonsBox = new HBox(15, confirmBtn, cancelBtn);
+        buttonsBox.setStyle("-fx-alignment: center;");
+
+        VBox root = new VBox(15, fieldsBox, buttonsBox);
+        root.setStyle("""
+        -fx-background-color: linear-gradient(to bottom, #1f1f1f, #2b2b2b);
+        -fx-padding: 20;
+    """);
+
+        popup.setScene(new Scene(root, 360, 280));
+        popup.showAndWait();
+    }
+    //-- card validation
+    public  boolean validateCard(String card, String expiry, String pin) {
+
+        // Normalize card number (remove spaces and dashes)
+        String normalizedCard = card.replaceAll("[ -]", "");
+
+        boolean cardValid = normalizedCard.matches("\\d{16}");
+        boolean pinValid  = pin.matches("\\d{3}");
+        boolean expiryValid = isValidExpiry(expiry);
+
+        System.out.println(
+                "Card=" + cardValid +
+                        ", PIN=" + pinValid +
+                        ", Expiry=" + expiryValid
+        );
+
+        return cardValid && pinValid && expiryValid;
+    }
+
+    private  boolean isValidExpiry(String expiry) {
+        if (!expiry.matches("(0[1-9]|1[0-2])/\\d{2}")) {
+            return false; // wrong format
+        }
+
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+            YearMonth exp = YearMonth.parse(expiry, formatter);
+            YearMonth now = YearMonth.now();
+
+            return !exp.isBefore(now); // must be current or future
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
+
+
 
 }

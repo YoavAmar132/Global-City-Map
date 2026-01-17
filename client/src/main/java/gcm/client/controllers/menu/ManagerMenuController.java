@@ -1,9 +1,11 @@
 package gcm.client.controllers.menu;
 
+import gcm.client.controllers.City.PendingCityPricesController;
 import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.manager_util.ClientCardController;
 import gcm.client.controllers.manager_util.ManageClientController;
 import gcm.client.controllers.manager_util.ReportsInputController;
+import gcm.client.controllers.map.EditPricesController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -21,6 +23,7 @@ public class ManagerMenuController {
 
     @FXML
     public void onPricingButton(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(PendingCityPricesController.class);
     }
     @FXML
     public void onManageClientsButton(ActionEvent actionEvent) {
