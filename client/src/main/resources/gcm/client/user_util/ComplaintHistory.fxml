@@ -47,7 +47,7 @@
 
         <HBox spacing="10.0" alignment="CENTER">
             <Button text="Create new complaint"
-                    prefWidth="120.0" prefHeight="32.0"
+                    prefWidth="160.0" prefHeight="32.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
                     onAction="#onCreateComplaintClicked"/>
         </HBox>

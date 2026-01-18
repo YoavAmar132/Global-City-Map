@@ -1,12 +1,6 @@
 package gcm.client.controllers.user_util;
 
 import common.model.Complaint;
-import gcm.client.controllers.WelcomeController;
-import gcm.client.controllers.catalog.BuyMapCatalogController;
-import gcm.client.controllers.catalogPublic.GuestCatalogController;
-import gcm.client.controllers.menu.MessagesController;
-import gcm.client.controllers.menu.UserMenuController;
-import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -50,7 +44,7 @@ public class CreateComplaintController {
 
     @FXML
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(UserMenuController.class);
+        ClientApp.getNavigator().show(ComplaintHistoryController.class);
     }
 
 
