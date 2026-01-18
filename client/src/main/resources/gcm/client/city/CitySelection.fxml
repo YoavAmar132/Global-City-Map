@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.City.CitySelectionController"
+            prefWidth="600"
+            prefHeight="500"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+
+    <!-- Close button -->
+    <Button text="✕"
+            onAction="#onBack"
+            AnchorPane.topAnchor="16"
+            AnchorPane.rightAnchor="16"
+            style="
+                -fx-background-color: transparent;
+                -fx-text-fill: white;
+                -fx-font-size: 20;
+                -fx-font-weight: bold;
+                -fx-cursor: hand;
+            "/>
+
+    <VBox spacing="20"
+          AnchorPane.topAnchor="40"
+          AnchorPane.leftAnchor="40"
+          AnchorPane.rightAnchor="40"
+          AnchorPane.bottomAnchor="40">
+
+        <!-- Title -->
+        <Label text="Select City"
+               style="-fx-text-fill: white;">
+            <font>
+                <Font size="28"/>
+            </font>
+        </Label>
+
+        <!-- Optional search -->
+        <TextField fx:id="searchField"
+                   promptText="Search city..."
+                   style="
+                       -fx-background-radius: 8;
+                       -fx-padding: 8;
+                       -fx-font-size: 14;
+                   "/>
+
+        <!-- City list -->
+        <ScrollPane fitToWidth="true"
+                    hbarPolicy="NEVER"
+                    style="-fx-background-color: transparent; -fx-background: transparent;">
+
+            <VBox fx:id="cityList"
+                  spacing="14"
+                  style="-fx-background-color: transparent;">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+            </VBox>
+
+        </ScrollPane>
+
+    </VBox>
+
+</AnchorPane>

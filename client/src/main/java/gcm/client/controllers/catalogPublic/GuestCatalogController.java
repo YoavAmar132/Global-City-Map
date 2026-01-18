@@ -20,6 +20,8 @@ import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.Region;
+
+import javax.management.Descriptor;
 import java.util.List;
 import java.util.Objects;
 
@@ -99,21 +101,27 @@ public class GuestCatalogController {
         Label name = new Label(city.getCityName());
         name.setStyle("-fx-text-fill: #1F2937; -fx-font-size: 16; -fx-font-weight: bold;");
 
-        // 2. Statistics Line (Maps, POIs, Tours)
-        // Ensure your CityCatalogItem has getPoiCount() and getToursCount()
+        String description = city.getCityDescription();
+        if (description == null || description.isBlank()) {
+            description = "No description";
+        }
+
         String statsText = String.format(
-                "Maps: %d  |  POIs: %d  |  Tours: %d",
+                "Maps: %d  |  POIs: %d  |  Tours: %d  | Description: %s",
                 city.getMapCount(),
                 city.getPoiCount(),
-                city.getToursCount()
+                city.getToursCount(),
+                description
         );
+
+
 
         Label statsLabel = new Label(statsText);
         statsLabel.setStyle("-fx-text-fill: #0072ff; -fx-font-weight: bold; -fx-font-size: 12;");
 
         // REMOVED: Description Label logic
 
-        VBox textBox = new VBox(4, name, statsLabel); // Removed descLabel from here
+        VBox textBox = new VBox(4, name, statsLabel);
 
         // 3. Action Button
         Button open = new Button("Open");

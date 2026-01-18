@@ -38,6 +38,10 @@ public class MapService {
 
     /* ================= MAPS ================= */
 
+
+
+
+
     public List<Poi> getpois() {
         return mapRepository.getAllPoi();
     }
@@ -82,15 +86,15 @@ public class MapService {
     }
 
     public boolean addPurchase(int userId, String cityName, double price,
-                               boolean isSubscription, int version) throws SQLException {
-        return mapRepository.addPurchase(userId, cityName, price, isSubscription, version);
+                               boolean isSubscription, int months,String credit) throws SQLException {
+        return mapRepository.addPurchase(userId, cityName, price, isSubscription, months,credit);
     }
 
     public List<City> getSubscribedCities(int userId) {
         return mapRepository.getSubscribedCities(userId);
     }
 
-    public List<MapSheet> getPurchasedMaps(int userId) {
+    public ArrayList<MapSheet> getPurchasedMaps(int userId) {
         return mapRepository.getPurchasedMapsByUserId(userId);
     }
 
@@ -193,6 +197,101 @@ public class MapService {
         return routeRepository.approveRoute(pendingRouteId);
     }
 
+    public List<MapSheet> getApprovedMapsForCity(int cityId) throws SQLException {
+        return mapRepository.getApprovedMapsForCity(cityId);
+    }
+
+    public boolean deleteMap(int mapId) throws SQLException {
+
+        // delete approved map
+        mapRepository.deleteApprovedMap(mapId);
+
+        // delete all pending versions (if exist)
+        mapRepository.deletePendingMapsBySourceMapId(mapId);
+
+        return true;
+    }
+
+    public boolean deleteRoute(int routeId) throws SQLException {
+
+        // delete approved route
+        routeRepository.deleteApprovedRoute2(routeId);
+
+        // delete pending edits if exist
+        routeRepository.deletePendingRouteBySourceRouteId(routeId);
+
+        return true;
+    }
+
+    public boolean deletePoiIfUnused2(int poiId) throws SQLException {
+
+        // used in maps?
+        if (mapRepository.isPoiUsedInAnyMap(poiId)) {
+            return false;
+        }
+
+        // used in routes?
+        if (routeRepository.isPoiUsedInAnyRoute(poiId)) {
+            return false;
+        }
+
+        // safe to delete
+        return mapRepository
+                .getPoirepo()
+                .deletePoiById(poiId);
+    }
+
+
+
+    public boolean deletePoiIfUnused(int poiId) throws SQLException {
+
+        if (mapRepository.isPoiUsedInAnyMap(poiId)) {
+            return false;
+        }
+
+        if (routeRepository.isPoiUsedInAnyRoute(poiId)) {
+            return false;
+        }
+
+        return mapRepository
+                .getPoirepo()
+                .deletePoiById(poiId);
+    }
+
+
+    public boolean deleteRoute2(int routeId) throws SQLException {
+
+        // delete pending edits
+        routeRepository.deletePendingRouteBySourceRouteId(routeId);
+
+        // delete approved route
+        routeRepository.deleteApprovedRoute(routeId);
+
+        return true;
+    }
+
+    public List<MapSheet> getApprovedMapsForCity2(int cityId)
+            throws SQLException {
+
+        return mapRepository.getApprovedMapsForCity(cityId);
+    }
+
+
+    public List<MapDeleteItem> getApprovedMapsForDelete(int cityId) {
+        return mapRepository.getApprovedMapsForDelete(cityId);
+    }
+
+    public boolean rejectPendingRoute(int routeId) throws SQLException {
+        return routeRepository.deletePendingRoute(routeId);
+    }
+
+    public boolean rejectPendingMap(MapSheet map) throws SQLException {
+        return mapRepository.deletePendingMap(
+                map.getCityID(),
+                map.getName(),
+                map.getVersion()
+        );
+    }
 
 
 }

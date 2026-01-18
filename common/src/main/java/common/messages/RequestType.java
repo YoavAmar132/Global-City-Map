@@ -7,6 +7,7 @@ public enum RequestType {
 
     // Catalog
     LIST_CITIES,
+    LIST_CITIES_WITH_MAPS,
     GET_CITY_DETAILS,
     GET_MESSAGES,
     LIST_MAPS_FOR_CITY,
@@ -25,6 +26,14 @@ public enum RequestType {
     UPDATE_POI,      // optional
     GET_POI_INDEX,
 
+
+    DELETE_POI,
+    DELETE_MAP,
+    DELETE_ROUTE,
+    DELETE_GET_CITY_MAPS,
+
+    REJECT_PENDING_ROUTE,
+    REJECT_PENDING_MAP,
 
     // Routes
     SUBMIT_ROUTE,
@@ -51,6 +60,7 @@ public enum RequestType {
     APPROVE_MAP_VERSION,
     GET_ACTIVITY_REPORT,
     LIST_ALL_USERS,
+    GET_USER_BY_ID,
     LIST_ALL_WORKERS,
     // Utility
     PING,
@@ -58,6 +68,15 @@ public enum RequestType {
 
     // Prices
     GET_ALL_CITY_PRICES,
-    UPDATE_CITY_PRICE
+    UPDATE_CITY_PRICE,
 
-    }
+    // City
+    CREATE_CITY,
+    CREATE_CITY_PRICE_CHANGE,
+    GET_PENDING_CITY_PRICES,
+    APPROVE_CITY_PRICE,
+    REJECT_CITY_PRICE,
+    REQUEST_CITY_PRICE_CHANGE,
+
+
+}

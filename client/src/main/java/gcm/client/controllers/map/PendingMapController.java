@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 
 public class PendingMapController {
     private GcmClient client;
+    private City currentCity;
+
 
     @FXML
     private VBox pendingList;
@@ -65,16 +67,42 @@ public class PendingMapController {
         approve.setStyle("-fx-background-color: rgba(255,255,255,0.20); -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;");
         approve.setOnAction(e -> ApproveMap(map));
 
+        Button reject = new Button("Reject");
+        reject.setPrefSize(90, 30);
+        reject.setStyle("""
+    -fx-background-color: rgba(255,80,80,0.35);
+    -fx-text-fill: white;
+    -fx-font-size: 13;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+""");
+
+        reject.setOnAction(e -> rejectMap(map));
+
+
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
 
-        HBox row = new HBox(12, name, spacer, open, approve);
+        HBox row = new HBox(12, name, spacer, open, approve, reject);
         row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;");
         row.setPadding(new javafx.geometry.Insets(10, 12, 10, 12));
 
         return row;
     }
+
+    private void rejectMap(MapSheet map) {
+        if (map == null) return;
+
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.REJECT_PENDING_MAP,
+                        map
+                )
+        );
+    }
+
+
 
     private void ApproveMap(MapSheet map) {
         if (map == null) return;
@@ -129,6 +157,11 @@ public class PendingMapController {
             }
 
             Object t = response.getData();
+            if (t == null) { // reject success
+                onRefreshClicked(null);
+                return;
+            }
+
             if (t instanceof Popup) {
                 // Likely the result of "APPROVE_MAP_VERSION" success
                 System.out.println("Map approval success (or empty response)");
@@ -146,12 +179,10 @@ public class PendingMapController {
                 // If it IS empty, we can't distinguish, but clearing the map list is usually safer.
 
                 if (list.isEmpty()) {
-                    // It's ambiguous, but usually safe to clear the UI list just in case it was a map search result
-                    // If it was an empty city list, clearing the pending map list is a harmless side effect (unless you expected maps).
-                    // Ideally, your server response should include the "RequestType" it is answering.
-                    System.out.println("Received empty list.");
+                    pendingList.getChildren().clear();
                     return;
                 }
+
 
                 // Case 2: List has items, check the first item type
                 Object firstItem = list.get(0);

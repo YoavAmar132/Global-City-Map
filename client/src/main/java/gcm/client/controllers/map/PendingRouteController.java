@@ -65,13 +65,25 @@ public class PendingRouteController {
             -fx-background-radius: 8;
             -fx-cursor: hand;
         """);
+        Button reject = new Button("Reject");
+        reject.setPrefSize(90, 30);
+        reject.setStyle("""
+    -fx-background-color: rgba(255,80,80,0.35);
+    -fx-text-fill: white;
+    -fx-font-size: 13;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+""");
+
+        reject.setOnAction(e -> rejectRoute(route));
+
 
         approve.setOnAction(e -> approveRoute(route));
 
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
 
-        HBox row = new HBox(12, name, spacer, open, approve);
+        HBox row = new HBox(12, name, spacer, open, approve, reject);
         row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;");
         row.setPadding(new javafx.geometry.Insets(10, 12, 10, 12));
@@ -93,7 +105,15 @@ public class PendingRouteController {
                         )
                 )
         );
+
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.GET_PENDING_ROUTES,
+                        new EmptyPayload()
+                )
+        );
     }
+
 
     /* =========================
        SERVER RESPONSE
@@ -108,7 +128,6 @@ public class PendingRouteController {
             }
 
             Object data = response.getData();
-
             // Case 1: Pending routes list
             if (data instanceof List<?> list
                     && (list.isEmpty() || list.get(0) instanceof PendingRoute)) {
@@ -120,6 +139,7 @@ public class PendingRouteController {
                 }
                 return;
             }
+
 
             // Case 2: Open pending route (EXACT SAME PATTERN AS MAPS)
             if (data instanceof RouteSheet sheet) {
@@ -148,6 +168,22 @@ public class PendingRouteController {
     }
 
 
+    private void rejectRoute(PendingRoute route) {
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.REJECT_PENDING_ROUTE,
+                        new RouteIdPayload(route.getRouteId())
+                )
+        );
+
+        // refresh list immediately (same pattern as approve)
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.GET_PENDING_ROUTES,
+                        new EmptyPayload()
+                )
+        );
+    }
 
 
     /* =========================

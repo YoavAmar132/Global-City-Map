@@ -137,7 +137,7 @@ public class StatsRepo {
 
         // 1) Purchases
         String purchasesSql = """
-        SELECT PurchaseDate, CityName, mapVersion, DownloadUsed
+        SELECT PurchaseDate, CityName, mapVersion, DownloadUsed,PaymentLast4
         FROM Purchases
         WHERE UserID = ?
         ORDER BY PurchaseDate DESC
@@ -145,7 +145,7 @@ public class StatsRepo {
 
         // 2) Subscriptions (join Cities to get a readable city name)
         String subsSql = """
-        SELECT s.StartDate, s.EndDate, s.DownloadsRemaining, c.CityName
+        SELECT s.StartDate, s.EndDate, s.DownloadsRemaining, c.CityName,PaymentLast4
         FROM Subscriptions s
         JOIN Cities c ON c.CityID = s.CityID
         WHERE s.UserID = ?
@@ -164,13 +164,15 @@ public class StatsRepo {
                         String city = rs.getString("CityName");
                         int version = rs.getInt("mapVersion");
                         boolean used = rs.getBoolean("DownloadUsed");
+                        String payment = rs.getString("PaymentLast4");
 
                         String row = String.format(
-                                "PURCHASE | %s | City: %s | Version: %d | Download used: %s",
+                                "PURCHASE | %s | City: %s | Version: %d | Download used: %s|Payment Method : %s",
                                 date,
                                 city,
                                 version,
-                                used ? "Yes" : "No"
+                                used ? "Yes" : "No",
+                                payment
                         );
 
                         history.add(row);

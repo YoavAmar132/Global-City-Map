@@ -2,144 +2,410 @@ package gcm.client.controllers.user_util;
 
 import common.messages.*;
 import common.model.City;
+import common.model.MapSheet;
+import common.model.Poi;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
+import gcm.client.controllers.map.MapViewerController;
+import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
+import gcm.client.utill.SceneNavigator;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class BuyMapScreenController {
 
-    @FXML private Label cityNameLabel;
-    @FXML private Label priceLabel;
-    @FXML private RadioButton radioOTP; // One Time Purchase
-    @FXML private RadioButton radioSub; // Subscription
-    @FXML private ToggleGroup purchaseGroup;
-
     private GcmClient client;
-    private City selectedCity; // שומרים את העיר כשדה במחלקה לגישה נוחה
+    @FXML
+    private VBox Baselist;
+    private ArrayList<City> cities; // loaded earlier
+      private  double price;
+      private  double subprice;
+      private String cityname;
+
 
     @FXML
-    public void initialize() {
-        // 1. Setup Client
-        this.client = ClientApp.getClient();
+    private void initialize() {
+        client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
 
-        // 2. Get data from Session
-        PurchaseSession session = PurchaseSession.getInstance();
-        this.selectedCity = session.getSelectedCity();
-
-        if (selectedCity == null) {
-            cityNameLabel.setText("Error: No City Selected");
-            return;
-        }
-
-        // 3. Update UI with City Data
-        cityNameLabel.setText("Purchase: " + selectedCity.getName());
-
-        // עדכון הטקסט של הכפתורים שיראה את המחיר ליד האופציה
-        radioOTP.setText(String.format("One Time Purchase ($%.2f)", selectedCity.getPrice()));
-        radioSub.setText(String.format("Subscription (6 Months) ($%.2f)", selectedCity.getSubPrice()));
-
-        // 4. Setup listeners for price updates
-        purchaseGroup.selectedToggleProperty().addListener((obs, oldVal, newVal) -> updatePriceDisplay());
-
-        // Initial check
-        updatePriceDisplay();
-    }
-
-    private void updatePriceDisplay() {
-        if (selectedCity == null) return;
-
-        if (radioOTP.isSelected()) {
-            priceLabel.setText(String.format("Total: $%.2f", selectedCity.getPrice()));
-        } else {
-            priceLabel.setText(String.format("Total: $%.2f", selectedCity.getSubPrice()));
-        }
-    }
-
-    public void onConfirmPurchaseClicked(ActionEvent actionEvent) {
-        if (selectedCity == null) return;
-
-        PurchaseSession session = PurchaseSession.getInstance();
-
-        // 1. Determine final price and type based on selection
-        double price;
-        if (radioOTP.isSelected()) {
-            session.setPurchaseType(PurchaseSession.PurchaseType.ONE_TIME_PURCHASE);
-            price = selectedCity.getPrice(); // מחיר רגיל מהעיר
-        } else {
-            session.setPurchaseType(PurchaseSession.PurchaseType.SUBSCRIPTION);
-            price = selectedCity.getSubPrice(); // מחיר מנוי מהעיר
-        }
-        session.setPrice(price);
-        boolean isSub = radioSub.isSelected();
-
-
-        // 2. Create Payload & Send Request
-        // כרגע אנחנו שולחים את המחיר שנבחר לשרת
-        BuyMapPayload payload = new BuyMapPayload(
-                PurchaseSession.getInstance().getUserID(),
-                selectedCity.getName(),
-                price,
-                isSub, // <--- Send the choice
-                0 // treat as Latest version = 0
-        );
-
-        // הערה: אם תרצה בעתיד לשמור ב-DB את סוג הרכישה (מנוי/רגיל),
-        // תצטרך להוסיף שדה ל-BuyMapPayload ולעדכן את ה-Repo בשרת.
-
-        GcmRequest request = new GcmRequest(RequestType.BUY_MAP, payload);
+        EmptyPayload payload=new EmptyPayload();
+        GcmRequest request = new GcmRequest(RequestType.LIST_CITIES, payload);
         client.sendRequest(request);
+
+
+
     }
 
-    // 3. Handle the Server Response
+    public void setCities(ArrayList<City> cities) {
+        this.cities = cities;
+    }
+
+    private HBox createMapRow(City city) {
+        Label name = new Label(city.getName());
+        name.setStyle("-fx-text-fill: white; -fx-font-size: 14;");
+
+        Button open = new Button("buy");
+        open.setPrefSize(90, 30);
+        open.setStyle(
+                "-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); " +
+                        "-fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;"
+        );
+        open.setOnAction(e -> openCity(city));
+
+
+        HBox spacer = new HBox();
+        HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
+
+        // ✅ add BOTH buttons
+        HBox row = new HBox(12, name, spacer, open);
+        row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        row.setStyle("-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;");
+        row.setPadding(new javafx.geometry.Insets(10, 12, 10, 12));
+
+        return row;
+    }
+
+
+
+    public void openCity(City city) {
+        MaPayload payload=new MaPayload(0,city.getName());
+        this.price=city.getPrice();
+        this.subprice=city.getSubPrice();
+        this.cityname=city.getName();
+     GcmRequest request  = new GcmRequest(RequestType.LIST_MAPS_FOR_CITY, payload);
+        client.sendRequest(request);
+
+    }
+
+
     private void handleResponse(GcmResponse response) {
-        Platform.runLater(() -> {
-            if (response.isSuccess()) {
-                Object t = response.getData();
-                if (t instanceof Popup) {
-                    if((((Popup) t).isInList(ClientApp.getCurrentUser().getId())))
-                    {
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("");
-                        alert.setContentText("you have a new message");
-                        alert.showAndWait();
-                    }
-                }else {
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setTitle("Success");
-                    alert.setHeaderText("Purchase Successful!");
-                    alert.setContentText("You have successfully purchased access to " + selectedCity.getName());
-                    alert.showAndWait();
+        if (!response.isSuccess()) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("loading all maps Failed");
+            alert.setContentText(response.getErrorMessage());
+            alert.showAndWait();
+        }else {
 
-                    // Clear session and go to Main Menu
-                    PurchaseSession.getInstance().clear();
-                    ClientApp.getNavigator().show(UserMenuController.class);
+            Object t = response.getData();
+            if(t instanceof BuyMapPayload)
+            {
+                boolean subscription =((BuyMapPayload) t).isSubscription();
+                if(!subscription)
+                {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("Thank you for your purchase");
+                    alert.setContentText("your transaction is complete. check your Messages");
+                    alert.showAndWait();
                 }
-            } else {
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Purchase Failed");
-                alert.setHeaderText("Transaction Declined");
-                alert.setContentText(response.getErrorMessage());
-                alert.showAndWait();
             }
-        });
+            if(t instanceof ArrayList<?>||t instanceof List<?>)
+            {
+                ArrayList<?> list = (ArrayList<?>) t;
+
+                if (!list.isEmpty() && list.get(0) instanceof City) {
+                    @SuppressWarnings("unchecked")
+                    ArrayList<City> cities = (ArrayList<City>) list;
+                    setCities(cities);
+                    Baselist.getChildren().clear();
+                    for (City city  : cities) {
+                        Baselist.getChildren().add(createMapRow(city));
+                    }
+                    System.out.println("City list success");
+                }
+                if (!list.isEmpty() && list.get(0) instanceof MapSheet) {
+                    ArrayList<MapSheet> map = (ArrayList<MapSheet>) list;
+                    showMapsPopup(map,this.price,this.subprice);
+                }
+
+
+            }
+
+        }
+
+
     }
 
-    public void onCancelClicked(ActionEvent actionEvent) {
-        PurchaseSession.getInstance().clear();
-        ClientApp.getNavigator().show(BuyMapCatalogController.class);
+
+    public void onBackClicked(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        Platform.exit();
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
+
+    public void onRefreshClicked(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(BuyMapScreenController.class);
+    }
+    //---------lazy popup screen no fxml----------------
+    public  void showMapsPopup(
+            ArrayList<MapSheet> maps,
+            double otpPrice,
+            double subscriptionPrice
+    ) {
+        Stage popup = new Stage();
+        popup.initModality(Modality.APPLICATION_MODAL);
+        popup.setTitle("Content in this City bundle");
+
+        // Map list
+        ListView<String> listView = new ListView<>();
+        for (MapSheet sheet : maps) {
+            listView.getItems().add(sheet.getName());
+        }
+        listView.setPrefHeight(250);
+
+        // Buttons
+        Button purchaseBtn = new Button("Purchase");
+        Button subscribeBtn = new Button("Subscribe");
+        Button closeBtn = new Button("Close");
+
+        // Subscription duration selector (1–6 months)
+        ComboBox<Integer> monthsBox = new ComboBox<>();
+        monthsBox.getItems().addAll(1, 2, 3, 4, 5, 6);
+        monthsBox.setValue(1); // default
+        monthsBox.setPrefWidth(70);
+
+        // Price labels
+        Label otpLabel = new Label("One-time: ₪" + otpPrice);
+        Label subLabel = new Label("Per month: ₪" + subscriptionPrice);
+
+        // === Styling (same theme as before) ===
+        listView.setStyle("""
+        -fx-background-color: #2f2f2f;
+        -fx-control-inner-background: #2f2f2f;
+        -fx-text-fill: white;
+    """);
+
+        purchaseBtn.setStyle("""
+        -fx-background-color: #3f8cff;
+        -fx-text-fill: white;
+        -fx-font-weight: bold;
+        -fx-background-radius: 6;
+        -fx-padding: 8 16;
+    """);
+
+        subscribeBtn.setStyle("""
+        -fx-background-color: #4caf50;
+        -fx-text-fill: white;
+        -fx-font-weight: bold;
+        -fx-background-radius: 6;
+        -fx-padding: 8 16;
+    """);
+
+        closeBtn.setStyle("""
+        -fx-background-color: #555555;
+        -fx-text-fill: white;
+        -fx-background-radius: 6;
+        -fx-padding: 6 14;
+    """);
+
+        monthsBox.setStyle("""
+        -fx-background-color: #0000FF;
+        -fx-text-fill: white;
+    """);
+
+        otpLabel.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 11px;");
+        subLabel.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 11px;");
+
+        // === Actions ===
+        purchaseBtn.setOnAction(e -> {
+
+            BuyMapPayload payload=new BuyMapPayload(ClientApp.getCurrentUser().getId(),this.cityname,otpPrice,false,0);
+            showTransactionPopup(payload);
+
+            System.out.println("Bought " + this.cityname + " For Total: ₪" + otpPrice);
+
+            popup.close();
+        });
+
+        subscribeBtn.setOnAction(e -> {
+            int months = monthsBox.getValue(); // 🔥 selected months (1–6)
+            double totalPrice = months * subscriptionPrice;
+
+
+            BuyMapPayload payload=new BuyMapPayload(ClientApp.getCurrentUser().getId(),this.cityname,totalPrice,true,months);
+            showTransactionPopup(payload);
+
+            System.out.println("Subscribe for " + months + " months. Total: ₪" + totalPrice);
+
+            popup.close();
+        });
+
+        closeBtn.setOnAction(e -> popup.close());
+
+        // Layout
+        VBox purchaseBox = new VBox(5, purchaseBtn, otpLabel);
+
+        HBox subscribeRow = new HBox(5, subscribeBtn, monthsBox);
+        subscribeRow.setStyle("-fx-alignment: center;");
+
+        VBox subscribeBox = new VBox(5, subscribeRow, subLabel);
+
+        HBox actionsBox = new HBox(30, purchaseBox, subscribeBox);
+        actionsBox.setStyle("-fx-alignment: center;");
+
+        VBox root = new VBox(15, listView, actionsBox, closeBtn);
+        root.setStyle("""
+        -fx-background-color: linear-gradient(to bottom, #1f1f1f, #2b2b2b);
+        -fx-padding: 15;
+    """);
+
+        popup.setScene(new Scene(root, 420, 500));
+        popup.showAndWait();
+    }
+
+    //-- lazy transaction pop up no fxml
+    public  void showTransactionPopup(BuyMapPayload payload) {
+
+        Stage popup = new Stage();
+        popup.initModality(Modality.APPLICATION_MODAL);
+        popup.setTitle("Payment Details");
+
+        // === Input fields ===
+        TextField cardNumberField = new TextField();
+        cardNumberField.setPromptText("Credit Card Number");
+
+        TextField expiryField = new TextField();
+        expiryField.setPromptText("MM/YY");
+
+        PasswordField pinField = new PasswordField();
+        pinField.setPromptText("PIN");
+
+        // === Buttons ===
+        Button confirmBtn = new Button("Confirm Payment");
+        Button cancelBtn = new Button("Cancel");
+
+        // === Styling ===
+        String fieldStyle = """
+        -fx-background-color: #2f2f2f;
+        -fx-text-fill: white;
+        -fx-prompt-text-fill: #aaaaaa;
+        -fx-background-radius: 6;
+        -fx-border-color: #444;
+        -fx-border-radius: 6;
+        -fx-padding: 8;
+    """;
+
+        String confirmStyle = """
+        -fx-background-color: #3f8cff;
+        -fx-text-fill: white;
+        -fx-font-weight: bold;
+        -fx-background-radius: 6;
+        -fx-padding: 8 18;
+    """;
+
+        String cancelStyle = """
+        -fx-background-color: #555555;
+        -fx-text-fill: white;
+        -fx-background-radius: 6;
+        -fx-padding: 8 18;
+    """;
+
+        cardNumberField.setStyle(fieldStyle);
+        expiryField.setStyle(fieldStyle);
+        pinField.setStyle(fieldStyle);
+        confirmBtn.setStyle(confirmStyle);
+        cancelBtn.setStyle(cancelStyle);
+
+        // === Actions ===
+        confirmBtn.setOnAction(e -> {
+            String cardNumber = cardNumberField.getText().trim();
+            String expiry = expiryField.getText().trim();
+            String pin = pinField.getText().trim();
+
+            // 🔒 Basic validation (you can expand this)
+            if (!validateCard(cardNumber,expiry,pin)) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error in Payment method");
+                alert.setContentText("your transaction is  not complete. check your Payment details and insert again correctly");
+                alert.showAndWait();
+                return;
+            }
+            String normalizedCard = cardNumber.replaceAll("[ -]", "");
+            String last4 = normalizedCard.substring(normalizedCard.length() - 4);
+            payload.setCredit(last4);
+
+            GcmRequest request  = new GcmRequest(RequestType.BUY_MAP, payload);
+            client.sendRequest(request);
+            System.out.println("Payment confirmed:");
+            System.out.println("Card: " + cardNumber);
+            System.out.println("Expiry: " + expiry);
+            System.out.println("PIN: " + pin);
+
+            popup.close();
+        });
+
+        cancelBtn.setOnAction(e -> popup.close());
+
+        // === Layout ===
+        VBox fieldsBox = new VBox(10,
+                cardNumberField,
+                expiryField,
+                pinField
+        );
+
+        HBox buttonsBox = new HBox(15, confirmBtn, cancelBtn);
+        buttonsBox.setStyle("-fx-alignment: center;");
+
+        VBox root = new VBox(15, fieldsBox, buttonsBox);
+        root.setStyle("""
+        -fx-background-color: linear-gradient(to bottom, #1f1f1f, #2b2b2b);
+        -fx-padding: 20;
+    """);
+
+        popup.setScene(new Scene(root, 360, 280));
+        popup.showAndWait();
+    }
+    //-- card validation
+    public  boolean validateCard(String card, String expiry, String pin) {
+
+        // Normalize card number (remove spaces and dashes)
+        String normalizedCard = card.replaceAll("[ -]", "");
+
+        boolean cardValid = normalizedCard.matches("\\d{16}");
+        boolean pinValid  = pin.matches("\\d{3}");
+        boolean expiryValid = isValidExpiry(expiry);
+
+        System.out.println(
+                "Card=" + cardValid +
+                        ", PIN=" + pinValid +
+                        ", Expiry=" + expiryValid
+        );
+
+        return cardValid && pinValid && expiryValid;
+    }
+
+    private  boolean isValidExpiry(String expiry) {
+        if (!expiry.matches("(0[1-9]|1[0-2])/\\d{2}")) {
+            return false; // wrong format
+        }
+
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/yy");
+            YearMonth exp = YearMonth.parse(expiry, formatter);
+            YearMonth now = YearMonth.now();
+
+            return !exp.isBefore(now); // must be current or future
+        } catch (DateTimeParseException e) {
+            return false;
+        }
+    }
+
+
+
 }
