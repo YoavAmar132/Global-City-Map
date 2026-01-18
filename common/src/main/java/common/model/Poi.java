@@ -13,7 +13,7 @@ public class Poi implements Serializable {
     private final boolean accessible;
     private final int cityID;
     private final Boolean is_approved;
-
+    private final int recommendedMinutes;
     // Stored in BASE_ZOOM world-pixels
     private final double baseWorldX;
     private final double baseWorldY;
@@ -21,7 +21,7 @@ public class Poi implements Serializable {
     public Poi(int id, String name, String description,
                double baseWorldX, double baseWorldY,
                POI_Category category,
-               boolean accessible, int cityID, boolean is_approved) {
+               boolean accessible, int cityID, boolean is_approved, int recommendedMinutes) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -31,6 +31,7 @@ public class Poi implements Serializable {
         this.accessible = accessible;
         this.cityID = cityID;
         this.is_approved = is_approved;
+        this.recommendedMinutes = recommendedMinutes;
     }
 
     public void setId(int id) {
@@ -46,7 +47,7 @@ public class Poi implements Serializable {
     }
     public int getCityID() { return cityID; }
     public boolean isApproved() { return is_approved; }
-
+    public int getRecommendedMinutes() { return recommendedMinutes; }
 
 
 

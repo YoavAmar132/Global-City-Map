@@ -82,7 +82,15 @@
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
                     onAction="#onCreateButton"/>
-
+            <!-- Delte button -->
+            <Button fx:id="DeleteButton" text="Delete content"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onDeleteButton"/>
             <!-- approve pending maps button -->
             <Button fx:id="MapsApproveButton" text="Approve Pending Maps"
                     prefWidth="200.0" prefHeight="36.0"
@@ -105,6 +113,7 @@
                -fx-cursor: hand;"
                     onAction="#onRouteApproveButton"/>
 
+
             <!-- Manage report button -->
             <Button fx:id="EditPricesButton" text="Edit Prices"
                     prefWidth="200.0" prefHeight="36.0"
@@ -114,6 +123,16 @@
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
                     onAction="#onEditPricesButton"/>
+
+            <!-- Manage report button -->
+            <Button fx:id="CreateCityButton" text="Create City"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onCreateCityButton"/>
 
         </VBox>
     </StackPane>

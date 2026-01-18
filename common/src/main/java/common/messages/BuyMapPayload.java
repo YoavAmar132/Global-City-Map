@@ -8,6 +8,7 @@ public class BuyMapPayload implements Serializable {
     private double price;
     private boolean isSubscription;
     private int version; // <--- NEW FIELD
+    private String credit;
 
     // Updated Constructor
     public BuyMapPayload(int userId, String cityName, double price, boolean isSubscription, int version) {
@@ -16,6 +17,14 @@ public class BuyMapPayload implements Serializable {
         this.price = price;
         this.isSubscription = isSubscription;
         this.version = version;
+    }
+
+    public String getCredit() {
+        return credit;
+    }
+
+    public void setCredit(String credit) {
+        this.credit = credit;
     }
 
     public int getUserId() { return userId; }

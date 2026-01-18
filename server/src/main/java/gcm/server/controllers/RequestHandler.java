@@ -100,16 +100,6 @@ public class RequestHandler {
                 throw new RuntimeException("failed to register user", e);
             }
         }
-        /*
-        if(type==RequestType.GET_ROUTE_INDEX) {
-            System.out.println("route index created");
-            try {
-                System.out.println("request detected");
-                return handleRouteIndex(request);
-            }  catch (SQLException e) {
-                throw new RuntimeException("failed to register user", e);
-            }
-        }*/
         if(type==RequestType.GET_MAP) {
             System.out.println("map request proccesed");
             try {
@@ -140,6 +130,16 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+
+        if (type == RequestType.LIST_CITIES_WITH_MAPS) {
+            try {
+                return handleListCitiesWithMaps(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
         if (type == RequestType.LIST_MAPS_FOR_CITY) {
             try {
                 return handleAllCityMaps(request);
@@ -313,8 +313,127 @@ public class RequestHandler {
             }
         }
 
+        if (type == RequestType.GET_USER_BY_ID) {
+            try {
+                System.out.println("called get user info");
+                return handleUserInfo(request);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+        }
 
 
+
+
+        if (type == RequestType.CREATE_CITY) {
+            try {
+                return handleCreateCity(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while creating city");
+            }
+        }
+
+
+        if (type == RequestType.CREATE_CITY_PRICE_CHANGE) {
+            try {
+                return handleCreateCityPriceChange(request);
+            } catch (SQLException e) {
+                return GcmResponse.error("Failed to request city price change");
+            }
+        }
+
+        if (type == RequestType.GET_PENDING_CITY_PRICES) {
+            try {
+                return GcmResponse.ok(cityService.getPendingCityPrices());
+            } catch (SQLException e) {
+                return GcmResponse.error("Failed to load pending city prices");
+            }
+        }
+
+        if (type == RequestType.APPROVE_CITY_PRICE) {
+            try {
+                return cityService.approveCityPrice(
+                        ((CityIdPayload) request.getPayload()).getCityId()
+                )
+                        ? GcmResponse.ok(null)
+                        : GcmResponse.error("Approval failed");
+            } catch (SQLException e) {
+                return GcmResponse.error("Database error");
+            }
+        }
+
+        if (type == RequestType.REJECT_CITY_PRICE) {
+            try {
+                return cityService.rejectCityPrice(
+                        ((CityIdPayload) request.getPayload()).getCityId()
+                )
+                        ? GcmResponse.ok(null)
+                        : GcmResponse.error("Reject failed");
+            } catch (SQLException e) {
+                return GcmResponse.error("Database error");
+            }
+        }
+
+        if (type == RequestType.REQUEST_CITY_PRICE_CHANGE) {
+            CityPricingItem item = (CityPricingItem) request.getPayload();
+            boolean ok = cityService.requestCityPriceChange(item);
+            return ok ? GcmResponse.ok(null) :
+                        GcmResponse.error("There is already a pending price change for this city"
+                        );
+        }
+
+
+
+        if (type == RequestType.DELETE_POI) {
+            try {
+                return handleDeletePoi(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while deleting POI");
+            }
+        }
+
+        if (type == RequestType.DELETE_MAP) {
+            try {
+                return handleDeleteMap(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while deleting map");
+            }
+        }
+
+        if (type == RequestType.DELETE_ROUTE) {
+            try {
+                return handleDeleteRoute(request);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return GcmResponse.error("Database error while deleting route");
+            }
+        }
+
+        if (type == RequestType.DELETE_GET_CITY_MAPS) {
+            return handleDeleteGetCityMaps(request);
+        }
+
+        if (type == RequestType.REJECT_PENDING_ROUTE) {
+            System.out.println("reject pending route request processed");
+            try {
+                return handleRejectPendingRoute(request);
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to reject pending route", e);
+            }
+        }
+
+        if (type == RequestType.REJECT_PENDING_MAP) {
+            System.out.println("reject pending map request processed");
+            try {
+                return handleRejectPendingMap(request);
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to reject pending map", e);
+            }
+        }
 
 
 
@@ -396,6 +515,9 @@ public class RequestHandler {
             return GcmResponse.error("Server error during registration");
         }
     }
+
+
+
 
     public static synchronized void removeOnlineUser(User user) {
         online_users.removeIf(u ->
@@ -529,6 +651,17 @@ public class RequestHandler {
         return GcmResponse.ok(cities);
 
     }
+    private GcmResponse handleListCitiesWithMaps(GcmRequest request) throws SQLException {
+        System.out.println("list of citis with maps request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof EmptyPayload empty)) {
+            return GcmResponse.error("Invalid payload for map pending request");
+        }
+        List<City> cities = cityService.getAllCitiesWithMaps();
+        if (cities == null) return GcmResponse.error("faild to get list");
+        return GcmResponse.ok(cities);
+
+    }
     // get poi index
     private GcmResponse handlePoiIndex(GcmRequest request) throws SQLException {
         System.out.println("poi index request received");
@@ -628,46 +761,34 @@ public class RequestHandler {
         }
 
         try {
-            boolean alreadyOwns = false;
-
+            boolean alreadySub = false;
+            boolean alreadyOTP = false;
+            alreadySub = mapService.isUserSubscribed(payload.getUserId(), payload.getCityName());
+            alreadyOTP = mapService.isCityPurchased(payload.getUserId(), payload.getCityName());
             if (payload.isSubscription()) {
-                // Check for active subscription
-                alreadyOwns = mapService.isUserSubscribed(payload.getUserId(), payload.getCityName());
-            } else {
-                // OTP: Check specific version
-                int versionToCheck = payload.getVersion();
-
-                // If client sent 0 (standard buy), we need to check against the LATEST version
-                // (Assuming standard buy always targets the latest)
-                if (versionToCheck == 0) {
-                    // We need to resolve the version to check ownership correctly
-                    // Ideally, MapService should expose getLatestVersionForCity(cityName)
-                    // For now, let's assume if they send 0, we rely on the repo's internal check or assume they want the latest.
-                    // A safer way:
-                    // alreadyOwns = mapService.isCityPurchased(...); // BLOCKS DUPLICATES
-
-                    // BUT, since we want to allow V1 and V2, we should ideally resolve the version here.
-                    // Simplified Logic: If version is 0, we fall back to "Do you own the city?" to prevent accidental double buys of the "main" map.
-                    alreadyOwns = mapService.isCityPurchased(payload.getUserId(), payload.getCityName());
-                } else {
-                    // Client requested a specific version (e.g. from Subscription Claim)
-                    alreadyOwns = mapService.isMapVersionPurchased(payload.getUserId(), payload.getCityName(), versionToCheck);
+                if (alreadySub) {
+                    return GcmResponse.error("You have this City Subscription");
+                }
+            }else { // trying to otp
+                if (alreadySub) {
+                    return GcmResponse.error("You ARE Subscribed to this City, all City content is Available in my maps");
+                }
+                if (alreadyOTP) {
+                    return GcmResponse.error("You have Purchase this City Before try a Subscription");
                 }
             }
 
-            if (alreadyOwns) {
-                return GcmResponse.error("You already own this specific map version!");
-            }
 
             boolean success = mapService.addPurchase(
                     payload.getUserId(),
                     payload.getCityName(),
                     payload.getPrice(),
                     payload.isSubscription(),
-                    payload.getVersion() // Pass the version
+                    payload.getVersion(), // Pass the version
+                    payload.getCredit()
             );
 
-            return success ? GcmResponse.ok("Success") : GcmResponse.error("Database Error");
+            return success ? GcmResponse.ok(payload) : GcmResponse.error("Database Error");
 
         } catch (Exception e) {
             return GcmResponse.error("Server Error: " + e.getMessage());
@@ -707,7 +828,12 @@ public class RequestHandler {
 
             // 2. Fetch maps using the service method we created
             // (This gets both OTP maps and Subscription maps)
-            List<MapSheet> maps = mapService.getPurchasedMaps(userId);
+            ArrayList<MapSheet> maps = mapService.getPurchasedMaps(userId);
+            if(maps.isEmpty())
+            {
+                System.out.println("got the maps");
+            }
+
 
             // 3. Return the list
             return GcmResponse.ok(maps);
@@ -945,10 +1071,164 @@ public class RequestHandler {
         List<RouteSheet> routes = mapService.getApprovedRoutesForCity(payload.getCityId());
         return GcmResponse.ok(routes);
     }
+    private GcmResponse handleUserInfo(GcmRequest request) throws SQLException {
+
+        Object raw = request.getPayload();
+        if (!(raw instanceof Integer id)) {
+            System.out.println("faild x");
+            return GcmResponse.error("Invalid payload for get user info");
+        }
+        GcmResponse response=authService.getUsers();
+        if(response.isSuccess())
+        {
+            Object t=response.getData();
+            ArrayList<RegisterPayload> users= (ArrayList<RegisterPayload>)t;
+            for (RegisterPayload rp : users) {
+                if (rp.getUserid() == id) {
+                   return GcmResponse.ok(rp);
+
+                }
+            }
+
+        }
+        return GcmResponse.error("Invalid payload for get user info");
+
+
+    }
+
+    private GcmResponse handleCreateCity(GcmRequest request) throws SQLException {
+
+        Object rawPayload = request.getPayload();
+
+        if (!(rawPayload instanceof CreateCityPayload payload)) {
+            return GcmResponse.error("Invalid payload for CREATE_CITY");
+        }
+
+        boolean success = cityService.createCity(payload);
+
+        return success
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to create city");
+    }
+
+
+    private GcmResponse handleCreateCityPriceChange(GcmRequest request)
+            throws SQLException {
+
+        PendingCityPricePayload payload =
+                (PendingCityPricePayload) request.getPayload();
+
+        boolean ok = cityService.requestCityPriceChange(payload);
+
+        return ok
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to request city price change");
+    }
+
+
+    private GcmResponse handleDeletePoi(GcmRequest request) throws SQLException {
+
+        System.out.println("DELETE_POI request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof PoiIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_POI");
+        }
+
+        int poiId = payload.getPoiId();
+
+        System.out.println("Deleting POI id = " + poiId);
+
+        boolean success = mapService.deletePoiIfUnused2(poiId);
+
+        return success
+                ? GcmResponse.ok(poiId)
+                : GcmResponse.error("Cannot delete POI. It is used in a map or route");
+    }
 
 
 
+    private GcmResponse handleDeleteRoute(GcmRequest request) throws SQLException {
 
+        System.out.println("DELETE_ROUTE request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof RouteIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_ROUTE");
+        }
+
+        int routeId = payload.getRouteId();
+
+        System.out.println("Deleting route id = " + routeId);
+
+        boolean success = mapService.deleteRoute2(routeId);
+
+        return success
+                ? GcmResponse.ok(routeId)
+                : GcmResponse.error("Failed to delete route");
+    }
+
+
+    private GcmResponse handleDeleteGetCityMaps(GcmRequest request) {
+
+        if (!(request.getPayload() instanceof CityIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_GET_CITY_MAPS");
+        }
+
+        List<MapDeleteItem> maps =
+                mapService.getApprovedMapsForDelete(payload.getCityId());
+
+        return GcmResponse.ok(maps);
+    }
+
+    private GcmResponse handleDeleteMap(GcmRequest request) throws SQLException {
+
+        System.out.println("DELETE_MAP request received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MapIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for DELETE_MAP");
+        }
+
+        int mapId = payload.getMapId();
+
+        System.out.println("Deleting map id = " + mapId);
+
+        boolean success = mapService.deleteMap(mapId);
+
+        return success
+                ? GcmResponse.ok(mapId)
+                : GcmResponse.error("Failed to delete map");
+    }
+
+
+    private GcmResponse handleRejectPendingRoute(GcmRequest request) throws SQLException {
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof RouteIdPayload payload)) {
+            return GcmResponse.error("Invalid payload for REJECT_PENDING_ROUTE");
+        }
+
+        boolean success = mapService.rejectPendingRoute(payload.getRouteId());
+
+        return success
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to reject pending route");
+    }
+
+    private GcmResponse handleRejectPendingMap(GcmRequest request) throws SQLException {
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof MapSheet map)) {
+            return GcmResponse.error("Invalid payload for REJECT_PENDING_MAP");
+        }
+
+        boolean success = mapService.rejectPendingMap(map);
+
+        return success
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("Failed to reject pending map");
+    }
 
 
 }

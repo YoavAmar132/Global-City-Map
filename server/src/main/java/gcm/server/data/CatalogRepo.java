@@ -20,14 +20,15 @@ public class CatalogRepo {
 
         String sql = """
            SELECT
-            c.CityID,
-            c.CityName,
-            c.CityPrice,
-            c.SubPrice,
-            COUNT(m.mapID) AS mapCount
+                c.CityID,
+                c.CityName,
+                c.CityPrice,
+                c.SubPrice,
+                c.description,
+                COUNT(m.mapID) AS mapCount
             FROM Cities c
             LEFT JOIN Maps m ON m.cityID = c.CityID
-            GROUP BY c.CityID, c.CityName, c.CityPrice, c.SubPrice
+            GROUP BY c.CityID, c.CityName, c.CityPrice, c.SubPrice, c.description
         """;
 
         try (Connection conn = DbManager.getConnection();
@@ -42,7 +43,8 @@ public class CatalogRepo {
                         rs.getDouble("CityPrice"),
                         rs.getDouble("SubPrice"),
                         rs.getInt("PoiCount"),
-                        rs.getInt("RouteCount")
+                        rs.getInt("RouteCount"),
+                        rs.getString("description")
                 ));
 
             }
@@ -123,57 +125,58 @@ public class CatalogRepo {
         // 2. The main SELECT joins everything again to get the TOTAL counts for those cities.
 
         String sql = """
-        SELECT
+        
+                SELECT
             c.CityID,
             c.CityName,
             c.CityPrice,
             c.SubPrice,
-
+            c.description,
+        
             COUNT(DISTINCT m.mapID) AS MapCount,
             COUNT(DISTINCT p.id) AS PoiCount,
             COUNT(DISTINCT r.routeID) AS RouteCount
-
+        
         FROM Cities c
-
-        LEFT JOIN Maps m
+        
+        JOIN Maps m
             ON c.CityID = m.cityID
-
+        
         LEFT JOIN pois p
-            ON c.CityID = p.cityID
-           AND p.is_approved = TRUE
-
+             ON c.CityID = p.cityID
+            AND p.is_approved = TRUE
+        
         LEFT JOIN routes r
             ON c.CityID = r.cityID
-           AND EXISTS (
+            AND EXISTS (
                 SELECT 1
                 FROM route_stops rs
                 JOIN pois rp ON rs.poiID = rp.id
                 WHERE rs.routeID = r.routeID
                   AND rp.is_approved = TRUE
-           )
-
+            )
+        
         WHERE c.CityID IN (
             SELECT DISTINCT subC.CityID
             FROM Cities subC
             LEFT JOIN pois subP
                 ON subC.CityID = subP.cityID
+               AND subP.is_approved = TRUE
             WHERE
                 subC.CityName LIKE ?
-                OR (
-                    subP.is_approved = TRUE
-                    AND (
-                        subP.name LIKE ?
-                        OR subP.description LIKE ?
-                    )
-                )
+                OR subC.description LIKE ?
+                OR subP.name LIKE ?
+                OR subP.description LIKE ?
         )
-
+        
         GROUP BY
             c.CityID,
             c.CityName,
             c.CityPrice,
-            c.SubPrice
+            c.SubPrice,
+            c.description
         """;
+
 
         List<CityCatalogItem> resultList = new ArrayList<>();
         String searchPattern = "%" + queryText + "%";
@@ -184,6 +187,7 @@ public class CatalogRepo {
             stmt.setString(1, searchPattern);
             stmt.setString(2, searchPattern);
             stmt.setString(3, searchPattern);
+            stmt.setString(4, searchPattern);
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -194,7 +198,8 @@ public class CatalogRepo {
                             rs.getDouble("CityPrice"),
                             rs.getDouble("SubPrice"),
                             rs.getInt("PoiCount"),
-                            rs.getInt("RouteCount")
+                            rs.getInt("RouteCount"),
+                            rs.getString("description")
                     ));
                 }
             }
