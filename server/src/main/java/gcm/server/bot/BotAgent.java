@@ -1,23 +1,23 @@
 package gcm.server.bot;
 
-import gcm.server.data.ComplaintRepo;
 import gcm.server.bot.tools.BotTool;
 import common.model.Complaint;
+import gcm.server.service.ComplaintService;
 
 import java.util.Optional;
 
 public class BotAgent implements Runnable {
 
-    private final ComplaintRepo repo;
+    private final ComplaintService complaintService;
     private final OllamaClient ollama;
     private final BotToolRegistry toolRegistry;
 
     public BotAgent(
-            ComplaintRepo repo,
+            ComplaintService complaintService,
             OllamaClient ollama,
             BotToolRegistry toolRegistry
     ) {
-        this.repo = repo;
+        this.complaintService = complaintService;
         this.ollama = ollama;
         this.toolRegistry = toolRegistry;
     }
@@ -28,12 +28,12 @@ public class BotAgent implements Runnable {
 
         while (true) {
             try {
-                if (!repo.claimNextComplaint() && !repo.hasInProgressComplaint()) {
+                if (!complaintService.claimNextComplaint() && !complaintService.hasInProgressComplaint()) {
                     Thread.sleep(1000);
                     continue;
                 }
                 System.out.println("-bot agent: trying to claim next complaint");
-                Optional<Complaint> opt = repo.getNextInProgressComplaint();
+                Optional<Complaint> opt = complaintService.getNextInProgressComplaint();
                 if (opt.isEmpty()) continue;
                 System.out.println("-bot agent: claimed next complaint successfully");
                 Complaint complaint = opt.get();
@@ -63,12 +63,12 @@ public class BotAgent implements Runnable {
         //TODO: add a while loop
         switch (decision.action) {
 
-            case ANSWER -> repo.closeWithBotAnswer(
+            case ANSWER -> complaintService.closeWithBotAnswer(
                     complaint.getId(),
                     decision.text
             );
 
-            case ESCALATE -> repo.setWaitingForHuman(
+            case ESCALATE -> complaintService.setWaitingForHuman(
                     complaint.getId()
             );
 
@@ -80,7 +80,7 @@ public class BotAgent implements Runnable {
 
                 if (tool.isEmpty()) {
                     System.out.println("-bot agent: setting to wait for human");
-                    repo.setWaitingForHuman(complaint.getId());
+                    complaintService.setWaitingForHuman(complaint.getId());
                     return;
                 }
 
@@ -110,13 +110,13 @@ public class BotAgent implements Runnable {
 
                 if (finalDecision.action == BotAction.ANSWER) {
                     System.out.println("-bot agent: setting final response");
-                    repo.closeWithBotAnswer(
+                    complaintService.closeWithBotAnswer(
                             complaint.getId(),
                             finalDecision.text
                     );
                 } else {
                     System.out.println("-bot agent: setting to wait for human after unsuccessful follow up response");
-                    repo.setWaitingForHuman(complaint.getId());
+                    complaintService.setWaitingForHuman(complaint.getId());
                 }
             }
         }

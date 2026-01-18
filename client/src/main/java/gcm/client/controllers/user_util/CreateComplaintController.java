@@ -37,6 +37,18 @@ public class CreateComplaintController {
                 alert.showAndWait();
             }
         }
+        else if (t instanceof Complaint complaint) {
+            // 1. Clear old session data
+            ComplaintSession.getInstance().clear();
+
+            // 2. Set the new city in the singleton
+            ComplaintSession.getInstance().setSelectedComplaint(complaint);
+            ComplaintSession.getInstance().setUserID(ClientApp.getCurrentUser().getId());
+
+            // 3. Navigate
+            System.out.println("should show complaint");
+            ClientApp.getNavigator().show(ViewComplaintController.class);
+        }
 
 
     }

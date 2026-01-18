@@ -2,8 +2,6 @@ package gcm.client.controllers.user_util;
 import common.messages.*;
 
 import common.model.Complaint;
-import common.model.User;
-import gcm.client.controllers.catalogPublic.GuestCatalogController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -22,7 +20,7 @@ import java.util.ArrayList;
 
 public class ComplaintHistoryController {
     private GcmClient client;
-
+    private static final int DESCRIPTION_LENGTH = 50;
     @FXML
     private VBox complaintList;
     @FXML private Label statusLabel;
@@ -39,27 +37,22 @@ public class ComplaintHistoryController {
         client.sendRequest(request);
     }
 
-    private HBox createMapRow(Complaint complaint) {
-
-        // 2. תצוגת המחירים (רגיל + מנוי) - קטן יותר ובצבע בהיר אך שונה
-        // אנו משתמשים ב-String.format כדי להציג 2 ספרות אחרי הנקודה
-
-
+    private HBox createComplaintRow(Complaint complaint) {
 
         //The complaint description
         String complaintText = complaint.getText();
-        String complaintDescription = complaintText.length()<30 ? complaintText: complaintText.substring(0,50)+"...";
+        String complaintDescription = complaintText.length()< DESCRIPTION_LENGTH ? complaintText: complaintText.substring(0,DESCRIPTION_LENGTH)+"...";
         Label description = new Label(complaintDescription);
         description.setStyle("-fx-text-fill: #dddddd; -fx-font-size: 12;");
 
 
-        // 3. VBox שיחזיק את השם והמחיר אחד מתחת לשני
+        // 3. VBox to hold the description
         VBox infoBox = new VBox(4, description);
         infoBox.setAlignment(Pos.CENTER_LEFT);
 
         // 4. כפתור הקנייה
         Button buyBtn = new Button("View complaint");
-        buyBtn.setPrefSize(90, 34);
+        buyBtn.setPrefSize(120, 34);
         buyBtn.setStyle(
                 "-fx-background-color: linear-gradient(to right, #11998e, #38ef7d); " +
                         "-fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold; " +
@@ -90,7 +83,7 @@ public class ComplaintHistoryController {
 
         // 3. Navigate
         System.out.println("should show complaint");
-        //ClientApp.getNavigator().show(ViewComplaintController.class);
+        ClientApp.getNavigator().show(ViewComplaintController.class);
     }
 
     private void handleResponse(GcmResponse response) {
@@ -114,11 +107,11 @@ public class ComplaintHistoryController {
                 }
                 if (t instanceof ArrayList<?>) {
                     ArrayList<?> list = (ArrayList<?>) t;
-                    // בדיקה שהרשימה לא ריקה ושהאיבר הראשון הוא אכן City
+                    // בדיקה שהרשימה לא ריקה ושהאיבר הראשון הוא אכן Complaint
                     if (!list.isEmpty() && list.get(0) instanceof Complaint) {
                         complaintList.getChildren().clear();
                         for (Object o : list) {
-                            complaintList.getChildren().add(createMapRow((Complaint) o));
+                            complaintList.getChildren().addFirst(createComplaintRow((Complaint) o));
                         }
                         statusLabel.setText("Select a complaint to view.");
                     } else if (list.isEmpty()) {

@@ -79,7 +79,7 @@ public class ComplaintRepo {
     }
 
 
-        // 2. Atomically claim next complaint
+    // 2. Atomically claim next complaint
     public boolean claimNextComplaint() throws SQLException {
         String sql = """
         UPDATE SupportTickets st
@@ -101,7 +101,6 @@ public class ComplaintRepo {
     }
 
 
-    // 2. Atomically claim next complaint
     public boolean hasComplaintWaitingForBot() throws SQLException {
         String sql = """
                 SELECT ticketID FROM SupportTickets
@@ -167,14 +166,14 @@ public class ComplaintRepo {
         }
     }
 
-    public Complaint getComplaint(int ticketId) throws SQLException {
+    public Complaint getComplaint(int complaintId) throws SQLException {
         String sql = """
             SELECT * FROM SupportTickets
             WHERE ticketID = ?
         """;
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);){
-            stmt.setInt(1, ticketId);
+            stmt.setInt(1, complaintId);
             ResultSet rs = stmt.executeQuery();
             if (!rs.next()) return null;
             return mapRow(rs);
@@ -195,7 +194,7 @@ public class ComplaintRepo {
         }
     }
 
-    public ArrayList<Complaint> getUserComplaint(int id) throws SQLException{
+    public ArrayList<Complaint> getUserComplaints(int id) throws SQLException{
         String sql = """
             SELECT * FROM SupportTickets
             WHERE userID = ?
@@ -242,8 +241,26 @@ public class ComplaintRepo {
         complaint.setResponse(rs.getString("response"));//if it's null then response = 0
         complaint.setResponseBy(rs.getString("responseBy"));//if it's null then responseBy = 0
         complaint.setPreviousComplaintId(rs.getInt("previousComplaintId"));//if it's null then previousComplaintId = 0
-
-        return complaint;
+        String status = rs.getString("ticketStatus");
+        if(status.equals("Open")){
+            complaint.setStatus(Complaint.Status.OPEN);
+        }
+        else if(status.equals("WaitingForBot")){
+            complaint.setStatus(Complaint.Status.WAITING_FOR_BOT);
+        }
+        else if(status.equals("WaitingForHuman")){
+            complaint.setStatus(Complaint.Status.WAITING_FOR_HUMAN);
+        }
+        else if(status.equals("InProgress")){
+            complaint.setStatus(Complaint.Status.IN_PROGRESS);
+        }
+        else if(status.equals("Closed")){
+            complaint.setStatus(Complaint.Status.CLOSED);
+        }
+        else{
+            System.err.println("complaintRepo - Unknown complaint status: " + status);
+        }
+            return complaint;
     }
 
 }

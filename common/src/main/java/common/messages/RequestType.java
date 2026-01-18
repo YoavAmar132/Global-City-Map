@@ -7,6 +7,7 @@ public enum RequestType {
 
     //Complaints
     SUBMIT_COMPLAINT,
+    GET_COMPLAINT,
     LIST_USER_COMPLAINTS,
     LIST_CUSTOMER_SUPPORT_COMPLAINTS,
 

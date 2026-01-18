@@ -1,14 +1,19 @@
 package gcm.server.service;
 
 import common.messages.GcmResponse;
-import common.model.City;
+import common.messages.UpdateComplaint;
 import common.model.Complaint;
+import common.model.User;
 import gcm.server.bot.*;
 import gcm.server.data.ComplaintRepo;
+import gcm.server.network.CurrentServer;
+import gcm.server.network.GcmServer;
+import ocsf.server.ConnectionToClient;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
 public class ComplaintService {
 
@@ -19,38 +24,6 @@ public class ComplaintService {
     }
 
 
-
-    /*
-     * when user open his ocmplaint Area he send:
-     * complaintRepo.getAllPreviousComplaints(userId)
-     *
-     *
-     *
-     * complaintRepo.addComplaint(complaint)
-     * if complaint.getPreviousComplaintId() == -1
-     * complaintRepo.setComplaintWaitingForBot(long id)
-     * return success
-     *else
-     * complaintRepo.getAnsweredBy(long id)
-     * if bot:
-     * complaintRepo.setComplaintWaitingForBot()
-     * return success
-     * else if customer_support
-     * complaintRepo.setComplaintWaitingForCustomerSupport()
-     * else throw exception
-     *
-     * (in botQueue,we get the first complaint that is waiting for bot ordered by time)
-     *  using complaintRepo.getNextUnansweredByBot()
-     *  then we use complaintRepo.answerByBot(string answer)
-     *  in customer support
-     *  we call: complaintRepo.getAllUnansweredByCustomerSupport(id)
-     *  then we use complaintRepo.answerByCustomerSupport(id,string answer)
-     *
-     *
-     * look at init in software file
-     *
-     * */
-
     public GcmResponse submitComplaint(Complaint complaint) throws SQLException {
         System.out.println("adding complaint");
         try {
@@ -59,30 +32,30 @@ public class ComplaintService {
             BotConfig botConfig = BotConfig.getInstance();
 
             if (!botConfig.isEnabled()) {
-                complaintRepo.setWaitingForHuman(complaint.getId());
-                return GcmResponse.ok(id);
+                setWaitingForHuman(complaint.getId());
+                return GcmResponse.ok(complaint);
             }
             //TODO:remove previousComplaintId
             if (complaint.getPreviousComplaintId() == 0) { //there was no previous complaint
                 System.out.println("setting complaint to wait for bot - there was no previous complaint");
-                complaintRepo.setWaitingForBot(complaint.getId());
+                setWaitingForBot(complaint.getId());
             } else {
                 System.out.println("checking previous complaint");
                 //getting the previous complaint and deciding base on it's respondent to whom the complaint will wait
                 Complaint previousComplaint = complaintRepo.getComplaint(complaint.getPreviousComplaintId());
                 if (previousComplaint.getResponseBy().equals("Bot")) {
                     System.out.println("setting complaint to wait for bot - there was a previous complaint");
-                    complaintRepo.setWaitingForBot(complaint.getId());
+                    setWaitingForBot(complaint.getId());
                 } else if (previousComplaint.getResponseBy().equals("Human")) {
                     System.out.println("setting complaint to wait for human - there was a previous complaint");
-                    complaintRepo.setWaitingForHuman(complaint.getId());
+                    setWaitingForHuman(complaint.getId());
                 }
                 else{
                     System.out.println("couldn't recognize previous complaint");
                     return GcmResponse.error("Server Error: couldn't recognize previous complaint");
                 }
             }
-            return GcmResponse.ok(id);
+            return GcmResponse.ok(complaint);
         } catch (Exception e) {
             System.out.println("server error");
             return GcmResponse.error("Server Error: " + e.getMessage());
@@ -102,9 +75,91 @@ public class ComplaintService {
         }
     }
 
+    public boolean hasInProgressComplaint() throws SQLException{
+        return complaintRepo.hasInProgressComplaint();
+    }
+    public boolean claimNextComplaint() throws SQLException {
+        return complaintRepo.claimNextComplaint();
+    }
+
+
+    public void setWaitingForBot(int ticketId) throws SQLException, IOException {
+        complaintRepo.setWaitingForBot(ticketId);
+        Complaint complaint = complaintRepo.getComplaint(ticketId);
+        ConnectionToClient connection = getConnectionToId(complaint.getUserId());
+        if(connection != null){
+            System.out.println("sending to client: waiting for bot");
+            connection.sendToClient(GcmResponse.ok(new UpdateComplaint(complaint)));
+        }
+    }
+
+    public void setWaitingForHuman(int ticketId) throws SQLException, IOException {
+        complaintRepo.setWaitingForHuman(ticketId);
+        Complaint complaint = complaintRepo.getComplaint(ticketId);
+        ConnectionToClient connection = getConnectionToId(complaint.getUserId());
+        if(connection != null){
+            System.out.println("sending to client: waiting for human");
+            connection.sendToClient(GcmResponse.ok(new UpdateComplaint(complaint)));
+        }
+    }
+
+    public void closeWithHumanAnswer(int ticketId, String response) throws SQLException, IOException {
+        complaintRepo.closeWithHumanAnswer(ticketId,response);
+        Complaint complaint = complaintRepo.getComplaint(ticketId);
+        ConnectionToClient connection = getConnectionToId(complaint.getUserId());
+        if(connection != null){
+            System.out.println("sending to client: closed with human");
+
+            connection.sendToClient(GcmResponse.ok(new UpdateComplaint(complaint)));
+        }
+    }
+
+
+    public void closeWithBotAnswer(int ticketId, String response) throws SQLException, IOException {
+        complaintRepo.closeWithBotAnswer(ticketId,response);
+        Complaint complaint = complaintRepo.getComplaint(ticketId);
+        ConnectionToClient connection = getConnectionToId(complaint.getUserId());
+        if(connection != null){
+            System.out.println("sending to client: closed with bot");
+
+            connection.sendToClient(GcmResponse.ok(new UpdateComplaint(complaint)));
+        }
+    }
+
+    public Optional<Complaint> getNextInProgressComplaint() throws SQLException{
+        return complaintRepo.getNextInProgressComplaint();
+    }
+
+
 
     public ArrayList<Complaint> getUserComplaints(int id) throws SQLException{
+        return complaintRepo.getUserComplaints(id);
+    }
 
-        return complaintRepo.getUserComplaint(id);
+    public Complaint getComplaint(int complaintId) throws SQLException{
+        return complaintRepo.getComplaint(complaintId);
+    }
+
+    public void reassignHangingComplaintsForCustomerSupport() throws SQLException {
+        complaintRepo.reassignHangingComplaintsForCustomerSupport();
+    }
+
+    private ConnectionToClient getConnectionToId(int id) throws SQLException {
+        Thread[] clientThreadList = CurrentServer.getInstance().getServer().getClientConnections();
+        for (int i=0; i<clientThreadList.length; i++)
+        {
+            try
+            {
+                ConnectionToClient connection = (ConnectionToClient) clientThreadList[i];
+                User user = (User)(connection.getInfo("user"));
+                if(user.getId()==id)
+                    return connection;
+            }
+            // Ignore all exceptions when closing clients.
+            catch(Exception ex) {
+                System.out.println(ex.getMessage());
+            }
+        }
+        return null;
     }
 }

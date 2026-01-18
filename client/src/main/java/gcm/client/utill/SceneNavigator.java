@@ -61,6 +61,7 @@ public class SceneNavigator {
         routes.put(ClientCardController.class, "/gcm/client/manager_util/ClientCardScreen.fxml");
         routes.put(CreateComplaintController.class, "/gcm/client/user_util/CreateComplaint.fxml");
         routes.put(ComplaintHistoryController.class, "/gcm/client/user_util/ComplaintHistory.fxml");
+        routes.put(ViewComplaintController.class, "/gcm/client/user_util/ViewComplaint.fxml");
 
 
         routes.put(PendingRouteController.class, "/gcm/client/map/PendingRouteScreen.fxml");

@@ -7,6 +7,7 @@ import gcm.server.bot.OllamaClient;
 import gcm.server.bot.tools.*;
 import gcm.server.controllers.RequestHandler;
 import gcm.server.data.*;
+import gcm.server.network.CurrentServer;
 import gcm.server.network.GcmServer;
 import gcm.server.service.*;
 
@@ -35,7 +36,7 @@ public class ServerBootstrap {
         ComplaintRepo complaintRepo = new ComplaintRepo();
         ComplaintService complaintService = new ComplaintService(complaintRepo);
 
-        initializeBot(complaintRepo);
+        initializeBot(complaintService);
 
         RequestHandler handler =
                 new RequestHandler(authService, mapService, cityService, catalogService, statsService,complaintService);
@@ -49,9 +50,13 @@ public class ServerBootstrap {
                 e.printStackTrace();
             }
         }, "GCM-Server-Thread").start();
+
+
+        CurrentServer currentServer = CurrentServer.getInstance();
+        currentServer.setServer(server);
     }
 
-    private static void initializeBot(ComplaintRepo complaintRepo) {
+    private static void initializeBot(ComplaintService complaintService) {
 
         BotConfig botConfig = BotConfig.getInstance();
         if (botConfig.isEnabled()) {
@@ -68,7 +73,7 @@ public class ServerBootstrap {
                  more generally,it's used in order to failure proof this part of the system
                 */
                 try{
-                    complaintRepo.reassignHangingComplaintsForCustomerSupport();
+                    complaintService.reassignHangingComplaintsForCustomerSupport();
                 }
                 catch (Exception e){
                     System.out.println("failed to reassign hanging complaints for customer support");
@@ -83,7 +88,7 @@ public class ServerBootstrap {
             botToolRegistry.register(new GetCityExistTool());
 
             //letting the bot run in the background
-            BotAgent botAgent = new BotAgent(complaintRepo, ollamaClient, botToolRegistry);
+            BotAgent botAgent = new BotAgent(complaintService, ollamaClient, botToolRegistry);
             Thread botThread = new Thread(botAgent);
             botThread.setDaemon(true);
             botThread.start();
@@ -95,7 +100,7 @@ public class ServerBootstrap {
                  more generally,it's used in order to failure proof this part of the system
                 */
             try{
-                complaintRepo.reassignHangingComplaintsForCustomerSupport();
+                complaintService.reassignHangingComplaintsForCustomerSupport();
             }
             catch (Exception e){
                 System.out.println("failed to reassign hanging complaints for customer support");
