@@ -48,6 +48,11 @@
                 <Label style="-fx-font-size: 14;" text="Phone Number" textFill="white" />
                 <TextField fx:id="PhoneNumber" promptText="Enter your Phone Number" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
             </VBox>
+            <!-- email -->
+            <VBox spacing="5.0">
+                <Label style="-fx-font-size: 14;" text="Email" textFill="white" />
+                <TextField fx:id="email" promptText="Enter your Phone Number" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
+            </VBox>
             <HBox alignment="CENTER_LEFT" spacing="8">
 
                 <!-- Credit number label + first block -->

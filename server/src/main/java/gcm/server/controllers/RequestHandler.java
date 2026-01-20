@@ -416,6 +416,14 @@ public class RequestHandler {
                 throw new RuntimeException("failed to reject pending map", e);
             }
         }
+        if (type == RequestType.CHANGE_INFO) {
+            System.out.println("requesting  info change");
+            try {
+                return handleChangeInfo(request);
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to reject pending map", e);
+            }
+        }
 
 
 
@@ -1173,6 +1181,45 @@ public class RequestHandler {
         return success
                 ? GcmResponse.ok(null)
                 : GcmResponse.error("Failed to reject pending map");
+    }
+    private GcmResponse handleChangeInfo(GcmRequest request) throws SQLException {
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof RegisterPayload payload)) {
+            return GcmResponse.error("Invalid payload for info change");
+        }
+
+        boolean validMail= authService.validEmail(payload.getEmail());
+        boolean EmailUsed=authService.EmailInUse(payload.getEmail());
+        boolean validPhone= authService.validatePhone(payload.getPhonenum());
+        boolean validName=payload.getFirstname().length()>1;
+        boolean validSurename=payload.getLastname().length()>1;
+        if(!validMail)
+        {
+            GcmResponse.error("Email is not valid");
+
+        }
+        if(EmailUsed)
+        {
+            GcmResponse.error("Email is Already Taken");
+        }
+        if(!validPhone)
+        {
+            GcmResponse.error("phone number is not valid");
+        }
+        if(!validName)
+        {
+            GcmResponse.error("name is not valid");
+        }
+        if(!validSurename)
+        {
+            GcmResponse.error("Surname is not valid");
+        }
+        boolean success= authService.AlterInfo(payload);
+
+        return success
+                ? GcmResponse.ok(null)
+                : GcmResponse.error("faild to change information");
     }
 
 
