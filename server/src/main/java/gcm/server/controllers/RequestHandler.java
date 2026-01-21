@@ -700,12 +700,18 @@ public class RequestHandler {
         System.out.println("GET_CITY_MAPS request received");
 
         Object rawPayload = request.getPayload();
-        if (!(rawPayload instanceof CityMapsRequestPayload payload)) {
+        if (!(rawPayload instanceof CityMapsRequestPayload)) {
             return GcmResponse.error("Invalid payload for city maps");
         }
 
+        CityMapsRequestPayload payload1 = (CityMapsRequestPayload) request.getPayload();
+
+        if(payload1.getUserRole().equals("Customer") || payload1.getUserRole().equals("Guest")){
+            catalogService.newLogCityView(payload1.getCityId(), payload1.getUserId());
+        }
+
         List<MapCatalogItem> maps =
-                catalogService.loadMapsForCity(payload.getCityId());
+                catalogService.loadMapsForCity(payload1.getCityId());
 
         if (maps == null) {
             return GcmResponse.error("Failed to load maps for city");
