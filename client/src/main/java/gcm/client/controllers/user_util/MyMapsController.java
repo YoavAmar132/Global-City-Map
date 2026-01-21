@@ -29,18 +29,12 @@ public class MyMapsController {
     private void initialize() {
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
-        loadMyMaps();
-    }
-
-    private void loadMyMaps() {
         int userId = ClientApp.getCurrentUser().getId();
-        // RequestType.LIST_USER_PURCHASES must be handled in RequestHandler
-        // to return List<MapSheet> (OTP maps + active subscription maps)
-        // In MyMapsController.java
         GcmRequest request = new GcmRequest(RequestType.LIST_USER_MAPS, userId);
         client.sendRequest(request);
-        CstatusLabel.setText("Fetching your maps...");
+
     }
+
 
     /**
      * Creates the "View Subscriptions" button dynamically.
@@ -137,6 +131,7 @@ public class MyMapsController {
                 if (t instanceof ArrayList<?>) {
                     ArrayList<?> list = (ArrayList<?>) t;
 
+
                     Citylist.getChildren().clear();
 
                     // 1. ALWAYS Add the Subscription Button at the top
@@ -147,15 +142,16 @@ public class MyMapsController {
                     Citylist.getChildren().add(spacer);
 
                     // 2. Add the maps
-                    if (list.isEmpty()) {
-                        CstatusLabel.setText("You don't have any maps yet.");
-                    } else {
+                    if (!list.isEmpty() && list.get(0) instanceof MapSheet) {
+                        ArrayList<MapSheet> maps=(ArrayList<MapSheet>)list;
                         CstatusLabel.setText("");
-                        for (Object obj : list) {
-                            if (obj instanceof MapSheet) {
-                                Citylist.getChildren().add(createMapRow((MapSheet) obj));
+                        for (MapSheet map : maps) {
+                                Citylist.getChildren().add(createMapRow(map));
                             }
-                        }
+
+
+                    } else {
+                        CstatusLabel.setText("You don't have any maps yet.");
                     }
                 }
             }
@@ -171,6 +167,6 @@ public class MyMapsController {
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
-        loadMyMaps();
+
     }
 }

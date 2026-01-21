@@ -18,7 +18,7 @@
 
     <!-- Close (X) button -->
     <Button text="✕"
-            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;"
+            style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;"
             onAction="#handleClose"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
 
@@ -53,18 +53,46 @@
                            -fx-cursor: hand;"
                     onAction="#onViewCatalogClicked"/>
 
-            <!-- Edit a Map button -->
-            <Button fx:id="EditButton" text="Edit content"
+            <!-- Edit a Map  -->
+            <Button fx:id="EditExistingMap" text="Edit Map"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
                            -fx-font-size: 15;
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
-                    onAction="#onEditButton"/>
+                    onAction="#onEditExistingMap"/>
 
-            <!-- Manage report button -->
-            <Button fx:id="ReportsButton" text="Approve Pending Maps"
+            <!-- Edit a Map  -->
+            <Button fx:id="EditExistingRoute" text="Edit Route"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onEditExistingRoute"/>
+
+            <!-- Edit a Map button -->
+            <Button fx:id="CreateButton" text="Create content"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onCreateButton"/>
+            <!-- Delte button -->
+            <Button fx:id="DeleteButton" text="Delete content"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onDeleteButton"/>
+            <!-- approve pending maps button -->
+            <Button fx:id="MapsApproveButton" text="Approve Pending Maps"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
@@ -72,6 +100,20 @@
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
                     onAction="#onMapApproveButton"/>
+
+            <!-- approve pending routes button -->
+            <Button fx:id="RoutesApproveButton"
+                    text="Approve Pending Routes"
+                    prefWidth="200.0"
+                    prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+               -fx-text-fill: white;
+               -fx-font-size: 15;
+               -fx-background-radius: 8;
+               -fx-cursor: hand;"
+                    onAction="#onRouteApproveButton"/>
+
+
             <!-- Manage report button -->
             <Button fx:id="EditPricesButton" text="Edit Prices"
                     prefWidth="200.0" prefHeight="36.0"
@@ -81,6 +123,16 @@
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
                     onAction="#onEditPricesButton"/>
+
+            <!-- Manage report button -->
+            <Button fx:id="CreateCityButton" text="Create City"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onCreateCityButton"/>
 
         </VBox>
     </StackPane>

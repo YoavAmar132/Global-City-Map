@@ -24,16 +24,9 @@ import java.util.List;
 
 public class UserMapViewerController {
     private int poid=0;
-    private int routid=0;
     @FXML
     private StackPane stackPane;
-    private List<Poi> pois = new ArrayList<>();
-    private Route buildingRoute = null;
-    private List<Route> routes = new ArrayList<>();
-    private boolean buildingRouteWaitingFirstPoint = false;
-    private int routeId = 0;
     private String path;
-    private  MaPayload mapayload;
     private MapSheet map;
     private boolean initialized = false;
     private boolean hasVals = false;
@@ -44,17 +37,9 @@ public class UserMapViewerController {
     {
         return this.poid;
     }
-    public int getRoutid()
-    {
-        return this.routeId;
-    }
     public void setPoid(int id)
     {
         this.poid=id;
-    }
-    public void setRoutid(int id)
-    {
-        this.routeId=id;
     }
     public void setMap(MapSheet map)
     {
@@ -70,6 +55,9 @@ public class UserMapViewerController {
 
     @FXML
     private void initialize() {
+        client = ClientApp.getClient();
+        client.setResponseHandler(this::handleResponse);
+
         baseLayerController.setTileRoot(path);
         overlayLayerController.setZoomSupplier(() -> baseLayerController.getZoom());
 
@@ -122,7 +110,80 @@ public class UserMapViewerController {
         hasVals = true;
         baseLayerController.setTileRoot(path);
         tryShowMap();
+        // ask server for all approved routes of this city
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.GET_APPROVED_ROUTES_FOR_CITY,
+                        new CityIdPayload(map.getCityID())   // use your actual getter name
+                )
+        );
+
     }
+
+    private void handleResponse(GcmResponse response) {
+        Platform.runLater(() -> {
+
+            if (!response.isSuccess()) {
+                //System.out.println("ERROR: " + response.getErrorMessage());
+                return;
+            }
+            Object data = response.getData();
+            //System.out.println("HANDLE RESPONSE DATA = " + data);
+
+            if (data instanceof List<?> list &&
+                    !list.isEmpty() &&
+                    list.get(0) instanceof RouteSheet) {
+
+                //System.out.println("ROUTES RECEIVED: " + list.size());
+                @SuppressWarnings("unchecked")
+                List<RouteSheet> routes = (List<RouteSheet>) list;
+                drawRouteConnections(routes);
+            }
+        });
+    }
+
+    private void drawRouteConnections(List<RouteSheet> approvedRoutes) {
+
+        if (map == null) {
+            System.out.println("MAP IS NULL");
+            return;
+        }
+        if (approvedRoutes == null) return;
+
+        System.out.println("=== DRAW ROUTE CONNECTIONS ===");
+        System.out.println("MAP POIS:");
+        for (Poi p : map.getPois()) {
+            System.out.println("  MAP POI id=" + p.getId() + " name=" + p.getName());
+        }
+
+        if (approvedRoutes == null) return;
+
+        // Set of POI ids that exist in the opened map
+        java.util.Set<Integer> mapPoiIds = new java.util.HashSet<>();
+        if (map.getPois() != null) {
+            for (Poi p : map.getPois()) mapPoiIds.add(p.getId());
+        }
+
+        // clear previous lines (we will add this method next)
+        overlayLayerController.clearRouteLines();
+
+        for (RouteSheet rs : approvedRoutes) {
+            List<Poi> stops = rs.getOrderedPois();
+            if (stops == null || stops.size() < 2) continue;
+
+            for (int i = 0; i < stops.size() - 1; i++) {
+                Poi a = stops.get(i);
+                Poi b = stops.get(i + 1);
+
+                if (mapPoiIds.contains(a.getId()) && mapPoiIds.contains(b.getId())) {
+                    overlayLayerController.addRouteLine(a, b);
+                }
+            }
+        }
+
+        overlayLayerController.rerender();
+    }
+
 
     private void tryShowMap() {
         if (showDone) return;
@@ -171,6 +232,47 @@ public class UserMapViewerController {
         overlayLayerController.rerender();
     }
 
+
+
+
+    public void setRouteVals(RouteSheet sheet) {
+
+        // Load base map tiles
+        baseLayerController.setTileRoot(sheet.getCityTilePath());
+
+        // Clear overlay
+        overlayLayerController.clearAll();
+
+        // Defer POI rendering until JavaFX layout is ready
+        Platform.runLater(() -> {
+
+            List<Integer> orderedIds = new ArrayList<>();
+
+            for (Poi p : sheet.getOrderedPois()) {
+                overlayLayerController.addPoi(p);
+                orderedIds.add(p.getId());
+            }
+
+            // Apply numbering (1..N)
+            overlayLayerController.updateRouteNumbers(orderedIds);
+
+            // Force render
+            overlayLayerController.rerender();
+
+            // Ensure everything is in view
+            baseLayerController.recenterNow();
+        });
+        overlayLayerController.rerender();
+
+    }
+
+
+
+
+
+
+
+
     /**
      * Show a map with given POIs and routes.
      * Assumes POI coordinates are in the same "world" coordinate system
@@ -179,29 +281,10 @@ public class UserMapViewerController {
     public void showMap(MapSheet map) {
         overlayLayerController.clearAll();
         List<Poi> pois=map.getPois();
-         List<Route> routes=map.getRoutes();
         if (pois != null) {
             for (Poi p : pois) {
                 System.out.println(p.getName()+" x:"+p.getWorldX(13));
                 overlayLayerController.addPoi(p);
-            }
-        }
-
-        if (routes != null) {
-            for (Route r : routes) {
-                System.out.println("route id :"+r.getBasePoints());
-                List<double[]> pts = r.getBasePoints();
-
-                if (pts != null && !pts.isEmpty() && pts.get(0).length >= 2) {
-                    double firstX = pts.get(0)[0];
-                    double firstY = pts.get(0)[1];
-
-                    Poi head = new Poi(r.getId(), r.getName(), r.getDescription(), firstX, firstY, r.getCategory(),false, map.getCityID());
-                  //  overlayLayerController.addPoi(head);
-                }
-                 overlayLayerController.addRoute(r);
-
-                overlayLayerController.rerender();
             }
         }
 
@@ -225,9 +308,16 @@ public class UserMapViewerController {
         MenuItem cat = new MenuItem("Category: " + poi.getCategory());
         cat.setDisable(true);
 
+        MenuItem time = new MenuItem("Recommended mins: " + poi.getRecommendedMinutes());
+        time.setDisable(true);
+
+        String is_accessible = poi.isAccessible() ? "Yes" : "No";
+        MenuItem accessibility = new MenuItem("Accessible: " + is_accessible);
+        accessibility.setDisable(true);
+
         MenuItem close = new MenuItem("Close");
 
-        menu.getItems().addAll(title, desc, cat, new SeparatorMenuItem(), close);
+        menu.getItems().addAll(title, desc, cat, time,accessibility, new SeparatorMenuItem(), close);
 
         menu.show(anchor, Side.TOP, 0, -10);
     }

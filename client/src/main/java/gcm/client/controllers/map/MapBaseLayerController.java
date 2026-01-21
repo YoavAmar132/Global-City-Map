@@ -1,6 +1,5 @@
 package gcm.client.controllers.map;
 
-import gcm.client.utill.ClientApp;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -11,23 +10,19 @@ import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.image.Image;
-import java.net.URISyntaxException;
-import java.nio.file.*;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
 
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Consumer;
 
 public class MapBaseLayerController {
     public enum InteractionMode {
         VIEW,
-        ADD_POI
+        ADD_POI,
+        ADD_ROUTE
     }
 
     private URI tileRootUri;
@@ -38,6 +33,7 @@ public class MapBaseLayerController {
     private final java.util.Map<String, Image> tileCache = new java.util.HashMap<>();
 
     public void setInteractionMode(InteractionMode mode) {
+        System.out.println("BaseLayer mode set to: " + mode);
         this.mode = mode;
     }
     public InteractionMode getInteractionMode() {
@@ -97,6 +93,16 @@ public class MapBaseLayerController {
     @FXML
     private void initialize() {
         gc = mapCanvas.getGraphicsContext2D();
+
+
+        tileRootUri = Paths.get(
+                "C:/Users/ADAM/Desktop/DONT YOU DARE/Labs/Project/Global-City-Map/client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
+        ).toUri();
+        File testTile = new File(tileRootUri);
+        System.out.println("DEBUG testTile: " + testTile.getAbsolutePath()
+                + " exists=" + testTile.exists());
+
+
         AnchorPane parent = (AnchorPane) mapCanvas.getParent();
 
         parent.widthProperty().addListener((obs, o, n) -> {
@@ -125,6 +131,7 @@ public class MapBaseLayerController {
     private void initMouseHandlers() {
 
         mapCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
+            System.out.println("MOUSE_PRESSED mode=" + mode);
 
             if (e.getButton() == MouseButton.SECONDARY) {
                 if (onRightClick != null) onRightClick.run();
@@ -221,9 +228,9 @@ public class MapBaseLayerController {
     /* ================= drawing ================= */
 
     private void redraw() {
-
         if (gc == null)
         {
+            System.out.println("gc was null");
             return;
         }
 
@@ -263,7 +270,6 @@ public class MapBaseLayerController {
             return;
         }
 
-
         int drawn = 0;
 
         for (int tx = clampedMinX; tx <= clampedMaxX; tx++) {
@@ -298,25 +304,17 @@ public class MapBaseLayerController {
     /** copied from your test app, adapted to use tileRoot + mapCanvas */
     private void centerOnAvailableTiles() {
         if (mapCanvas.getWidth() <= 0 || mapCanvas.getHeight() <= 0) return;
-        File zoomDir;
+        File test = new File(tileRoot+ File.separator + zoom);
+        String pathh =  test.getAbsolutePath();
+        tileRootUri = Paths.get(pathh).toUri();
 
-       if(isRunningFromJar())
-       {
-           System.out.println("ran from jar");
-           String city = new File(tileRoot).getName();  // works with \ and /
-           Path jarDir = getJarDir();
-           Path tilesDir = jarDir.resolve("maps").resolve(city); // or selected city
 
-           tileRoot = tilesDir.toString();
-            zoomDir = new File(tileRoot + File.separator + zoom);
 
-       }else{
-           System.out.println("ran from local");
-           File test = new File(tileRoot);
-           String pathh =  test.getAbsolutePath();
-            zoomDir = new File(pathh + File.separator + zoom);
-       }
+        System.out.println("pathh=" + pathh);
 
+        File zoomDir = new File(tileRootUri );
+
+        System.out.println("pathh=" + zoomDir.getAbsolutePath());
 
         File[] xDirs = zoomDir.listFiles(File::isDirectory);
         if (xDirs == null || xDirs.length == 0) return;
@@ -401,6 +399,7 @@ public class MapBaseLayerController {
         redraw();
     }
 
+
     public void handleExternalScroll(double deltaY) {
         if (deltaY > 0 && zoom < MAX_ZOOM) setZoom(zoom + 1);
         else if (deltaY < 0 && zoom > MIN_ZOOM) setZoom(zoom - 1);
@@ -409,30 +408,5 @@ public class MapBaseLayerController {
         centerOnAvailableTiles();
         redraw();
     }
-
-
-    public Path getJarDir() {
-        try {
-            return Paths.get(getClass().getProtectionDomain()
-                    .getCodeSource().getLocation().toURI()).getParent();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    public static boolean isRunningFromJar() {
-        try {
-            String path = ClientApp.class
-                    .getProtectionDomain()
-                    .getCodeSource()
-                    .getLocation()
-                    .toURI()
-                    .getPath();
-
-            return path.endsWith(".jar");
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
 
 }

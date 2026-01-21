@@ -18,7 +18,7 @@
 
     <!-- Close (X) button -->
     <Button text="✕"
-            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;"
+            style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;"
             onAction="#handleClose"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
 
@@ -72,6 +72,15 @@
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
                     onAction="#onMyMapsClicked"/>
+            <!-- My purchase historybutton -->
+            <Button fx:id="PurchaseHistoryButton" text="Purchase History"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onPurchaseHistoryClicked"/>
             <!-- My messages button -->
             <Button fx:id="myMessagesButton" text="My Messages"
                     prefWidth="200.0" prefHeight="36.0"

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.City.PendingCityPricesController"
+            prefHeight="500.0" prefWidth="820.0"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+
+    <!-- Close (X) button -->
+    <Button text="✕"
+            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18; -fx-cursor: hand;"
+            onAction="#handleClose"
+            AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+
+    <!-- Center card -->
+    <StackPane layoutX="80.0" layoutY="60.0"
+               prefWidth="660.0" prefHeight="380.0"
+               style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+        <effect>
+            <DropShadow radius="10.0" color="#00000055"/>
+        </effect>
+
+        <VBox spacing="14.0" prefWidth="620.0" prefHeight="340.0" alignment="TOP_CENTER">
+            <padding>
+                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+            </padding>
+
+            <!-- Title -->
+            <Text text="Pending City Price Changes" fill="white">
+                <font>
+                    <Font name="Segoe UI Semibold" size="26.0"/>
+                </font>
+            </Text>
+
+            <Label text="Approve or reject requested price updates"
+                   textFill="white"
+                   style="-fx-font-size: 13; -fx-opacity: 0.9;"/>
+
+            <!-- Table -->
+            <TableView fx:id="table"
+                       prefWidth="620.0" prefHeight="260.0"
+                       style="-fx-background-color: transparent;">
+
+                <columns>
+                    <TableColumn fx:id="cityCol" text="City" prefWidth="160"/>
+                    <TableColumn fx:id="cityPriceCol" text="One-time Price" prefWidth="140"/>
+                    <TableColumn fx:id="subPriceCol" text="Subscription Price" prefWidth="160"/>
+                    <TableColumn fx:id="actionCol" text="Actions" prefWidth="140"/>
+                </columns>
+            </TableView>
+
+        </VBox>
+    </StackPane>
+</AnchorPane>
