@@ -26,6 +26,7 @@ public class FillFormController {
     @FXML private PasswordField PinNumber;
     private String Errormsg;
     public void handleClose(ActionEvent actionEvent) {
+        ClientApp.getNavigator().show(RegistrationController.class);
     }
     public void setUsername(String username)
     {

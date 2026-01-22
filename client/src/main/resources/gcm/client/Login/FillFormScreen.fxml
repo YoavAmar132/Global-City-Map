@@ -1,108 +1,132 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.effect.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.util.Duration?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gcm.client.controllers.FillFormController">
+<AnchorPane prefHeight="400.0" prefWidth="600.0"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gcm.client.controllers.FillFormController">
 
-    <!-- Close (X) button -->
-    <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;" text="✕" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
+    <Button onAction="#handleClose"
+            text="✕"
+            AnchorPane.rightAnchor="10"
+            AnchorPane.topAnchor="10"
+            style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;" />
 
-    <!-- Center card -->
-    <StackPane layoutX="100.0" layoutY="60.0" prefHeight="300.0" prefWidth="400.0" style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+    <StackPane layoutX="100" layoutY="60" prefWidth="400" prefHeight="300"
+               style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
         <effect>
-            <DropShadow color="#00000055" radius="10.0" />
+            <DropShadow radius="10" color="#00000055"/>
         </effect>
 
-        <VBox alignment="CENTER" prefHeight="418.0" prefWidth="400.0" spacing="15.0">
-            <!-- Headline -->
-            <Text fill="white" text="Global City Map">
-                <font>
-                    <Font name="Segoe UI Semibold" size="26.0" />
-                </font>
-            </Text>
-            <Text fill="#e0e0e0" text="Create a new account">
-                <font>
-                    <Font name="Segoe UI" size="14.0" />
-                </font>
-            </Text>
+        <VBox spacing="15" alignment="CENTER">
 
-            <!-- first name -->
-            <VBox spacing="5.0">
-                <Label style="-fx-font-size: 14;" text="First Name" textFill="white" />
-                <TextField fx:id="FirstName" promptText="Enter First Name" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
+            <!-- FIRST NAME -->
+            <VBox spacing="5">
+                <Label text="First Name" textFill="white"/>
+                <TextField fx:id="FirstName"/>
             </VBox>
 
-            <!-- Last name -->
-            <VBox spacing="5.0">
-                <Label style="-fx-font-size: 14;" text="Last Name" textFill="white" />
-                <TextField fx:id="LastName" promptText="Enter Last Name" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
+            <!-- LAST NAME -->
+            <VBox spacing="5">
+                <Label text="Last Name" textFill="white"/>
+                <TextField fx:id="LastName"/>
             </VBox>
 
-            <!-- Phone number -->
-            <VBox spacing="5.0">
-                <Label style="-fx-font-size: 14;" text="Phone Number" textFill="white" />
-                <TextField fx:id="PhoneNumber" promptText="Enter your Phone Number" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
-            </VBox>
-            <!-- email -->
-            <VBox spacing="5.0">
-                <Label style="-fx-font-size: 14;" text="Email" textFill="white" />
-                <TextField fx:id="email" promptText="Enter your Phone Number" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
-            </VBox>
-            <HBox alignment="CENTER_LEFT" spacing="8">
-
-                <!-- Credit number label + first block -->
-                <VBox spacing="5">
-                    <Label style="-fx-font-size: 14;" text="CreditCard" textFill="white" />
-                    <PasswordField fx:id="CreditNumber1" prefWidth="60" promptText="" style="-fx-background-radius: 8;                               -fx-background-color: rgba(255,255,255,0.9);                               -fx-padding: 8 10;" />
-                </VBox>
-
-                <Label style="-fx-font-size: 18;" text="-" textFill="white" />
-
-                <VBox spacing="5">
-                    <Label text="" />
-                    <PasswordField fx:id="CreditNumber2" prefWidth="60" promptText="" style="-fx-background-radius: 8;                               -fx-background-color: rgba(255,255,255,0.9);                               -fx-padding: 8 10;" />
-                </VBox>
-
-                <Label style="-fx-font-size: 18;" text="-" textFill="white" />
-
-                <VBox spacing="5">
-                    <Label text="" />
-                    <PasswordField fx:id="CreditNumber3" prefWidth="60" promptText="" style="-fx-background-radius: 8;                               -fx-background-color: rgba(255,255,255,0.9);                               -fx-padding: 8 10;" />
-                </VBox>
-
-                <Label style="-fx-font-size: 18;" text="-" textFill="white" />
-
-                <VBox spacing="5">
-                    <Label text="" />
-                    <PasswordField fx:id="CreditNumber4" prefWidth="60" promptText="" style="-fx-background-radius: 8;                               -fx-background-color: rgba(255,255,255,0.9);                               -fx-padding: 8 10;" />
-                </VBox>
-
-            </HBox>
-            <!-- PIN number -->
-            <VBox alignment="TOP_CENTER" spacing="5">
-                <Label style="-fx-font-size: 14;" text="PIN" textFill="white" />
-
-                <PasswordField fx:id="PinNumber" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="50" promptText="***" style="-fx-background-radius: 8;                           -fx-background-color: rgba(255,255,255,0.9);                           -fx-padding: 6 8;">
-               <cursor>
-                  <Cursor fx:constant="DEFAULT" />
-               </cursor></PasswordField>
+            <!-- PHONE -->
+            <VBox spacing="5">
+                <HBox spacing="6">
+                    <Label text="Phone Number" textFill="white"/>
+                    <Label text="❓"
+                           textFill="white"
+                           mouseTransparent="false"
+                           style="-fx-cursor: hand; -fx-padding: 4 6;">
+                        <tooltip>
+                            <Tooltip text="Exactly 10 digits">
+                                <showDelay><Duration millis="200"/></showDelay>
+                            </Tooltip>
+                        </tooltip>
+                    </Label>
+                </HBox>
+                <TextField fx:id="PhoneNumber"/>
             </VBox>
 
+            <!-- EMAIL -->
+            <VBox spacing="5">
+                <HBox spacing="6">
+                    <Label text="Email" textFill="white"/>
+                    <Label text="❓"
+                           textFill="white"
+                           mouseTransparent="false"
+                           style="-fx-cursor: hand; -fx-padding: 4 6;">
+                        <tooltip>
+                            <Tooltip text="Classic email format
+Must contain @ and .
+At least 2 letters after last dot">
+                                <showDelay><Duration millis="200"/></showDelay>
+                            </Tooltip>
+                        </tooltip>
+                    </Label>
+                </HBox>
+                <TextField fx:id="email"/>
+            </VBox>
 
+            <!-- CREDIT CARD -->
+            <VBox spacing="5">
+                <HBox spacing="6">
+                    <Label text="Credit Card" textFill="white"/>
+                    <Label text="❓"
+                           textFill="white"
+                           mouseTransparent="false"
+                           style="-fx-cursor: hand; -fx-padding: 4 6;">
+                        <tooltip>
+                            <Tooltip text="4 digits per field
+Total 16 digits">
+                                <showDelay><Duration millis="200"/></showDelay>
+                            </Tooltip>
+                        </tooltip>
+                    </Label>
+                </HBox>
+                <HBox spacing="8">
+                    <PasswordField fx:id="CreditNumber1" prefWidth="60"/>
+                    <PasswordField fx:id="CreditNumber2" prefWidth="60"/>
+                    <PasswordField fx:id="CreditNumber3" prefWidth="60"/>
+                    <PasswordField fx:id="CreditNumber4" prefWidth="60"/>
+                </HBox>
+            </VBox>
 
+            <!-- PIN -->
+            <VBox spacing="5">
+                <HBox spacing="6">
+                    <Label text="PIN" textFill="white"/>
+                    <Label text="❓"
+                           textFill="white"
+                           mouseTransparent="false"
+                           style="-fx-cursor: hand; -fx-padding: 4 6;">
+                        <tooltip>
+                            <Tooltip text="Exactly 3 digits">
+                                <showDelay><Duration millis="200"/></showDelay>
+                            </Tooltip>
+                        </tooltip>
+                    </Label>
+                </HBox>
+                <PasswordField fx:id="PinNumber" prefWidth="60"/>
+            </VBox>
 
-
-
-            <!--compleate form -->
-            <Button fx:id="Send" onAction="#onSendClicked" prefHeight="36.0" prefWidth="160.0" style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 15; -fx-background-radius: 8; -fx-cursor: hand;" text="send" />
-            <opaqueInsets>
-                <Insets bottom="100.0" />
-            </opaqueInsets>
+            <Button text="send"
+                    onAction="#onSendClicked"
+                    prefWidth="160"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;" />
         </VBox>
     </StackPane>
 </AnchorPane>

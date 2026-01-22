@@ -1,5 +1,6 @@
 package gcm.client.controllers.City;
 
+import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.utill.ClientApp;
 import gcm.client.utill.SceneNavigator;
@@ -38,7 +39,7 @@ public class DeleteContentMenuController {
 
     @FXML
     private void handleClose() {
-        ClientApp.getNavigator().show(ManagerMenuController.class);
+        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 }
 

@@ -5,61 +5,131 @@
 <?import javafx.scene.effect.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.util.Duration?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gcm.client.controllers.RegistrationController">
+<AnchorPane prefHeight="400.0" prefWidth="600.0"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gcm.client.controllers.RegistrationController">
 
-    <!-- Close (X) button -->
-    <Button onAction="#handleClose" style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;" text="✕" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
+    <Button onAction="#handleClose"
+            text="✕"
+            AnchorPane.rightAnchor="10"
+            AnchorPane.topAnchor="10"
+            style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;" />
 
-    <!-- Center card -->
-    <StackPane layoutX="100.0" layoutY="60.0" prefHeight="300.0" prefWidth="400.0" style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+    <StackPane layoutX="100" layoutY="60" prefWidth="400" prefHeight="300"
+               style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
         <effect>
-            <DropShadow color="#00000055" radius="10.0" />
+            <DropShadow radius="10" color="#00000055"/>
         </effect>
 
-        <VBox alignment="CENTER" prefHeight="418.0" prefWidth="400.0" spacing="15.0">
-            <!-- Headline -->
-            <Text fill="white" text="Global City Map">
-                <font>
-                    <Font name="Segoe UI Semibold" size="26.0" />
-                </font>
-            </Text>
-            <Text fill="#e0e0e0" text="Create a new account">
-                <font>
-                    <Font name="Segoe UI" size="14.0" />
-                </font>
+        <VBox spacing="15" alignment="CENTER">
+
+            <Text text="Global City Map" fill="white">
+                <font><Font size="26"/></font>
             </Text>
 
-            <!-- Username -->
-            <VBox spacing="5.0">
-                <Label style="-fx-font-size: 14;" text="Username" textFill="white" />
-                <TextField fx:id="usernameField" promptText="Choose a username" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
+            <Text text="Create a new account" fill="#e0e0e0"/>
+
+            <!-- USERNAME -->
+            <VBox spacing="5">
+                <HBox spacing="6">
+                    <Label text="Username" textFill="white"/>
+                    <Label text="❓"
+                           textFill="white"
+                           mouseTransparent="false"
+                           style="-fx-cursor: hand; -fx-padding: 4 6; -fx-font-size: 13;">
+                        <tooltip>
+                            <Tooltip text="8–12 characters
+Must contain:
+• 1 uppercase letter
+• 1 lowercase letter
+• 1 digit">
+                                <showDelay>
+                                    <Duration millis="200"/>
+                                </showDelay>
+                            </Tooltip>
+                        </tooltip>
+                    </Label>
+                </HBox>
+                <TextField fx:id="usernameField"
+                           promptText="Choose a username"
+                           style="-fx-background-radius: 8;
+                                  -fx-background-color: rgba(255,255,255,0.9);
+                                  -fx-padding: 8 10;" />
             </VBox>
 
-            <!-- Password -->
-            <VBox spacing="5.0">
-                <Label style="-fx-font-size: 14;" text="Password" textFill="white" />
-                <PasswordField fx:id="passwordField" promptText="Choose a password" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
+            <!-- PASSWORD -->
+            <VBox spacing="5">
+                <HBox spacing="6">
+                    <Label text="Password" textFill="white"/>
+                    <Label text="❓"
+                           textFill="white"
+                           mouseTransparent="false"
+                           style="-fx-cursor: hand; -fx-padding: 4 6; -fx-font-size: 13;">
+                        <tooltip>
+                            <Tooltip text="8–12 characters
+Must contain:
+• Uppercase letter
+• Lowercase letter
+• Special character">
+                                <showDelay>
+                                    <Duration millis="200"/>
+                                </showDelay>
+                            </Tooltip>
+                        </tooltip>
+                    </Label>
+                </HBox>
+                <PasswordField fx:id="passwordField"
+                               promptText="Choose a password"
+                               style="-fx-background-radius: 8;
+                                      -fx-background-color: rgba(255,255,255,0.9);
+                                      -fx-padding: 8 10;" />
             </VBox>
 
-            <!-- Confirm Password -->
-            <VBox spacing="5.0">
-                <Label style="-fx-font-size: 14;" text="Confirm Password" textFill="white" />
-                <PasswordField fx:id="confirmPasswordField" promptText="Re-enter your password" style="-fx-background-radius: 8; -fx-background-color: rgba(255,255,255,0.9); -fx-padding: 8 10;" />
+            <!-- CONFIRM PASSWORD -->
+            <VBox spacing="5">
+                <HBox spacing="6">
+                    <Label text="Confirm Password" textFill="white"/>
+                    <Label text="❓"
+                           textFill="white"
+                           mouseTransparent="false"
+                           style="-fx-cursor: hand; -fx-padding: 4 6; -fx-font-size: 13;">
+                        <tooltip>
+                            <Tooltip text="Must match the password exactly">
+                                <showDelay>
+                                    <Duration millis="200"/>
+                                </showDelay>
+                            </Tooltip>
+                        </tooltip>
+                    </Label>
+                </HBox>
+                <PasswordField fx:id="confirmPasswordField"
+                               promptText="Re-enter your password"
+                               style="-fx-background-radius: 8;
+                                      -fx-background-color: rgba(255,255,255,0.9);
+                                      -fx-padding: 8 10;" />
             </VBox>
 
-
-            <!-- Fill E-form small button with text -->
-            <HBox alignment="CENTER_LEFT" spacing="8.0">
-                <Button fx:id="fillEFormButton" onAction="#onFillFormClicked" prefHeight="26.0" prefWidth="26.0" style="-fx-background-color: rgba(255,255,255,0.9); -fx-background-radius: 50; -fx-cursor: hand; -fx-font-size: 12;" text="📝" />
-                <Label style="-fx-font-size: 13;" text="fill E-form" textFill="white" />
+            <!-- FILL FORM -->
+            <HBox spacing="8" alignment="CENTER_LEFT">
+                <Button text="📝"
+                        onAction="#onFillFormClicked"
+                        style="-fx-background-color: rgba(255,255,255,0.9);
+                               -fx-background-radius: 50;" />
+                <Label text="fill E-form" textFill="white"/>
             </HBox>
 
-            <!-- Register button -->
-            <Button fx:id="registerButton" onAction="#onRegisterClicked" prefHeight="36.0" prefWidth="160.0" style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 15; -fx-background-radius: 8; -fx-cursor: hand;" text="Register" />
-         <opaqueInsets>
-            <Insets bottom="100.0" />
-         </opaqueInsets>
+            <Button text="Register"
+                    onAction="#onRegisterClicked"
+                    prefWidth="160"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;" />
         </VBox>
     </StackPane>
 </AnchorPane>
