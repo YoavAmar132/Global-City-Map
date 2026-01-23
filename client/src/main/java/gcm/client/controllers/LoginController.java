@@ -1,8 +1,5 @@
 package gcm.client.controllers;
-import gcm.client.controllers.menu.ContentWorkerMenuController;
-import gcm.client.controllers.menu.CustomerSupportMenuController;
-import gcm.client.controllers.menu.ManagerMenuController;
-import gcm.client.controllers.menu.UserMenuController;
+import gcm.client.controllers.menu.*;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -81,7 +78,11 @@ public class LoginController {
                     ClientApp.getNavigator().show(UserMenuController.class);
                     break;
                 case "ContentManager":
+                    ClientApp.getNavigator().show(ContentManagerController.class);
+                    break;
                 case "Worker":
+                    ClientApp.getNavigator().show(WorkerMenuController.class);
+                    break;
                 case "ContentEmployee":
                     ClientApp.getNavigator().show(ContentWorkerMenuController.class);
                     break;

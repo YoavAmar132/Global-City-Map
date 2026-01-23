@@ -76,6 +76,10 @@ public class SceneNavigator {
         routes.put(DeleteRouteController.class, "/gcm/client/city/DeleteRouteScreen.fxml");
         routes.put(DeleteMapController.class, "/gcm/client/city/DeleteMapScreen.fxml");
         routes.put(CitySelectionController.class, "/gcm/client/city/CitySelection.fxml");
+
+        routes.put(WorkerMenuController.class, "/gcm/client/menu/WorkerMenuScreen.fxml");
+        routes.put(ContentManagerController.class, "/gcm/client/menu/ContentManagerMenuScreen.fxml");
+
         //yoav
         //adam
 

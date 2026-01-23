@@ -26,7 +26,14 @@ public class ContentWorkerMenuController {
     }
     @FXML
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.logout();
+        String role = ClientApp.getCurrentUser().getRole();
+        if(role.equals("CompanyManager")) {
+            ClientApp.getNavigator().show(ManagerMenuController.class);
+        }
+        else if(role.equals("ContentManager")) {
+            ClientApp.getNavigator().show(ContentManagerController.class);
+        }
+        else ClientApp.logout();
     }
 
     @FXML
@@ -80,50 +87,6 @@ public class ContentWorkerMenuController {
         ClientApp.getNavigator().show(DeleteContentMenuController.class);
     }
 
-    @FXML
-    public void onMapApproveButton(ActionEvent actionEvent) {
-        User current=ClientApp.getCurrentUser();
-        System.out.println(current.getRole());
-        if (current.getRole().equals("ContentManager")|| current.getRole().equals("CompanyManager")) {
-            ClientApp.getNavigator().show(PendingMapController.class);
-            return;
-
-        }else{
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Restriction Error");
-            alert.setContentText("This Feature is not Accessible for your account");
-            alert.showAndWait();
-
-        }
-
-
-    }
-
-    @FXML
-    public void onRouteApproveButton(ActionEvent actionEvent) {
-        User current = ClientApp.getCurrentUser();
-
-        if (current.getRole().equals("ContentManager") ||
-                current.getRole().equals("CompanyManager")) {
-
-            ClientApp.getNavigator().show(PendingRouteController.class);
-            return;
-        }
-
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Restriction Error");
-        alert.setContentText("This Feature is not Accessible for your account");
-        alert.showAndWait();
-    }
-
-
-
-
-
-    @FXML
-    public void onEditPricesButton(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(EditPricesController.class);
-    }
 
     /* lazy af sorry */
     @FXML

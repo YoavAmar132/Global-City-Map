@@ -12,7 +12,7 @@
 
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="gcm.client.controllers.menu.ManagerMenuController"
+            fx:controller="gcm.client.controllers.menu.ContentManagerController"
             prefHeight="550.0" prefWidth="600.0"
             style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
 
@@ -35,20 +35,29 @@
                 </font>
             </Text>
 
-            <Label text="Company Manager Menu"
+            <Label text="Content Manager Menu"
                    textFill="white"
                    style="-fx-font-size: 16;"/>
 
-            <Button fx:id="ContentManagerMenuButton" text="Content Manager Menu"
+
+            <Button fx:id="ManageClientsButton" text="Manage Clients"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
                            -fx-font-size: 15;
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
-                    onAction="#onContentManagerMenuButton"/>
+                    onAction="#onManageClientsButton"/>
+            <Button fx:id="ManageWorkersButton" text="Manage Workers"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onManageWorkersButton"/>
 
-            <Button fx:id="ContentMenuButton" text="Content Worker Menu"
+            <Button fx:id="ContentMenuButton" text="Manage Content"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
@@ -57,23 +66,50 @@
                            -fx-cursor: hand;"
                     onAction="#onContentMenuButton"/>
 
-            <Button fx:id="CustomerSupportMenuButton" text="Customer Support Menu"
+            <Button fx:id="ReportsButton" text="View Reports"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
                            -fx-font-size: 15;
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
-                    onAction="#onCustomerSupportMenuButton"/>
+                    onAction="#onReportsButton"/>
 
-            <Button fx:id="PricingButton" text="Manage Pricing"
+            <Button fx:id="ContentWorkerMenuButton" text="Content Worker Menu"
                     prefWidth="200.0" prefHeight="36.0"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                            -fx-text-fill: white;
                            -fx-font-size: 15;
                            -fx-background-radius: 8;
                            -fx-cursor: hand;"
-                    onAction="#onPricingButton"/>
+                    onAction="#onContentWorkerMenu"/>
+
+            <Button fx:id="ApprovePendingMapButton" text="Approve Pending Maps"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onApprovePendingMap"/>
+
+            <Button fx:id="ApprovePendingRouteButton" text="Approve Pending Routes"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onApprovePendingRoute"/>
+
+            <Button fx:id="EditPricesButton" text="Edit Prices"
+                    prefWidth="200.0" prefHeight="36.0"
+                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;"
+                    onAction="#onEditPrice"/>
 
         </VBox>
     </StackPane>

@@ -3,6 +3,7 @@ package gcm.client.controllers.map;
 import common.messages.*;
 import common.model.City;
 import common.model.CityPricingItem;
+import gcm.client.controllers.menu.ContentManagerController;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -160,7 +161,7 @@ public class EditPricesController {
             alert.showAndWait();
 
             ClientApp.getNavigator()
-                    .show(ContentWorkerMenuController.class);
+                    .show(ContentManagerController.class);
         }));
 
         client.sendRequest(new GcmRequest(
@@ -179,6 +180,6 @@ public class EditPricesController {
 
     @FXML
     private void handleClose() {
-        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 }
