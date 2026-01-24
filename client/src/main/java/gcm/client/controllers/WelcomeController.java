@@ -1,7 +1,6 @@
 package gcm.client.controllers;
 
 import gcm.client.controllers.catalogPublic.GuestCatalogController;
-import gcm.client.controllers.user_util.CatalogController;
 import gcm.client.utill.ClientApp;
 import javafx.fxml.FXML;
 
