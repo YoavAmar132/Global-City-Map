@@ -5,6 +5,7 @@ import common.messages.GcmRequest;
 import common.messages.GcmResponse;
 import common.messages.RequestType;
 import common.model.CityCatalogItem;
+import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -92,12 +93,12 @@ public class CitySelectionController {
 
     @FXML
     private void onBack() {
-        ClientApp.getNavigator().show(ManagerMenuController.class);
+        ClientApp.getNavigator().show(DeleteContentMenuController.class);
     }
 
     @FXML
     private void handleClose() {
-        ClientApp.getNavigator().show(ManagerMenuController.class);
+        ClientApp.getNavigator().show(DeleteContentMenuController.class);
     }
 
     private void showError(String msg) {

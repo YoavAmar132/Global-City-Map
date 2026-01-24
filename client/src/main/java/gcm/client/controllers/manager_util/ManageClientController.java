@@ -6,6 +6,7 @@ import gcm.client.controllers.catalogPublic.GuestCatalogController;
 import gcm.client.controllers.map.MapLoaderController;
 import gcm.client.controllers.map.MapViewerController;
 import gcm.client.controllers.map.UserMapViewerController;
+import gcm.client.controllers.menu.ContentManagerController;
 import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.controllers.menu.UserMenuController;
 import javafx.application.Platform;
@@ -148,11 +149,11 @@ public class ManageClientController {
 
 
     public void onBackClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ManagerMenuController.class);
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ManagerMenuController.class);
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

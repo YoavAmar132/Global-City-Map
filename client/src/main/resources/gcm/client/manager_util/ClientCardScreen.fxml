@@ -60,6 +60,10 @@
                         prefWidth="120.0" prefHeight="32.0"
                         style="-fx-background-color: rgba(255,255,255,0.20); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
                         onAction="#onBackClicked"/>
+                <Button fx:id="ChangeInfoButton" text="Change info"
+                        prefWidth="120.0" prefHeight="32.0"
+                        style="-fx-background-color: rgba(255,255,255,0.20); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
+                        onAction="#onChangeInfo"/>
             </HBox>
 
             <!-- Client info -->
@@ -110,6 +114,14 @@
                            textFill="white"
                            style="-fx-font-size: 14; -fx-opacity: 0.9; -fx-font-weight: bold;"/>
                     <Label fx:id="lblSurname" text="—"
+                           textFill="white"
+                           style="-fx-font-size: 14;"/>
+                    <HBox HBox.hgrow="ALWAYS"/>
+
+                    <Label text="Email:"
+                           textFill="white"
+                           style="-fx-font-size: 14; -fx-opacity: 0.9; -fx-font-weight: bold;"/>
+                    <Label fx:id="lblemail" text="—"
                            textFill="white"
                            style="-fx-font-size: 14;"/>
                 </HBox>

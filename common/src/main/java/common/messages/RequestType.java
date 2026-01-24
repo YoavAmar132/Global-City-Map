@@ -71,6 +71,7 @@ public enum RequestType {
     // Utility
     PING,
     GET_REPORT,
+    CHANGE_INFO,
 
     // Prices
     GET_ALL_CITY_PRICES,

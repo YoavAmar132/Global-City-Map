@@ -14,7 +14,14 @@ public class CustomerSupportMenuController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.logout();
+        String role = ClientApp.getCurrentUser().getRole();
+        if(role.equals("CompanyManager")) {
+            ClientApp.getNavigator().show(ManagerMenuController.class);
+        }
+        else if(role.equals("ContentManager")) {
+            ClientApp.getNavigator().show(ContentManagerController.class);
+        }
+        else ClientApp.logout();
     }
 
     public void onSupportButton(ActionEvent actionEvent) {

@@ -65,6 +65,10 @@ public class MapViewerController {
 
     private boolean editingExistingMap = false;
 
+    private boolean introShown = false;          // show intro only once per open
+    private boolean submitMapSuccess = false;    // show "map sent for approval"
+    private boolean submitRouteSuccess = false;  // show "route sent for approval"
+
     public void setMap(MapSheet map) {
         this.map = map;
     }
@@ -392,6 +396,8 @@ public class MapViewerController {
 
         mode = Mode.CREATE_MAP;
 
+        introShown = false;
+
         selectedPoiIds.clear();
         overlayLayerController.clearAll();
 
@@ -435,6 +441,16 @@ public class MapViewerController {
                 overlayLayerController.rerender();
             }
             showDone = true;
+
+            if (!introShown && entryContext == EntryContext.CREATE_CONTENT) {
+                introShown = true;
+                showInfo(
+                        "Welcome!\n\n" +
+                                "To start creating content:\n" +
+                                "• Click 'Add Map' to start building a new map\n" +
+                                "• Click 'Add Route' to start building a new route"
+                );
+            }
         });
     }
 
@@ -469,6 +485,13 @@ public class MapViewerController {
 
         mode = Mode.ADD_POI;
 
+        showInfo(
+                "Add Map mode:\n\n" +
+                        "• Click anywhere on the map to add a POI\n" +
+                        "• You will be asked for POI details\n" +
+                        "• Selected POIs will be part of the map"
+        );
+
         baseLayerController.setInteractionMode(
                 MapBaseLayerController.InteractionMode.ADD_POI
         );
@@ -487,7 +510,7 @@ public class MapViewerController {
             String description = askPoiDescription();
             if (description == null) return;
 
-            POI_Category category = askPoiCategory(); // FIXED (no poi variable here)
+            POI_Category category = askPoiCategory();
             if (category == null) return;
 
             int recommended_mins = askPoiRecommendedMinutes();
@@ -584,6 +607,8 @@ public class MapViewerController {
             payload.setSourceMapId(map.getSourceMapId());
         }
 
+        submitMapSuccess = true;
+
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
         client.sendRequest(new GcmRequest(RequestType.PEND_MAP, payload));
@@ -631,6 +656,8 @@ public class MapViewerController {
                     stops
             );
         }
+
+        submitRouteSuccess = true;
 
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
@@ -714,13 +741,11 @@ public class MapViewerController {
             MenuItem edit = new MenuItem("Edit POI");
             edit.setOnAction(e -> openEditPoiDialog(poi));
 
-
             menu.getItems().add(edit);
         }
 
         menu.show(anchor, Side.TOP, 0, -10);
     }
-
 
     private void openEditPoiDialog(Poi poi) {
 
@@ -759,14 +784,9 @@ public class MapViewerController {
                 mins
         );
 
-
         overlayLayerController.replacePoi(edited);
         overlayLayerController.rerender();
     }
-
-
-
-
 
     private void handleResponse(GcmResponse response) {
 
@@ -776,6 +796,10 @@ public class MapViewerController {
             alert.setContentText(response.getErrorMessage());
             alert.showAndWait();
             submitInProgress = false;
+
+            submitMapSuccess = false;
+            submitRouteSuccess = false;
+
             return;
         }
 
@@ -801,6 +825,16 @@ public class MapViewerController {
             overlayLayerController.rerender();
             submitInProgress = false;
             return;
+        }
+
+        if (submitMapSuccess) {
+            submitMapSuccess = false;
+            showInfo("Submission complete!\n\nYour map was sent for approval.");
+        }
+
+        if (submitRouteSuccess) {
+            submitRouteSuccess = false;
+            showInfo("Submission complete!\n\nYour route was sent for approval.");
         }
 
         if (!submitInProgress) {

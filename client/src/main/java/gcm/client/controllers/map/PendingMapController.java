@@ -4,6 +4,7 @@ import common.messages.*;
 import common.model.City;
 import common.model.MapSheet;
 import gcm.client.controllers.catalogPublic.GuestCatalogController;
+import gcm.client.controllers.menu.ContentManagerController;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -207,11 +208,11 @@ public class PendingMapController {
     }
 
     public void onBackClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
