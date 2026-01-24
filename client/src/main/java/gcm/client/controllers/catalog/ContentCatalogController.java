@@ -3,6 +3,8 @@ package gcm.client.controllers.catalog;
 import gcm.client.controllers.map.MapLoaderController;
 import gcm.client.controllers.map.RouteLoaderController;
 import gcm.client.controllers.map.UserMapViewerController;
+import gcm.client.controllers.menu.ManagerMenuController;
+import gcm.client.controllers.menu.WorkerMenuController;
 import javafx.event.ActionEvent;
 
 import common.messages.*;
@@ -163,11 +165,19 @@ public class ContentCatalogController {
 
 
     public void onBackClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+        String role = ClientApp.getCurrentUser().getRole();
+        if(role.equals("Worker")) {
+            ClientApp.getNavigator().show(WorkerMenuController.class);
+        }
+        else ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+        String role = ClientApp.getCurrentUser().getRole();
+        if(role.equals("Worker")) {
+            ClientApp.getNavigator().show(WorkerMenuController.class);
+        }
+        else ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

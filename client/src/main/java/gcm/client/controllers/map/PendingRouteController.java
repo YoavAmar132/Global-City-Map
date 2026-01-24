@@ -3,6 +3,7 @@ package gcm.client.controllers.map;
 import common.messages.*;
 import common.model.PendingRoute;
 import common.model.RouteSheet;
+import gcm.client.controllers.menu.ContentManagerController;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -192,7 +193,7 @@ public class PendingRouteController {
 
     @FXML
     public void handleClose(ActionEvent event) {
-        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     @FXML

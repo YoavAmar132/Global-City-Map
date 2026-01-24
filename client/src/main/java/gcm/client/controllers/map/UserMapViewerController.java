@@ -2,10 +2,7 @@ package gcm.client.controllers.map;
 
 import common.messages.*;
 import common.model.*;
-import gcm.client.controllers.menu.ContentWorkerMenuController;
-import gcm.client.controllers.menu.CustomerSupportMenuController;
-import gcm.client.controllers.menu.ManagerMenuController;
-import gcm.client.controllers.menu.UserMenuController;
+import gcm.client.controllers.menu.*;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import javafx.application.Platform;
@@ -331,19 +328,14 @@ public class UserMapViewerController {
             case "Customer":
                 ClientApp.getNavigator().show(UserMenuController.class);
                 break;
-            case "ContentManager":
             case "Worker":
+                ClientApp.getNavigator().show(WorkerMenuController.class);
+                break;
+            case "ContentManager", "CompanyManager":
+                ClientApp.getNavigator().show(ContentManagerController.class);
+                break;
             case "ContentEmployee":
                 ClientApp.getNavigator().show(ContentWorkerMenuController.class);
-                break;
-
-            case "CustomerSupport":
-                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
-                break;
-
-
-            case "CompanyManager":
-                ClientApp.getNavigator().show(ManagerMenuController.class);
                 break;
         }
 

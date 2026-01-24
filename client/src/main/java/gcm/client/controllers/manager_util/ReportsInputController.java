@@ -3,6 +3,7 @@ package gcm.client.controllers.manager_util;
 import common.messages.*;
 import common.model.CityCatalogItem;
 import common.model.CityReportData; // Make sure you have this from the previous step
+import gcm.client.controllers.menu.ContentManagerController;
 import gcm.client.controllers.menu.ManagerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -138,7 +139,7 @@ public class ReportsInputController {
 
     @FXML
     private void handleBack() {
-        ClientApp.getNavigator().show(ManagerMenuController.class);
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     private void showError(String msg) {

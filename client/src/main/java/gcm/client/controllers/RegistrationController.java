@@ -11,18 +11,16 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
-/**
- * overall very good just removed onFillEForm idk what that is xD
- */
+
 public class RegistrationController {
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private PasswordField confirmPasswordField;
     private RegisterPayload payload;
-    private boolean fillform=false;
-    public void setFillform(boolean fillform)
+    private boolean fillForm=false;
+    public void setFillForm(boolean fillform)
     {
-        this.fillform=fillform;
+        this.fillForm=fillform;
     }
 
     public void setPayload(RegisterPayload payload) {
@@ -39,7 +37,7 @@ public class RegistrationController {
         if(payload !=null)
         {
             setPayload(payload);
-            setFillform(true);
+            setFillForm(true);
             usernameField.setText(payload.getUsername());
             passwordField.setText(payload.getPassword());
             confirmPasswordField.setText(payload.getPassword());
@@ -49,7 +47,7 @@ public class RegistrationController {
 
 
     public void onRegisterClicked() {
-        if(!fillform)
+        if(!fillForm)
         {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle(" Failed");
