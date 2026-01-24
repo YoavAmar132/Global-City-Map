@@ -5,11 +5,23 @@ import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.*;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.engine.discovery.DiscoverySelectors;
 
+import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TestRunnerMain {
+public static String SuccessMsg;
+    private static final Map<String, String> successMessages =
+            new ConcurrentHashMap<>();
+
+    public static void setSuccessMsg(String testDisplayName, String message) {
+        successMessages.put(testDisplayName, message);
+    }
 
     public static void main(String[] args) {
         System.out.println("=== GCM Test Runner ===");
@@ -22,6 +34,7 @@ public class TestRunnerMain {
                                 DiscoverySelectors.selectPackage("test")
                         )
                         .build();
+
 
         TestResultCollector listener = new TestResultCollector();
         launcher.registerTestExecutionListeners(listener);
@@ -48,7 +61,11 @@ public class TestRunnerMain {
                     "%-50s | %-6s | %s%n",
                     r.displayName,
                     r.status,
-                    r.errorMessage == null ? "" : r.errorMessage
+                    r.errorMessage == null ? successMessages.getOrDefault(
+                            r.displayName,
+                            "OK"
+                    ) : r.errorMessage
+
             );
         }
     }
@@ -74,12 +91,16 @@ public class TestRunnerMain {
                     .map(Throwable::getMessage)
                     .orElse(null);
 
+            String success = successMessages.get(id.getDisplayName());
+
             results.add(new TestResult(
                     id.getDisplayName(),
                     status,
-                    error
+                    error,
+                    success
             ));
         }
+
 
         boolean hasFailures() {
             return results.stream().anyMatch(r -> r.status.equals("FAIL"));
@@ -90,11 +111,13 @@ public class TestRunnerMain {
         final String displayName;
         final String status;
         final String errorMessage;
+        final String successMessage;
 
-        TestResult(String displayName, String status, String errorMessage) {
+        TestResult(String displayName, String status, String errorMessage,String successMessage) {
             this.displayName = displayName;
             this.status = status;
             this.errorMessage = errorMessage;
+            this.successMessage = successMessage;
         }
     }
 }
