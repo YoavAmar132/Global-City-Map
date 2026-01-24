@@ -2,12 +2,16 @@ package gcm.server.bot;
 
 import java.util.Map;
 
+
+/*
+* A class that saves the bot response and allow others to see what was the bot's response
+* */
 public class BotResponse {
 
-    public final BotAction action;
-    public final String text;
-    public final String toolName;
-    public final Map<String, String> toolArgs;
+    private final BotAction action;
+    private final String text;
+    private final String toolName;
+    private final Map<String, String> toolArgs;
 
     private BotResponse(BotAction action, String text, String toolName, Map<String, String> toolArgs) {
         this.action = action;
@@ -27,27 +31,20 @@ public class BotResponse {
     public static BotResponse callTool(String tool, Map<String, String> args) {
         return new BotResponse(BotAction.CALL_TOOL, null, tool, args);
     }
-}
 
-/*
-public class BotResponse {
-
-    private String toolName;
-    private Map<String, String> arguments;
-    private String answer;
-    private BotDecision decision;
-
-    public BotResponse(BotDecision decision, String answer) {
-        this.decision = decision;
-        this.answer = answer;
+    public BotAction getAction() {
+        return action;
     }
 
-    public BotDecision getDecision() {
-        return decision;
+    public String getText() {
+        return text;
     }
 
-    public String getAnswer() {
-        return answer;
+    public String getToolName() {
+        return toolName;
+    }
+
+    public Map<String, String> getToolArgs() {
+        return toolArgs;
     }
 }
-*/

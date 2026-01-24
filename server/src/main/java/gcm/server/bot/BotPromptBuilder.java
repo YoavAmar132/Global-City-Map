@@ -1,5 +1,8 @@
 package gcm.server.bot;
 
+/*
+* build a prompt which is sent to the bot in every interaction with it
+* */
 public class BotPromptBuilder {
     private final static String CONTEXT_PROMPT= """
             You are a support bot for the Global City Map system.
@@ -24,6 +27,7 @@ public class BotPromptBuilder {
             - Output MUST start with exactly one of: ANSWER:, CALL_TOOL, or ESCALATE
             - Output MUST be a single line
             - NEVER output more than one action
+            - NEVER call more then ONE tool at a time
             - If a tool is needed, DO NOT answer
             - If you answer, DO NOT call a tool
             
@@ -31,7 +35,7 @@ public class BotPromptBuilder {
             
             User: does the city of paris exist in the system
             Output:
-            CALL_TOOL cityExist cityName=paris
+            CALL_TOOL getCityExist cityName=paris
             
             User: what is a map subscription
             Output:
@@ -43,7 +47,7 @@ public class BotPromptBuilder {
             
             """;
     /**
-    * build a prompt to send the bo
+    * build a prompt to send the bot
     * */
     public static String build(
             String userMessage,
@@ -57,6 +61,7 @@ public class BotPromptBuilder {
 
         IMPORTANT:
         Tool names must be used EXACTLY as written above.
+        You can only call one tool per response
         Do NOT pluralize, rename, or reformat tool names.
         If no available tool can answer the question, you MUST output ESCALATE.
         Do NOT invent tool names.

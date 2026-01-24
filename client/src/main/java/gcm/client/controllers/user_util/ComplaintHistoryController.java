@@ -107,15 +107,15 @@ public class ComplaintHistoryController {
                 }
                 if (t instanceof ArrayList<?>) {
                     ArrayList<?> list = (ArrayList<?>) t;
-                    // בדיקה שהרשימה לא ריקה ושהאיבר הראשון הוא אכן Complaint
                     if (!list.isEmpty() && list.get(0) instanceof Complaint) {
+                        //list is a list of complaints
                         complaintList.getChildren().clear();
                         for (Object o : list) {
                             complaintList.getChildren().addFirst(createComplaintRow((Complaint) o));
                         }
                         statusLabel.setText("Select a complaint to view.");
                     } else if (list.isEmpty()) {
-                        // טיפול במצב שאין פניות בכלל
+                        // dealing with cases where there are no complaints
                         complaintList.getChildren().clear();
                         statusLabel.setText("No complaints available.");
                     }
