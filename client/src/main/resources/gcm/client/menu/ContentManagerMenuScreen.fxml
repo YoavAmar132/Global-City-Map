@@ -57,14 +57,6 @@
                            -fx-cursor: hand;"
                     onAction="#onManageWorkersButton"/>
 
-            <Button fx:id="ContentMenuButton" text="Manage Content"
-                    prefWidth="200.0" prefHeight="36.0"
-                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
-                           -fx-text-fill: white;
-                           -fx-font-size: 15;
-                           -fx-background-radius: 8;
-                           -fx-cursor: hand;"
-                    onAction="#onContentMenuButton"/>
 
             <Button fx:id="ReportsButton" text="View Reports"
                     prefWidth="200.0" prefHeight="36.0"
