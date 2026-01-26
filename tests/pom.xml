@@ -20,9 +20,15 @@
 
         <!-- Versions -->
         <junit.jupiter.version>5.10.2</junit.jupiter.version>
-        <testfx.version>4.0.16-alpha</testfx.version>
+        <junit.platform.launcher.version>1.10.2</junit.platform.launcher.version>
+
+        <!-- ONE stable TestFX version -->
+        <testfx.version>4.0.18</testfx.version>
+
         <surefire.version>3.2.5</surefire.version>
         <shade.version>3.5.1</shade.version>
+        <mockito.version>5.12.0</mockito.version>
+        <hamcrest.version>2.2</hamcrest.version>
     </properties>
 
     <dependencies>
@@ -37,66 +43,58 @@
             <artifactId>server</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- Only include client if you really want JavaFX UI tests -->
         <dependency>
             <groupId>gcm</groupId>
             <artifactId>client</artifactId>
             <version>${project.version}</version>
         </dependency>
 
-        <!-- JUnit 5 -->
+        <!-- IMPORTANT:
+             You moved tests into src/main/java and you run them from a shaded jar,
+             so these must NOT be scope=test. -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
+            <artifactId>junit-jupiter</artifactId>
             <version>${junit.jupiter.version}</version>
-            <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>${junit.jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- TestFX (JavaFX UI testing) -->
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>testfx-junit5</artifactId>
-            <version>${testfx.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Headless support (optional but useful for CI) -->
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>openjfx-monocle</artifactId>
-            <version>jdk-12.0.1+2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>gcm</groupId>
-            <artifactId>common</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>gcm</groupId>
-            <artifactId>server</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
 
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-launcher</artifactId>
-            <version>1.10.2</version>
+            <version>${junit.platform.launcher.version}</version>
         </dependency>
 
+        <!-- TestFX -->
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>${testfx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-core</artifactId>
+            <version>${testfx.version}</version>
+        </dependency>
 
-        <!-- If your tests use Mockito -->
+        <!-- Headless support (optional) -->
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>openjfx-monocle</artifactId>
+            <version>jdk-12.0.1+2</version>
+        </dependency>
+
+        <!-- Fix: org.hamcrest.Matcher not found -->
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>${hamcrest.version}</version>
+        </dependency>
+
+        <!-- Mockito (keep as test unless you use it in main code) -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.12.0</version>
+            <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -104,32 +102,24 @@
     <build>
         <plugins>
 
-            <!-- Run unit tests (JUnit 5) -->
+            <!-- Run tests with Maven (optional, still works) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
-
-                    <!-- Useful if/when running TestFX headless -->
-                    <systemPropertyVariables>
-                        <!-- enable later for  headless -->
-                        <!--
-                        <testfx.robot>glass</testfx.robot>
-                        <testfx.headless>true</testfx.headless>
-                        <prism.order>sw</prism.order>
-                        <prism.text>t2k</prism.text>
-                        <java.awt.headless>true</java.awt.headless>
-                        -->
-                    </systemPropertyVariables>
+                    <argLine>
+                        --add-modules javafx.controls,javafx.fxml
+                        --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+                        --add-opens javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED
+                        --add-opens javafx.graphics/com.sun.javafx.stage=ALL-UNNAMED
+                        --add-opens javafx.controls/javafx.scene.control=ALL-UNNAMED
+                    </argLine>
                 </configuration>
             </plugin>
 
-            <!-- Build an executable "tests runner" jar later:
-                 mvn -DskipTests package
-                 -> target/tests-1.0-SNAPSHOT-tests-runner.jar
-            -->
+            <!-- Build runnable fat-jar with your TestRunnerMain -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -144,16 +134,15 @@
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
 
-                            <!-- This classifier keeps your normal jar intact -->
                             <shadedArtifactAttached>true</shadedArtifactAttached>
                             <shadedClassifierName>tests-runner</shadedClassifierName>
 
-                            <!-- You will create this class later.
-                                 It can run JUnit programmatically and (optionally) open a JavaFX TableView.
-                            -->
+                            <!-- CRITICAL: JUnit engines are discovered via META-INF/services -->
                             <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>gcm.tests.runner.TestRunnerMain</mainClass>
+                                    <!-- Your class is: package test; public class TestRunnerMain -->
+                                    <mainClass>test.TestRunnerMain</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

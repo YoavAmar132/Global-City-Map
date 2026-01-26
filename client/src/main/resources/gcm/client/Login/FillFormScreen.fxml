@@ -119,7 +119,8 @@ Total 16 digits">
                 <PasswordField fx:id="PinNumber" prefWidth="60"/>
             </VBox>
 
-            <Button text="send"
+            <Button fx:id="sendButton"
+                    text="send"
                     onAction="#onSendClicked"
                     prefWidth="160"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);

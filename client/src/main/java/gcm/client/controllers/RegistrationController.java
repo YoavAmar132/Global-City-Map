@@ -18,6 +18,10 @@ public class RegistrationController {
     @FXML private PasswordField confirmPasswordField;
     private RegisterPayload payload;
     private boolean fillForm=false;
+    public boolean getformstatus()
+    {
+        return this.fillForm;
+    }
     public void setFillForm(boolean fillform)
     {
         this.fillForm=fillform;
