@@ -115,21 +115,24 @@ Must contain:
 
             <!-- FILL FORM -->
             <HBox spacing="8" alignment="CENTER_LEFT">
-                <Button text="📝"
+                <Button fx:id="formButton"
+                        text="📝"
                         onAction="#onFillFormClicked"
                         style="-fx-background-color: rgba(255,255,255,0.9);
                                -fx-background-radius: 50;" />
                 <Label text="fill E-form" textFill="white"/>
             </HBox>
 
-            <Button text="Register"
+            <Button fx:id="registerButton"
+                    text="Register"
                     onAction="#onRegisterClicked"
                     prefWidth="160"
                     style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
-                           -fx-text-fill: white;
-                           -fx-font-size: 15;
-                           -fx-background-radius: 8;
-                           -fx-cursor: hand;" />
+               -fx-text-fill: white;
+               -fx-font-size: 15;
+               -fx-background-radius: 8;
+               -fx-cursor: hand;" />
+
         </VBox>
     </StackPane>
 </AnchorPane>
