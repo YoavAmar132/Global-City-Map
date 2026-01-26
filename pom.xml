@@ -19,6 +19,37 @@
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+
+        <!-- keep your JavaFX version -->
         <javafx.version>21.0.4</javafx.version>
+
+        <!-- ADD: TestFX + Surefire versions -->
+        <testfx.version>4.0.18</testfx.version>
+        <surefire.version>3.2.5</surefire.version>
     </properties>
+
+    <!-- ADD: surefire configuration for JavaFX + TestFX on Java 21 -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire.version}</version>
+                    <configuration>
+                        <!-- avoids module-path issues with TestFX -->
+                        <useModulePath>false</useModulePath>
+
+                        <!-- REQUIRED for TestFX on Java 21 -->
+                        <argLine>
+                            --add-modules javafx.controls,javafx.fxml
+                            --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+                            --add-opens javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED
+                            --add-opens javafx.graphics/com.sun.javafx.stage=ALL-UNNAMED
+                        </argLine>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

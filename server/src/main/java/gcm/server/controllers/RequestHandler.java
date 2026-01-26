@@ -59,14 +59,6 @@ public class RequestHandler {
             return GcmResponse.ok(null);
         }
 
-        /*
-        if (type == RequestType.LIST_ROUTES) {
-            try {
-                return handleRoute(request);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        }*/
         if (type == RequestType.LOGIN) {
             try {
                 return handleLogin(request);
