@@ -53,7 +53,7 @@ class Registration  {
         // init services once
         userRepo = new UserRepo();
         authService = new AuthService(userRepo);
-        requestHandler = new RequestHandler(authService, null, null, null, null);
+        requestHandler = new RequestHandler(authService, null, null, null, null,null);
 
         // make sure starting state is clean so @Order(1) is deterministic
         deleteUserByUsername(USERNAME);

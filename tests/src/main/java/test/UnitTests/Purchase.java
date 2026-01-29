@@ -63,7 +63,7 @@ public class Purchase {
         statsService=new StatsService(statsRepo);
         authService = new AuthService(userRepo);
         mapService=new MapService(mapRepo,userRepo,routeRepo);
-        requestHandler = new RequestHandler(authService, mapService, null, null, statsService);
+        requestHandler = new RequestHandler(authService, mapService, null, null, statsService,null);
 
         // make sure starting state is clean so @Order(1) is deterministic
         try {

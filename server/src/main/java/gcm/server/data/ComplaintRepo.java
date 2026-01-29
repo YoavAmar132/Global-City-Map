@@ -152,17 +152,18 @@ public class ComplaintRepo {
     }
 
 
-    public void closeWithHumanAnswer(int ticketId, String response) throws SQLException {
+    public boolean closeWithHumanAnswer(int ticketId, String response) throws SQLException {
         String sql = """
             UPDATE SupportTickets
             SET response = ?, ticketStatus = 'Closed', responseBy = 'Human'
-            WHERE ticketID = ?
+            WHERE ticketID = ? AND ticketStatus = 'WaitingForHuman'
         """;
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);){
             stmt.setString(1, response);
             stmt.setInt(2, ticketId);
-            stmt.executeUpdate();
+            int updatedRows = stmt.executeUpdate();
+            return updatedRows > 0;
         }
     }
 

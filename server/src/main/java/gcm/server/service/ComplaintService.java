@@ -63,16 +63,9 @@ public class ComplaintService {
     }
 
     //used for showing the customer support worker every complaint that they need to respond too
-    public GcmResponse getAllComplaintsForCustomerSupport() throws SQLException {
-        try {
-            ArrayList<Complaint> complaints = complaintRepo.getComplaintsWaitingForHuman();
-            if(complaints.isEmpty()){
-                return GcmResponse.error("Failed to load complaint catalog");
-            }
-            return GcmResponse.ok(complaints); // Returns ArrayList<Complaint>
-        } catch (Exception e) {
-            return GcmResponse.error("Server Error: " + e.getMessage());
-        }
+    public ArrayList<Complaint> getAllComplaintsForCustomerSupport() throws SQLException {
+        return complaintRepo.getComplaintsWaitingForHuman();
+
     }
 
     public boolean hasInProgressComplaint() throws SQLException{
@@ -103,15 +96,19 @@ public class ComplaintService {
         }
     }
 
-    public void closeWithHumanAnswer(int ticketId, String response) throws SQLException, IOException {
-        complaintRepo.closeWithHumanAnswer(ticketId,response);
-        Complaint complaint = complaintRepo.getComplaint(ticketId);
-        ConnectionToClient connection = getConnectionToId(complaint.getUserId());
-        if(connection != null){
-            System.out.println("sending to client: closed with human");
+    public boolean closeWithHumanAnswer(int ticketId, String response) throws SQLException, IOException {
+        boolean isComplaintAlreadyClosed = complaintRepo.closeWithHumanAnswer(ticketId,response);
+        if(!isComplaintAlreadyClosed){
+            Complaint complaint = complaintRepo.getComplaint(ticketId);
+            ConnectionToClient connection = getConnectionToId(complaint.getUserId());
+            if(connection != null){
+                System.out.println("sending to client: closed with human");
 
-            connection.sendToClient(GcmResponse.ok(new UpdateComplaint(complaint)));
+                connection.sendToClient(GcmResponse.ok(new UpdateComplaint(complaint)));
+            }
         }
+        return isComplaintAlreadyClosed;
+
     }
 
 
@@ -124,6 +121,12 @@ public class ComplaintService {
 
             connection.sendToClient(GcmResponse.ok(new UpdateComplaint(complaint)));
         }
+    }
+
+
+    public boolean isComplaintClosed(int ticketId) throws SQLException{
+        Complaint complaint = complaintRepo.getComplaint(ticketId);
+        return complaint.getStatus()==Complaint.Status.CLOSED;
     }
 
     public Optional<Complaint> getNextInProgressComplaint() throws SQLException{

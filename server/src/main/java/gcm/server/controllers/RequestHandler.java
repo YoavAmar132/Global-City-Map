@@ -23,7 +23,7 @@ public class RequestHandler {
 
     private static final List<User> online_users = new ArrayList<>();
     private User loggedInUser = null;
-     public Message message=new Message("new map added","");;
+     public Message message=new Message("new map added","");
     public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
                           CatalogService catalogService, StatsService statsService,ComplaintService complaintService) {
         this.authService = authService;
@@ -186,6 +186,16 @@ public class RequestHandler {
                 throw new RuntimeException(e);
             }
         }
+
+        if (type == RequestType.CLOSE_COMPLAINT_WITH_HUMAN_ANSWER) {
+            try {
+                return handleCloseWithHumanAnswer(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
         if (type == RequestType.GET_COMPLAINT) {
             try {
                 return handleGetComplaint(request);
@@ -195,7 +205,15 @@ public class RequestHandler {
         }
         if (type == RequestType.LIST_USER_COMPLAINTS) {
             try {
-                return handleGetUserComplaint(request);
+                return handleGetUserComplaints(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.LIST_CUSTOMER_SUPPORT_COMPLAINTS) {
+            try {
+                return handleGetCustomerSupportComplaints(request);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -801,7 +819,7 @@ public class RequestHandler {
         return GcmResponse.ok(complaint);
     }
 
-    private GcmResponse handleGetUserComplaint(GcmRequest request) throws SQLException {
+    private GcmResponse handleGetUserComplaints(GcmRequest request) throws SQLException {
         System.out.println("LIST_USER_COMPLAINT received");
 
         Object rawPayload = request.getPayload();
@@ -827,6 +845,58 @@ public class RequestHandler {
 
 
     }
+
+
+    private GcmResponse handleGetCustomerSupportComplaints(GcmRequest request) throws SQLException {
+        System.out.println("LIST_CUSTOMER_SUPPORT_COMPLAINTS received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof EmptyPayload)) {
+            return GcmResponse.error("Invalid payload for LIST_CUSTOMER_SUPPORT_COMPLAINTS");
+        }
+
+        try{
+            List<Complaint> complaints =
+                    complaintService.getAllComplaintsForCustomerSupport();
+
+            if (complaints == null) {
+                return GcmResponse.error("no complaints found");
+            }
+
+            return GcmResponse.ok(complaints);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return GcmResponse.error("server error");
+        }
+
+
+    }
+
+    private GcmResponse handleCloseWithHumanAnswer(GcmRequest request) throws SQLException {
+        System.out.println("CLOSE_COMPLAINT_WITH_HUMAN_ANSWER request received");
+        try {
+            if (request.getPayload() instanceof SubmitComplaintPayload payload) {
+                Complaint complaint = payload.getComplaint();
+                boolean isComplaintAlreadyClosed =
+                        complaintService.closeWithHumanAnswer(complaint.getId(),complaint.getResponse());
+                if(isComplaintAlreadyClosed){
+                    Message successful = new Message("Response sent","Your response has been sent to the user");
+                    return GcmResponse.ok(successful);
+                }
+                else{
+                    return GcmResponse.error("Someone else has already responded to the user's complaint");
+                }
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return GcmResponse.error("server error");
+        }
+        return GcmResponse.error("Invalid Payload for CLOSE_COMPLAINT_WITH_HUMAN_ANSWER");
+    }
+
 
 
     private GcmResponse handleGetCityPurchases(GcmRequest request) throws SQLException {
