@@ -40,6 +40,10 @@ public class BuyMapScreenController {
 
     @FXML
     private void initialize() {
+        if (client == null) {
+            // running in tests / screen opened without networking wired yet
+            return;
+        }
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
 
@@ -407,5 +411,9 @@ public class BuyMapScreenController {
     }
 
 
+    public void onCancelClicked(ActionEvent actionEvent) {
+    }
 
+    public void onConfirmPurchaseClicked(ActionEvent actionEvent) {
+    }
 }

@@ -73,4 +73,6 @@ public class ContentManagerController {
     }
 
 
+    public void onContentMenuButton(ActionEvent actionEvent) {
+    }
 }
