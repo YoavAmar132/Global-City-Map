@@ -1,8 +1,11 @@
-package gcm.client.controllers.user_util;
-import common.messages.*;
+package gcm.client.controllers.customer_support_worker_util;
 
+import common.messages.*;
 import common.model.Complaint;
+import gcm.client.controllers.menu.CustomerSupportMenuController;
 import gcm.client.controllers.menu.UserMenuController;
+import gcm.client.controllers.user_util.ComplaintSession;
+import gcm.client.controllers.user_util.CreateComplaintController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import javafx.application.Platform;
@@ -18,7 +21,7 @@ import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 
-public class ComplaintHistoryController {
+public class CustomerSupportComplaintsController {
     private GcmClient client;
     private static final int DESCRIPTION_LENGTH = 50;
     @FXML
@@ -33,7 +36,8 @@ public class ComplaintHistoryController {
     }
 
     private void loadComplaints() {
-        GcmRequest request = new GcmRequest(RequestType.LIST_USER_COMPLAINTS, ClientApp.getCurrentUser());
+        EmptyPayload payload = new EmptyPayload();
+        GcmRequest request = new GcmRequest(RequestType.LIST_CUSTOMER_SUPPORT_COMPLAINTS, payload);
         client.sendRequest(request);
     }
 
@@ -46,26 +50,26 @@ public class ComplaintHistoryController {
         description.setStyle("-fx-text-fill: #dddddd; -fx-font-size: 12;");
 
 
-        // VBox to hold the description
+        // 3. VBox to hold the description
         VBox infoBox = new VBox(4, description);
         infoBox.setAlignment(Pos.CENTER_LEFT);
 
         // Button to view complaint
-        Button viewBtn = new Button("View complaint");
-        viewBtn.setPrefSize(120, 34);
-        viewBtn.setStyle(
+        Button reviewBtn = new Button("Review complaint");
+        reviewBtn.setPrefSize(140, 34);
+        reviewBtn.setStyle(
                 "-fx-background-color: linear-gradient(to right, #11998e, #38ef7d); " +
                         "-fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold; " +
                         "-fx-background-radius: 8; -fx-cursor: hand;"
         );
-        viewBtn.setOnAction(e -> navigateToViewComplaint(complaint));
+        reviewBtn.setOnAction(e -> navigateToReviewComplaint(complaint));
 
         //adding space for the button
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         //assembling the entire row
-        HBox row = new HBox(12, infoBox, spacer, viewBtn);
+        HBox row = new HBox(12, infoBox, spacer, reviewBtn);
         row.setAlignment(Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;");
         row.setPadding(new javafx.geometry.Insets(10, 15, 10, 15));
@@ -73,7 +77,7 @@ public class ComplaintHistoryController {
         return row;
     }
 
-    private void navigateToViewComplaint(Complaint complaint) {
+    private void navigateToReviewComplaint(Complaint complaint) {
         // 1. Clear old session data
         ComplaintSession.getInstance().clear();
 
@@ -83,7 +87,7 @@ public class ComplaintHistoryController {
 
         // 3. Navigate
         System.out.println("should show complaint");
-        ClientApp.getNavigator().show(ViewComplaintController.class);
+        ClientApp.getNavigator().show(ReviewComplaintController.class);
     }
 
     private void handleResponse(GcmResponse response) {
@@ -105,6 +109,12 @@ public class ComplaintHistoryController {
                         alert.showAndWait();
                     }
                 }
+                else if(t instanceof Message message) {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle(message.getTitle());
+                    alert.setContentText(message.getMessage());
+                    alert.showAndWait();
+                }
                 if (t instanceof ArrayList<?>) {
                     ArrayList<?> list = (ArrayList<?>) t;
                     if (!list.isEmpty() && list.get(0) instanceof Complaint) {
@@ -113,7 +123,7 @@ public class ComplaintHistoryController {
                         for (Object o : list) {
                             complaintList.getChildren().addFirst(createComplaintRow((Complaint) o));
                         }
-                        statusLabel.setText("Select a complaint to view.");
+                        statusLabel.setText("Select a complaint to Review.");
                     } else if (list.isEmpty()) {
                         // dealing with cases where there are no complaints
                         complaintList.getChildren().clear();
@@ -122,18 +132,17 @@ public class ComplaintHistoryController {
                 }
 
                 else if (t instanceof Reload) {
-                    Platform.runLater(() -> ClientApp.getNavigator().show(ComplaintHistoryController.class));
+                    Platform.runLater(() -> ClientApp.getNavigator().show(CustomerSupportComplaintsController.class));
                 }
             }
         });
     }
 
-    public void onCreateComplaintClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(CreateComplaintController.class);
+    public void onRefresh(ActionEvent actionEvent) {
+        Platform.runLater(() -> ClientApp.getNavigator().show(CustomerSupportComplaintsController.class));
     }
 
-
     public void handleClose(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(UserMenuController.class);
+        ClientApp.getNavigator().show(CustomerSupportMenuController.class);
     }
 }

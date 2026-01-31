@@ -122,7 +122,11 @@ public class ViewComplaintController {
                 else if (t instanceof Reload) {
                     Platform.runLater(() -> ClientApp.getNavigator().show(ViewComplaintController.class));
                 }
+                else{
+                    System.out.println(t.getClass() + " received");
+                }
             }
+
         });
     }
 }

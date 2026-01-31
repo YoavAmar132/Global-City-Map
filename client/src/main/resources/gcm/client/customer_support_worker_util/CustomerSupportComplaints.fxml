@@ -15,10 +15,9 @@
 <?import javafx.scene.Group?>
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="gcm.client.controllers.user_util.ComplaintHistoryController"
+            fx:controller="gcm.client.controllers.customer_support_worker_util.CustomerSupportComplaintsController"
             prefHeight="500.0" prefWidth="820.0"
             style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
-
 
 
     <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0">
@@ -27,6 +26,15 @@
             <Button text="&#x21b7;"
                     style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
                     onAction="#handleClose"
+                    AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+        </Group>
+
+
+        <Group StackPane.alignment="TOP_LEFT">
+            <!-- Refresh (↻) button -->
+            <Button text="&#x21BB;"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
+                    onAction="#onRefresh"
                     AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
         </Group>
 
@@ -44,22 +52,16 @@
                         <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
                     </padding>
 
-                    <Text text="You previous complaints" fill="white">
+                    <Text text="Pending complaints" fill="white">
                         <font>
                             <Font name="Segoe UI Semibold" size="28.0"/>
                         </font>
                     </Text>
 
-                    <Label text="Select a complaint to view it"
+                    <Label text="Select a complaint to review it"
                            textFill="white"
                            style="-fx-font-size: 13; -fx-opacity: 0.9;"/>
 
-                    <HBox spacing="10.0" alignment="CENTER">
-                        <Button text="Create new complaint"
-                                prefWidth="160.0" prefHeight="32.0"
-                                style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
-                                onAction="#onCreateComplaintClicked"/>
-                    </HBox>
 
                     <ScrollPane fitToWidth="true"
                                 prefWidth="620.0" prefHeight="250.0"

@@ -1,6 +1,7 @@
 package gcm.client.controllers.menu;
 
 import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.customer_support_worker_util.CustomerSupportComplaintsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -25,6 +26,6 @@ public class CustomerSupportMenuController {
     }
 
     public void onSupportButton(ActionEvent actionEvent) {
-
+        ClientApp.getNavigator().show(CustomerSupportComplaintsController.class);
     }
 }

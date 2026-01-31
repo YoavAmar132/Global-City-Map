@@ -4,6 +4,8 @@ import gcm.client.controllers.*;
 import gcm.client.controllers.City.*;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalog.ContentCatalogController;
+import gcm.client.controllers.customer_support_worker_util.CustomerSupportComplaintsController;
+import gcm.client.controllers.customer_support_worker_util.ReviewComplaintController;
 import gcm.client.controllers.manager_util.ClientCardController;
 import gcm.client.controllers.manager_util.ManageClientController;
 import gcm.client.controllers.manager_util.ReportResultController;
@@ -63,6 +65,10 @@ public class SceneNavigator {
         routes.put(ComplaintHistoryController.class, "/gcm/client/user_util/ComplaintHistory.fxml");
         routes.put(ViewComplaintController.class, "/gcm/client/user_util/ViewComplaint.fxml");
 
+        routes.put(CustomerSupportComplaintsController.class,
+                "/gcm/client/customer_support_worker_util/CustomerSupportComplaints.fxml");
+        routes.put(ReviewComplaintController.class,
+                "/gcm/client/customer_support_worker_util/ReviewComplaint.fxml");
 
         routes.put(PendingRouteController.class, "/gcm/client/map/PendingRouteScreen.fxml");
         routes.put(RouteLoaderController.class, "/gcm/client/map/RouteLoaderScreen.fxml");
