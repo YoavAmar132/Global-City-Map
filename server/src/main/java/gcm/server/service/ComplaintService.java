@@ -99,7 +99,7 @@ public class ComplaintService {
     public boolean closeWithHumanAnswer(int ticketId, String response) throws SQLException, IOException {
         boolean isComplaintAlreadyClosed = complaintRepo.closeWithHumanAnswer(ticketId,response);
         if(isComplaintAlreadyClosed){
-            System.out.println("complaint is closed");
+            System.out.println("complaint isn't closed");
 
             Complaint complaint = complaintRepo.getComplaint(ticketId);
             ConnectionToClient connection = getConnectionToId(complaint.getUserId());
