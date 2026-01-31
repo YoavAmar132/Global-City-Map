@@ -17,8 +17,9 @@
             prefHeight="500.0" prefWidth="820.0"
             style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
 
-    <Button text="✕"
-            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18; -fx-cursor: hand;"
+    <!-- Return (↷) button -->
+    <Button text="&#x21b7;"
+            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
             onAction="#handleClose"
             AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
 
