@@ -85,7 +85,7 @@ public class ServerBootstrap {
             BotToolRegistry botToolRegistry = new BotToolRegistry();
 
             //registering all the tools the bot can access
-            botToolRegistry.register(new GetCityExistTool());
+            registerTools(botToolRegistry);
 
             //letting the bot run in the background
             BotAgent botAgent = new BotAgent(complaintService, ollamaClient, botToolRegistry);
@@ -107,6 +107,17 @@ public class ServerBootstrap {
                 e.printStackTrace();
             }
         }
+    }
+
+    /*
+    * registering all the tools the bot can access
+    * */
+    private static void registerTools(BotToolRegistry botToolRegistry){
+        //registering all the tools the bot can access
+        botToolRegistry.register(new GetCityExistTool());
+        botToolRegistry.register(new GetCityRoutes());
+        botToolRegistry.register(new GetCitySubPrice());
+
     }
 
 }

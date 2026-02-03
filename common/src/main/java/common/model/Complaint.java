@@ -18,8 +18,6 @@ public class Complaint implements Serializable {
     private Status status = Status.OPEN;
     private String response = null;
     private String responseBy = null;
-    private int previousComplaintId = 0; //if the complaint isn't a response to a previous complaint then previousComplaintId = 0
-
 
     public Complaint(int userId, String text) {
         this.userId = userId;
@@ -37,12 +35,6 @@ public class Complaint implements Serializable {
     }
     public String getText() {
         return text;
-    }
-    public int getPreviousComplaintId() {
-        return previousComplaintId;
-    }
-    public void setPreviousComplaintId(int previousComplaintId) {
-        this.previousComplaintId = previousComplaintId;
     }
 
     public void setStatus(Status status) {

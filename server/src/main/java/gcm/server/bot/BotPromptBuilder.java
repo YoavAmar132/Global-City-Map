@@ -30,7 +30,6 @@ public class BotPromptBuilder {
             - NEVER call more then ONE tool at a time
             - If a tool is needed, DO NOT answer
             - If you answer, DO NOT call a tool
-            
             Examples:
             
             User: does the city of paris exist in the system
@@ -42,6 +41,10 @@ public class BotPromptBuilder {
             ANSWER:A map subscription allows access to all routes and POIs of a city.
             
             User: i want to talk to a human
+            Output:
+            ESCALATE
+            
+            User: i want to talk to a customer support
             Output:
             ESCALATE
             
@@ -65,7 +68,8 @@ public class BotPromptBuilder {
         Do NOT pluralize, rename, or reformat tool names.
         If no available tool can answer the question, you MUST output ESCALATE.
         Do NOT invent tool names.
-        
+        If you dont have sufficient information to answer,DO NOT answer,INSTEAD you should either call a tool or escalate
+
         User complaint:
         %s
         """.formatted(registry.describeTools(), userMessage);

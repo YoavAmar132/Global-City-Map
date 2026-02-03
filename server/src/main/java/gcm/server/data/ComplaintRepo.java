@@ -9,22 +9,16 @@ import java.util.Optional;
 public class ComplaintRepo {
 
     // 1. Create complaint and return id
-    public int createComplaint(int userId, String message,int previousComplaintId) throws SQLException {
+    public int createComplaint(int userId, String message) throws SQLException {
         String sql = """
-            INSERT INTO SupportTickets (userID, message, ticketStatus,previousComplaintId)
-            VALUES (?, ?, 'Open',?);
+            INSERT INTO SupportTickets (userID, message, ticketStatus)
+            VALUES (?, ?, 'Open');
         """;
 
         try (Connection conn = DbManager.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql,Statement.RETURN_GENERATED_KEYS);){
              stmt.setInt(1, userId);
              stmt.setString(2, message);
-             if(previousComplaintId != 0){
-                 stmt.setInt(3, previousComplaintId);
-             }
-             else{
-                 stmt.setNull(3, Types.INTEGER);
-             }
 
              stmt.executeUpdate();
              ResultSet generatedKeys = stmt.getGeneratedKeys();
@@ -132,7 +126,7 @@ public class ComplaintRepo {
 
             if (!rs.next()) return Optional.empty();
 
-            return Optional.of(mapRow(rs));
+            return Optional.of(createComplaintFromResSet(rs));
         }
     }
 
@@ -177,7 +171,7 @@ public class ComplaintRepo {
             stmt.setInt(1, complaintId);
             ResultSet rs = stmt.executeQuery();
             if (!rs.next()) return null;
-            return mapRow(rs);
+            return createComplaintFromResSet(rs);
         }
     }
     /**
@@ -208,7 +202,7 @@ public class ComplaintRepo {
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                resultList.add(mapRow(rs));
+                resultList.add(createComplaintFromResSet(rs));
             }
             return resultList;
         }
@@ -226,14 +220,14 @@ public class ComplaintRepo {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery();){
             while (rs.next()) {
-                resultList.add(mapRow(rs));
+                resultList.add(createComplaintFromResSet(rs));
             }
             return resultList;
         }
     }
 
 
-        private Complaint mapRow(ResultSet rs) throws SQLException {
+        private Complaint createComplaintFromResSet(ResultSet rs) throws SQLException {
 
         Complaint complaint =  new Complaint(
                 rs.getInt("userID"),
@@ -241,7 +235,6 @@ public class ComplaintRepo {
         complaint.setId(rs.getInt("ticketID"));
         complaint.setResponse(rs.getString("response"));//if it's null then response = 0
         complaint.setResponseBy(rs.getString("responseBy"));//if it's null then responseBy = 0
-        complaint.setPreviousComplaintId(rs.getInt("previousComplaintId"));//if it's null then previousComplaintId = 0
         String status = rs.getString("ticketStatus");
         if(status.equals("Open")){
             complaint.setStatus(Complaint.Status.OPEN);

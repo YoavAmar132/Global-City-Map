@@ -8,7 +8,7 @@ import java.util.*;
  * class used for registering the tools the bot may use
  * allow for an easy addition of new tools
  * if we want to add a new tool we must give make a class that implement BotTool
- * if we want the bot to be able to use the tool we must register the tool inside initializeBot() in ServerBootstrap class
+ * if we want the bot to be able to use the tool we must register the tool inside registerTools() in ServerBootstrap class
  */
 public class BotToolRegistry {
 

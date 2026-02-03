@@ -27,35 +27,20 @@ public class ComplaintService {
     public GcmResponse submitComplaint(Complaint complaint) throws SQLException {
         System.out.println("adding complaint");
         try {
-            int id = complaintRepo.createComplaint(complaint.getUserId(), complaint.getText(), complaint.getPreviousComplaintId());
+            int id = complaintRepo.createComplaint(complaint.getUserId(), complaint.getText());
             complaint.setId(id);
             BotConfig botConfig = BotConfig.getInstance();
 
             if (!botConfig.isEnabled()) {
+                System.out.println("setting complaint to wait for human");
                 setWaitingForHuman(complaint.getId());
                 return GcmResponse.ok(complaint);
             }
-            //TODO:remove previousComplaintId
-            if (complaint.getPreviousComplaintId() == 0) { //there was no previous complaint
-                System.out.println("setting complaint to wait for bot - there was no previous complaint");
-                setWaitingForBot(complaint.getId());
-            } else {
-                System.out.println("checking previous complaint");
-                //getting the previous complaint and deciding base on it's respondent to whom the complaint will wait
-                Complaint previousComplaint = complaintRepo.getComplaint(complaint.getPreviousComplaintId());
-                if (previousComplaint.getResponseBy().equals("Bot")) {
-                    System.out.println("setting complaint to wait for bot - there was a previous complaint");
-                    setWaitingForBot(complaint.getId());
-                } else if (previousComplaint.getResponseBy().equals("Human")) {
-                    System.out.println("setting complaint to wait for human - there was a previous complaint");
-                    setWaitingForHuman(complaint.getId());
-                }
-                else{
-                    System.out.println("couldn't recognize previous complaint");
-                    return GcmResponse.error("Server Error: couldn't recognize previous complaint");
-                }
-            }
+
+            System.out.println("setting complaint to wait for bot");
+            setWaitingForBot(complaint.getId());
             return GcmResponse.ok(complaint);
+
         } catch (Exception e) {
             System.out.println("server error");
             return GcmResponse.error("Server Error: " + e.getMessage());

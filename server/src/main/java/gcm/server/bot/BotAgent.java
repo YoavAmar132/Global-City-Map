@@ -26,7 +26,7 @@ public class BotAgent implements Runnable {
     private final ComplaintService complaintService;
     private final OllamaClient ollama;
     private final BotToolRegistry toolRegistry;
-    private final int toolUseLimit = 1; //the number of times the bot is allowed to call tools in response to one complaint
+    private final int toolUseLimit = 3; //the number of times the bot is allowed to call tools in response to one complaint
 
     public BotAgent(
             ComplaintService complaintService,
