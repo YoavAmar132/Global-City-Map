@@ -12,100 +12,105 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
+<?import javafx.scene.Group?>
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="gcm.client.controllers.map.PendingRouteController"
             prefHeight="500.0" prefWidth="820.0"
             style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
 
-    <!-- Close (X) button -->
-    <Button text="✕"
-            style="-fx-background-color: transparent;
-                   -fx-text-fill: black;
-                   -fx-font-size: 18;
-                   -fx-cursor: hand;"
-            onAction="#handleClose"
-            AnchorPane.rightAnchor="10.0"
-            AnchorPane.topAnchor="10.0"/>
+    <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Group StackPane.alignment="TOP_RIGHT">
+            <!-- Return (↷) button -->
+            <Button text="&#x21b7;"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
+                    onAction="#handleClose"
+                    AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+        </Group>
 
-    <!-- Center card -->
-    <StackPane layoutX="80.0" layoutY="60.0"
-               prefWidth="660.0" prefHeight="380.0"
-               style="-fx-background-color: rgba(255,255,255,0.15);
+        <Group StackPane.alignment="CENTER">
+            <!-- Center card -->
+            <StackPane layoutX="80.0" layoutY="60.0"
+                       prefWidth="660.0" prefHeight="380.0"
+                       style="-fx-background-color: rgba(255,255,255,0.15);
                       -fx-background-radius: 16;">
-        <effect>
-            <DropShadow radius="10.0" color="#00000055"/>
-        </effect>
+                <effect>
+                    <DropShadow radius="10.0" color="#00000055"/>
+                </effect>
 
-        <VBox spacing="14.0"
-              prefWidth="620.0"
-              prefHeight="340.0"
-              alignment="TOP_CENTER">
+                <VBox spacing="14.0"
+                      prefWidth="620.0"
+                      prefHeight="340.0"
+                      alignment="TOP_CENTER">
 
-            <padding>
-                <Insets top="20" right="20" bottom="20" left="20"/>
-            </padding>
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
 
-            <!-- Title -->
-            <Text text="Pending Routes" fill="white">
-                <font>
-                    <Font name="Segoe UI Semibold" size="28.0"/>
-                </font>
-            </Text>
+                    <!-- Title -->
+                    <Text text="Pending Routes" fill="white">
+                        <font>
+                            <Font name="Segoe UI Semibold" size="28.0"/>
+                        </font>
+                    </Text>
 
-            <Label text="Select a route to review"
-                   textFill="white"
-                   style="-fx-font-size: 13;
+                    <Label text="Select a route to review"
+                           textFill="white"
+                           style="-fx-font-size: 13;
                           -fx-opacity: 0.9;"/>
 
-            <!-- Actions -->
-            <HBox spacing="10" alignment="CENTER">
-                <Button text="Refresh"
-                        prefWidth="120"
-                        prefHeight="32"
-                        style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                    <!-- Actions -->
+                    <HBox spacing="10" alignment="CENTER">
+                        <Button text="Refresh"
+                                prefWidth="120"
+                                prefHeight="32"
+                                style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
                                -fx-text-fill: white;
                                -fx-font-size: 14;
                                -fx-background-radius: 8;
                                -fx-cursor: hand;"
-                        onAction="#initialize"/>
+                                onAction="#initialize"/>
 
-                <Button text="Back"
-                        prefWidth="120"
-                        prefHeight="32"
-                        style="-fx-background-color: rgba(255,255,255,0.20);
+                        <Button text="Back"
+                                prefWidth="120"
+                                prefHeight="32"
+                                style="-fx-background-color: rgba(255,255,255,0.20);
                                -fx-text-fill: white;
                                -fx-font-size: 14;
                                -fx-background-radius: 8;
                                -fx-cursor: hand;"
-                        onAction="#handleClose"/>
-            </HBox>
+                                onAction="#handleClose"/>
+                    </HBox>
 
-            <!-- List of pending routes -->
-            <ScrollPane fitToWidth="true"
-                        prefWidth="620"
-                        prefHeight="250"
-                        hbarPolicy="NEVER"
-                        vbarPolicy="AS_NEEDED"
-                        style="-fx-background: transparent;
+                    <!-- List of pending routes -->
+                    <ScrollPane fitToWidth="true"
+                                prefWidth="620"
+                                prefHeight="250"
+                                hbarPolicy="NEVER"
+                                vbarPolicy="AS_NEEDED"
+                                style="-fx-background: transparent;
                                -fx-background-color: transparent;
                                -fx-border-color: transparent;">
 
-                <content>
-                    <VBox fx:id="pendingList"
-                          spacing="10"
-                          style="-fx-background-color: transparent;">
-                        <padding>
-                            <Insets top="8" right="8" bottom="8" left="8"/>
-                        </padding>
-                    </VBox>
-                </content>
-            </ScrollPane>
+                        <content>
+                            <VBox fx:id="pendingList"
+                                  spacing="10"
+                                  style="-fx-background-color: transparent;">
+                                <padding>
+                                    <Insets top="8" right="8" bottom="8" left="8"/>
+                                </padding>
+                            </VBox>
+                        </content>
+                    </ScrollPane>
 
-            <Label text="Loading pending routes..."
-                   textFill="white"
-                   style="-fx-font-size: 12;
+                    <Label text="Loading pending routes..."
+                           textFill="white"
+                           style="-fx-font-size: 12;
                           -fx-opacity: 0.85;"/>
-        </VBox>
+                </VBox>
+            </StackPane>
+        </Group>
     </StackPane>
+
+
 </AnchorPane>

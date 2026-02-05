@@ -29,6 +29,22 @@
                     AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
         </Group>
 
+        <Group StackPane.alignment="CENTER">
+
+        </Group>
+    </StackPane>
+
+
+
+    <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Group StackPane.alignment="TOP_RIGHT">
+            <!-- Return (↷) button -->
+            <Button text="&#x21b7;"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
+                    onAction="#handleClose"
+                    AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+        </Group>
+
 
         <Group StackPane.alignment="TOP_LEFT">
             <!-- Refresh (↻) button -->
