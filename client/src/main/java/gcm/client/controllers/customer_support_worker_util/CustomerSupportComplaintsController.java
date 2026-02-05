@@ -121,7 +121,9 @@ public class CustomerSupportComplaintsController {
                         //list is a list of complaints
                         complaintList.getChildren().clear();
                         for (Object o : list) {
-                            complaintList.getChildren().addFirst(createComplaintRow((Complaint) o));
+
+                            complaintList.getChildren().add(0,createComplaintRow((Complaint) o));
+
                         }
                         statusLabel.setText("Select a complaint to Review.");
                     } else if (list.isEmpty()) {
