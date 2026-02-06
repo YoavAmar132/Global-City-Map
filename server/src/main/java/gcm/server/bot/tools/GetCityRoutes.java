@@ -23,7 +23,7 @@ public class GetCityRoutes implements BotTool {
     public String getDescription() {
         return "- getCityRoutes requires EXACT argument name: cityName (cityName has to be name of a city that exist in the system)\n" +
                 "return the list of routes of the city in the following form:\n" +
-                "routes for <cityName>\n" +
+                "The available routes for the city of <cityName>\n"+
                 "route 1: <route 1>\n" +
                 "....\n" +
                 "route n: <route n>\n"+
@@ -47,7 +47,6 @@ public class GetCityRoutes implements BotTool {
     public String execute(Map<String, String> args) throws Exception {
         String city = args.get("cityName");
         if (city == null) throw new Exception("CityName not provided");
-
         city = normalize(city);
 
         CityRepo cityRepo = new CityRepo();
@@ -57,7 +56,9 @@ public class GetCityRoutes implements BotTool {
         RouteRepo routeRepo = new RouteRepo();
         List<RouteSheet> routeSheetList = routeRepo.loadApprovedRoutesForCity(cityId);
         StringBuilder answer = new StringBuilder();
-        answer.append("\n");
+        answer.append("The available routes for the city of ");
+        answer.append(city);
+        answer.append(" are :\n");
         int i  = 1;
         for (RouteSheet routeSheet : routeSheetList) {
 

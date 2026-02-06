@@ -11,6 +11,8 @@ public class BotPromptBuilder {
             DO NOT explain your reasoning.
             DO NOT answer and call a tool in the same response.
             DO NOT output multiple lines.
+            NEVER call the same tool twice
+            If in previous iteration you called a tool its result will appear right below the complaint
             
             Valid actions:
             

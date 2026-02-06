@@ -96,7 +96,7 @@ public class BotDecisionParser {
      * get the bot raw textual response (which is in a json-like format in the case of ollama)
      * split the response to its different part and extract the relevant parts (which is the response itself)
      * */
-    private static String extractResponseText(String rawJson) {
+    public static String extractResponseText(String rawJson) {
 
         int responseIndex = rawJson.indexOf("\"response\":");
         if (responseIndex == -1) {

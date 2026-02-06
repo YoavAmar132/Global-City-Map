@@ -6,6 +6,8 @@ import gcm.server.service.ComplaintService;
 
 import java.util.Optional;
 
+import static gcm.server.bot.BotDecisionParser.extractResponseText;
+
 
 /*
  * run concurrently with the rest of the server
@@ -80,6 +82,9 @@ public class BotAgent implements Runnable {
         System.out.println(raw);
 
         System.out.println("-bot agent: analyzing decision");
+
+        String trimmed_response = extractResponseText(raw).trim();
+
         BotResponse decision = BotDecisionParser.parse(raw);
         int usedTools = 0;
         while (usedTools < toolUseLimit){
@@ -133,7 +138,7 @@ public class BotAgent implements Runnable {
                     System.out.println("-bot agent: answering the bot back:");
 
                     String followUpPrompt =
-                            prompt + "Tool result:" + toolResult;
+                            prompt + "\nTool result for: "+trimmed_response+" :\n" + toolResult;
                     System.out.println(followUpPrompt);
 
                     String answer =

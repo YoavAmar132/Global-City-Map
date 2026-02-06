@@ -12,7 +12,7 @@ public final class BotConfig {
 
     private static BotConfig instance = null;
     private boolean enabled = false;
-    private String model = "qwen2.5:1.5b";
+    private String model = "mistral";
 
     private BotConfig() {}
 
