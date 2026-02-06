@@ -116,6 +116,41 @@ public class SceneNavigator {
 
             stage.setScene(scene);
             if (!stage.isShowing()) stage.show();
+            /*
+            double currentSceneWidth = 0;
+            double currentSceneHeight = 0;
+            if(stage.getScene()!=null) {
+                //if we switch to a new scene from an existing one ,we'll ensure that its new width/height is
+                // the maximum between the last scene width and the new scene preferred width/height
+                currentSceneWidth = stage.getScene().getWindow().getWidth();
+                currentSceneHeight = stage.getScene().getWindow().getHeight();
+
+
+                if(currentSceneWidth<scene.getWidth()) {
+                    currentSceneWidth = scene.getWidth();
+                }
+                if(currentSceneHeight<scene.getHeight()) {
+                    currentSceneHeight = scene.getHeight();
+                }
+
+                scene.getStylesheets().add(
+                        getClass().getResource("/gcm/client/map/map.css").toExternalForm()
+                );
+
+                stage.setScene(scene);
+                if (!stage.isShowing()) stage.show();
+                stage.setWidth(currentSceneWidth);
+                stage.setHeight(currentSceneHeight);
+            }
+            else {
+                scene.getStylesheets().add(
+                        getClass().getResource("/gcm/client/map/map.css").toExternalForm()
+                );
+
+                stage.setScene(scene);
+                if (!stage.isShowing()) stage.show();
+            }
+            */
         } catch (IOException e) {
             throw new RuntimeException("Failed to load " + fxml, e);
         }
