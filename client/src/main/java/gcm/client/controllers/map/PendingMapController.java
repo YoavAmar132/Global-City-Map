@@ -28,6 +28,7 @@ public class PendingMapController {
     private GcmClient client;
     private City currentCity;
 
+    private boolean active = false;
 
     @FXML
     private VBox pendingList;
@@ -36,6 +37,8 @@ public class PendingMapController {
 
     @FXML
     private void initialize() {
+        active = true;
+
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
 
@@ -147,8 +150,11 @@ public class PendingMapController {
     }
 
     private void handleResponse(GcmResponse response) {
-        // ALWAYS use Platform.runLater for UI updates from network threads
+        if (!active) return;
+
         Platform.runLater(() -> {
+            if (!active) return;
+
             if (!response.isSuccess()) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
@@ -157,61 +163,39 @@ public class PendingMapController {
                 return;
             }
 
-            Object t = response.getData();
-            if (t == null) { // reject success
-                onRefreshClicked(null);
-                return;
-            }
+            Object data = response.getData();
 
-            if (t instanceof Popup) {
-                // Likely the result of "APPROVE_MAP_VERSION" success
-                System.out.println("Map approval success (or empty response)");
-                // Optional: refresh list automatically
-                onRefreshClicked(null);
-                return;
-            }
+            if (data instanceof ArrayList<?> list && !list.isEmpty()) {
+                Object first = list.get(0);
 
-            if (t instanceof ArrayList<?>) {
-                ArrayList<?> list = (ArrayList<?>) t;
-
-                // Case 1: Empty list. We must check which request type it was.
-                // Since we can't easily track request IDs here without complex logic,
-                // we rely on the object type if the list ISN'T empty.
-                // If it IS empty, we can't distinguish, but clearing the map list is usually safer.
-
-                if (list.isEmpty()) {
-                    pendingList.getChildren().clear();
-                    return;
+                if (first instanceof City) {
+                    cities = (ArrayList<City>) list;
                 }
-
-
-                // Case 2: List has items, check the first item type
-                Object firstItem = list.get(0);
-
-                if (firstItem instanceof City) {
-                    @SuppressWarnings("unchecked")
-                    ArrayList<City> loadedCities = (ArrayList<City>) list;
-                    setCities(loadedCities);
-                    System.out.println("City list loaded: " + loadedCities.size());
-                }
-                else if (firstItem instanceof MapSheet) {
-                    @SuppressWarnings("unchecked")
-                    List<MapSheet> pendingMaps = (List<MapSheet>) list;
+                else if (first instanceof MapSheet) {
                     pendingList.getChildren().clear();
-                    for (MapSheet map : pendingMaps) {
+                    for (MapSheet map : (List<MapSheet>) list) {
                         pendingList.getChildren().add(createMapRow(map));
                     }
-                    System.out.println("Pending maps loaded: " + pendingMaps.size());
                 }
             }
         });
     }
 
+
+    private void detach() {
+        active = false;
+        client.setResponseHandler(null);
+    }
+
+
+
     public void onBackClicked(ActionEvent actionEvent) {
+        detach();
         ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     public void handleClose(ActionEvent actionEvent) {
+        detach();
         ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
