@@ -18,11 +18,11 @@
 
     <properties>
         <!-- Java -->
-        <java.version>17</java.version>
-        <maven.compiler.release>17</maven.compiler.release>
+        <java.version>21</java.version>
+        <maven.compiler.release>21</maven.compiler.release>
 
         <!-- JavaFX -->
-        <javafx.version>17.0.12</javafx.version>
+        <javafx.version>21.0.4</javafx.version>
 
         <!-- Build -->
         <surefire.version>3.2.5</surefire.version>

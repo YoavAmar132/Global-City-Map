@@ -42,7 +42,7 @@ public class MyMapsController {
      * We add this to the top of the list every time we reload.
      */
     private Button createSubscriptionButton() {
-        Button subBtn = new Button("View My Subscriptions");
+        Button subBtn = new Button("View My Subscriptions maps:");
         subBtn.setMaxWidth(Double.MAX_VALUE);
         subBtn.setPrefHeight(40);
         subBtn.setStyle(
@@ -53,9 +53,6 @@ public class MyMapsController {
                         "-fx-background-radius: 8; " +
                         "-fx-cursor: hand;"
         );
-
-        // Navigate to the Subscriptions Controller (Ensure you created this class!)
-        subBtn.setOnAction(e -> ClientApp.getNavigator().show(UserSubscriptionsController.class));
         return subBtn;
     }
 
