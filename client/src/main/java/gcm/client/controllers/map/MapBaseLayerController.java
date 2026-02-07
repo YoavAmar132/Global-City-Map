@@ -304,7 +304,8 @@ public class MapBaseLayerController {
 
 
 
-    /** copied from your test app, adapted to use tileRoot + mapCanvas */  private void centerOnAvailableTiles() {
+    /** copied from your test app, adapted to use tileRoot + mapCanvas */
+    private void centerOnAvailableTiles() {
         if (!(this.mapCanvas.getWidth() <= (double)0.0F) && !(this.mapCanvas.getHeight() <= (double)0.0F)) {
             File zoomDir;
             if (isRunningFromJar()) {

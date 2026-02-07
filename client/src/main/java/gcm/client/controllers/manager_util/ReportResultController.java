@@ -55,7 +55,7 @@ public class ReportResultController {
             series.getData().add(new XYChart.Data<>("Subscribers", data.getNumSubscriptions()));
             //series.getData().add(new XYChart.Data<>("Renewals", data.getNumRenewals())); // Optional if you added this field
             series.getData().add(new XYChart.Data<>("Views", data.getNumViews()));
-            //series.getData().add(new XYChart.Data<>("Downloads", data.getNumDownloads())); // Optional if you added this field
+            series.getData().add(new XYChart.Data<>("Downloads", data.getNumDownloads())); // Optional if you added this field
 
             // 4. Add the series to the chart
             reportChart.getData().add(series);

@@ -416,6 +416,14 @@ public class RequestHandler {
                 throw new RuntimeException("failed to reject pending map", e);
             }
         }
+        if (type == RequestType.DOWNLOAD) {
+            System.out.println("requesting  download");
+            try {
+                return handledownload(request);
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to download  map", e);
+            }
+        }
 
 
 
@@ -883,6 +891,19 @@ public class RequestHandler {
         List<CityCatalogItem> results = catalogService.searchCities(payload.getQuery());
 
         return GcmResponse.ok(results);
+    }
+    private GcmResponse handledownload(GcmRequest request) throws SQLException {
+        System.out.println("download request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof Download download)) {
+            return GcmResponse.error("Invalid payload for download");
+        }
+        boolean result=mapService.addDownload(download.getId(),download.getCityid());
+       if(result)
+       {
+           return GcmResponse.ok(null);
+       }
+        return GcmResponse.error("faild to increment");
     }
 
 
