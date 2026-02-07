@@ -6,6 +6,7 @@ import gcm.client.controllers.catalogPublic.GuestCatalogController;
 import gcm.client.controllers.user_util.ComplaintHistoryController;
 import gcm.client.controllers.user_util.CreateComplaintController;
 import gcm.client.controllers.manager_util.ClientCardController;
+import gcm.client.controllers.user_util.BuyMapScreenController;
 import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;

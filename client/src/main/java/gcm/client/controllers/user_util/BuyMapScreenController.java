@@ -40,13 +40,14 @@ public class BuyMapScreenController {
 
     @FXML
     private void initialize() {
+        System.out.println("called mapscreen");
+
+        client = ClientApp.getClient();
         if (client == null) {
-            // running in tests / screen opened without networking wired yet
+            System.out.println("testing");
             return;
         }
-        client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
-
         EmptyPayload payload=new EmptyPayload();
         GcmRequest request = new GcmRequest(RequestType.LIST_CITIES, payload);
         client.sendRequest(request);

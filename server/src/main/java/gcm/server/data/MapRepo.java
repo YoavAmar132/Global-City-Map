@@ -121,6 +121,26 @@ public class MapRepo {
             }
         } catch (SQLException e) { e.printStackTrace(); return false; }
     }
+    public boolean incrementDownloadsRemaining(int userId, int cityId) {
+        String sql =
+                "UPDATE subscriptions " +
+                        "SET Downloadsremaining = Downloadsremaining + 1 " +
+                        "WHERE UserID = ? AND CityID = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, cityId);
+
+            boolean ok = stmt.executeUpdate() > 0;
+            return ok;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 
     // 2. Updated Add Purchase: Handle explicit versions
     public boolean addPurchase(int userId, String cityName, double price, boolean isSubscription, int months,String credit) throws SQLException {
@@ -158,7 +178,20 @@ public class MapRepo {
                 stmt.setInt(3, versionToBuy);
                 stmt.setString(4, credit);
                 writeMessage(userId,"We Thank you for your purchase of :"+cityName+" Maps . you can download them here->");
-                return stmt.executeUpdate() > 0;
+                boolean i= stmt.executeUpdate() > 0;
+                List<MapSheet> maps=loadAllMapsFromCity(cityName);
+                for(MapSheet m:maps)
+                {
+                    String pois="";
+                    for(Poi p:m.getPois())
+                    {
+                        pois= pois+"  poi name: "+p.getName()+" poi description: "+p.getDescription()+" recomended time to stay: "+p.getRecommendedMinutes()
+                                +" Accessable?: "+p.isAccessible();
+                    }
+
+                   writeMessage(userId,"Map: "+m.getName()+ System.lineSeparator()+" description:"+m.getDescription()+ System.lineSeparator()+" point of intrests : || "+pois+ System.lineSeparator());
+                }
+                return i;
             } catch (SQLException e) { e.printStackTrace(); return false; }
 
     }
