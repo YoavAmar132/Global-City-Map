@@ -6,30 +6,49 @@ import java.io.Serializable;
 public class Poi implements Serializable {
     public static final int BASE_ZOOM = 16;
 
-    private final int id;
+    private  int id;
     private final String name;
     private final String description;
     private final POI_Category category;
-
+    private final boolean accessible;
+    private final int cityID;
+    private final Boolean is_approved;
+    private final int recommendedMinutes;
     // Stored in BASE_ZOOM world-pixels
     private final double baseWorldX;
     private final double baseWorldY;
 
     public Poi(int id, String name, String description,
                double baseWorldX, double baseWorldY,
-               POI_Category category) {
+               POI_Category category,
+               boolean accessible, int cityID, boolean is_approved, int recommendedMinutes) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.baseWorldX = baseWorldX;
         this.baseWorldY = baseWorldY;
         this.category = category;
+        this.accessible = accessible;
+        this.cityID = cityID;
+        this.is_approved = is_approved;
+        this.recommendedMinutes = recommendedMinutes;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getId() { return id; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public POI_Category getCategory() { return category; }
+    public boolean isAccessible() {
+        return accessible;
+    }
+    public int getCityID() { return cityID; }
+    public boolean isApproved() { return is_approved; }
+    public int getRecommendedMinutes() { return recommendedMinutes; }
+
 
 
     // Convert BASE_ZOOM world-pixels -> requested zoom world-pixels
@@ -40,11 +59,20 @@ public class Poi implements Serializable {
 
     public double getWorldY(int zoomLevel) {
         double scale = Math.pow(2, BASE_ZOOM - zoomLevel);
-        return baseWorldY / scale;
+        return baseWorldY/ scale;
+    }
+    // Convert BASE_ZOOM world-pixels -> requested zoom world-pixels
+    public double getNWorldX() {
+        return baseWorldX ;
+    }
+
+    public double getNWorldY() {
+        return baseWorldY;
     }
 
     // Optional: if you ever need raw base coords
     public double getBaseWorldX() { return baseWorldX; }
     public double getBaseWorldY() { return baseWorldY; }
+
 }
 

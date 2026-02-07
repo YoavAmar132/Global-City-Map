@@ -26,6 +26,7 @@ public class MapLoaderController {
     private GcmClient client;
     @FXML
     private VBox MapList;
+    private boolean editMode = false;
 
 
     @FXML
@@ -41,6 +42,11 @@ public class MapLoaderController {
         client.sendRequest(request);
     }
 
+    public void setVals(String Cityname, boolean editMode) {
+        this.editMode = editMode;
+        setVals(Cityname); // reuse existing logic
+    }
+
 
     private HBox createMapRow(MapSheet map) {
         Label name = new Label(map.getName());
@@ -52,7 +58,7 @@ public class MapLoaderController {
                 "-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); " +
                         "-fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;"
         );
-        open.setOnAction(e -> openPendingMap(map));
+        open.setOnAction(e -> openApprovedMap(map));
 
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
@@ -64,6 +70,31 @@ public class MapLoaderController {
         row.setPadding(new javafx.geometry.Insets(10, 12, 10, 12));
 
         return row;
+    }
+
+
+    public void openApprovedMap(MapSheet map) {
+
+        if (!editMode) {
+            // VIEW (your existing behavior)
+            SceneNavigator.LoadedView<UserMapViewerController> view =
+                    ClientApp.getNavigator().get(UserMapViewerController.class);
+
+            view.controller.setVals(map);
+            ClientApp.getNavigator().showLoaded(view.root);
+
+            System.out.println("opened (VIEW): " + map.getName());
+            return;
+        }
+
+        // EDIT (new behavior)
+        SceneNavigator.LoadedView<MapViewerController> view =
+                ClientApp.getNavigator().get(MapViewerController.class);
+
+        view.controller.setValsForEdit(map);
+        ClientApp.getNavigator().showLoaded(view.root);
+
+        System.out.println("opened (EDIT): " + map.getName());
     }
 
 
@@ -118,8 +149,8 @@ public class MapLoaderController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
+        client.sendRequest(request);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

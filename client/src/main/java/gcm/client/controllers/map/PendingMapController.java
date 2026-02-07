@@ -3,6 +3,8 @@ package gcm.client.controllers.map;
 import common.messages.*;
 import common.model.City;
 import common.model.MapSheet;
+import gcm.client.controllers.catalogPublic.GuestCatalogController;
+import gcm.client.controllers.menu.ContentManagerController;
 import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
@@ -24,6 +26,9 @@ import java.util.stream.Collectors;
 
 public class PendingMapController {
     private GcmClient client;
+    private City currentCity;
+
+    private boolean active = false;
 
     @FXML
     private VBox pendingList;
@@ -32,6 +37,8 @@ public class PendingMapController {
 
     @FXML
     private void initialize() {
+        active = true;
+
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
 
@@ -64,16 +71,42 @@ public class PendingMapController {
         approve.setStyle("-fx-background-color: rgba(255,255,255,0.20); -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;");
         approve.setOnAction(e -> ApproveMap(map));
 
+        Button reject = new Button("Reject");
+        reject.setPrefSize(90, 30);
+        reject.setStyle("""
+    -fx-background-color: rgba(255,80,80,0.35);
+    -fx-text-fill: white;
+    -fx-font-size: 13;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+""");
+
+        reject.setOnAction(e -> rejectMap(map));
+
+
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
 
-        HBox row = new HBox(12, name, spacer, open, approve);
+        HBox row = new HBox(12, name, spacer, open, approve, reject);
         row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;");
         row.setPadding(new javafx.geometry.Insets(10, 12, 10, 12));
 
         return row;
     }
+
+    private void rejectMap(MapSheet map) {
+        if (map == null) return;
+
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.REJECT_PENDING_MAP,
+                        map
+                )
+        );
+    }
+
+
 
     private void ApproveMap(MapSheet map) {
         if (map == null) return;
@@ -104,6 +137,8 @@ public class PendingMapController {
         ApprovePayload payload = new ApprovePayload(map, chosenCity);
         GcmRequest request = new GcmRequest(RequestType.APPROVE_MAP_VERSION, payload);
         client.sendRequest(request);
+
+
     }
 
     public void openPendingMap(MapSheet map) {
@@ -115,8 +150,11 @@ public class PendingMapController {
     }
 
     private void handleResponse(GcmResponse response) {
-        // ALWAYS use Platform.runLater for UI updates from network threads
+        if (!active) return;
+
         Platform.runLater(() -> {
+            if (!active) return;
+
             if (!response.isSuccess()) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.setTitle("Error");
@@ -125,60 +163,40 @@ public class PendingMapController {
                 return;
             }
 
-            Object t = response.getData();
-            if (t == null) {
-                // Likely the result of "APPROVE_MAP_VERSION" success
-                System.out.println("Map approval success (or empty response)");
-                // Optional: refresh list automatically
-                onRefreshClicked(null);
-                return;
-            }
+            Object data = response.getData();
 
-            if (t instanceof ArrayList<?>) {
-                ArrayList<?> list = (ArrayList<?>) t;
+            if (data instanceof ArrayList<?> list && !list.isEmpty()) {
+                Object first = list.get(0);
 
-                // Case 1: Empty list. We must check which request type it was.
-                // Since we can't easily track request IDs here without complex logic,
-                // we rely on the object type if the list ISN'T empty.
-                // If it IS empty, we can't distinguish, but clearing the map list is usually safer.
-
-                if (list.isEmpty()) {
-                    // It's ambiguous, but usually safe to clear the UI list just in case it was a map search result
-                    // If it was an empty city list, clearing the pending map list is a harmless side effect (unless you expected maps).
-                    // Ideally, your server response should include the "RequestType" it is answering.
-                    System.out.println("Received empty list.");
-                    return;
+                if (first instanceof City) {
+                    cities = (ArrayList<City>) list;
                 }
-
-                // Case 2: List has items, check the first item type
-                Object firstItem = list.get(0);
-
-                if (firstItem instanceof City) {
-                    @SuppressWarnings("unchecked")
-                    ArrayList<City> loadedCities = (ArrayList<City>) list;
-                    setCities(loadedCities);
-                    System.out.println("City list loaded: " + loadedCities.size());
-                }
-                else if (firstItem instanceof MapSheet) {
-                    @SuppressWarnings("unchecked")
-                    List<MapSheet> pendingMaps = (List<MapSheet>) list;
+                else if (first instanceof MapSheet) {
                     pendingList.getChildren().clear();
-                    for (MapSheet map : pendingMaps) {
+                    for (MapSheet map : (List<MapSheet>) list) {
                         pendingList.getChildren().add(createMapRow(map));
                     }
-                    System.out.println("Pending maps loaded: " + pendingMaps.size());
                 }
             }
         });
     }
 
+
+    private void detach() {
+        active = false;
+        client.setResponseHandler(null);
+    }
+
+
+
     public void onBackClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+        detach();
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        detach();
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {

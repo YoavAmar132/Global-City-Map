@@ -1,17 +1,17 @@
 package gcm.client.controllers;
-import gcm.client.controllers.menu.ContentWorkerMenuController;
-import gcm.client.controllers.menu.CustomerSupportMenuController;
-import gcm.client.controllers.menu.ManagerMenuController;
-import gcm.client.controllers.menu.UserMenuController;
+import gcm.client.controllers.menu.*;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
 import common.model.User;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
+
+import javax.lang.model.type.NullType;
 
 public class LoginController {
 
@@ -51,42 +51,69 @@ public class LoginController {
             alert.showAndWait();
             return;
         }
+        Object data = response.getData();
 
-        User user = (User) response.getData();
-        ClientApp.setCurrentUser(user);          // store the logged-in user globally
-        System.out.println("Logged in as: " + user.getUsername() + " (" + user.getRole() + ")");
+        if(data instanceof User) {
+            User user = (User) response.getData();
+            ClientApp.setCurrentUser(user);          // store the logged-in user globally
+            System.out.println("Logged in as: " + user.getUsername() + " (" + user.getRole() + ")");
+            int x;
+            try {
+                x = Integer.parseInt(response.getErrorMessage());
+            } catch (NumberFormatException e) {
+                x = 0; // or handle error
+            }
+            Alert alert;
+            switch (user.getRole()) {
 
-        switch (user.getRole()) {
+                case "Customer":
+                    if(x!=0)
+                    {
+                         alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("Welcome "+user.getUsername());
+                        alert.setContentText("You have "+x+" new messages");
+                        alert.showAndWait();
+                    }
 
-            case "Customer":
-                ClientApp.getNavigator().show(UserMenuController.class);
-                break;
-            case "ContentManager":
-            case "Worker":
-            case "ContentEmployee":
-                ClientApp.getNavigator().show(ContentWorkerMenuController.class);
-                break;
+                    ClientApp.getNavigator().show(UserMenuController.class);
+                    break;
+                case "ContentManager":
+                    ClientApp.getNavigator().show(ContentManagerController.class);
+                    break;
+                case "Worker":
+                    ClientApp.getNavigator().show(WorkerMenuController.class);
+                    break;
+                case "ContentEmployee":
+                    ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+                    break;
 
-            case "CustomerSupport":
-                ClientApp.getNavigator().show(CustomerSupportMenuController.class);
-                break;
+                case "CustomerSupport":
+                    ClientApp.getNavigator().show(CustomerSupportMenuController.class);
+                    break;
 
 
-            case "CompanyManager":
-                ClientApp.getNavigator().show(ManagerMenuController.class);
-                break;
+                case "CompanyManager":
+                    ClientApp.getNavigator().show(ManagerMenuController.class);
+                    break;
 
-            default:
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Login Failed");
-                alert.setContentText("Unknown role: " + user.getRole());
-                alert.showAndWait();
+                default:
+                     alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Login Failed");
+                    alert.setContentText("Unknown role: " + user.getRole());
+                    alert.showAndWait();
+            }
+        }
+        else
+        {
+            ClientApp.getNavigator().show(WelcomeController.class);
         }
     }
 
     @FXML
     private void handleClose() {
-        ClientApp.getNavigator().show(WelcomeController.class);
+        GcmRequest request = new GcmRequest(RequestType.LOGOUT,ClientApp.getCurrentUser() );
+        client.sendRequest(request);
+
     }
 
 

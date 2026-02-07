@@ -3,7 +3,8 @@ package gcm.client.controllers.map;
 import common.messages.*;
 import common.model.City;
 import common.model.CityPricingItem;
-import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.menu.ContentManagerController;
+import gcm.client.controllers.menu.ContentWorkerMenuController;
 import gcm.client.network.GcmClient;
 import gcm.client.utill.ClientApp;
 import javafx.application.Platform;
@@ -26,7 +27,6 @@ public class EditPricesController {
     @FXML
     private void initialize() {
         client = ClientApp.getClient();
-        // הגדרת ה-Handler הראשוני לטעינת הרשימה
         client.setResponseHandler(this::handleListResponse);
 
         client.sendRequest(new GcmRequest(
@@ -35,9 +35,7 @@ public class EditPricesController {
         ));
     }
 
-    // פונקציה נפרדת לטיפול בתשובת הרשימה
     private void handleListResponse(GcmResponse response) {
-        // עדכוני GUI חייבים לרוץ ב-Platform.runLater
         Platform.runLater(() -> {
             if (!response.isSuccess()) {
                 showError(response.getErrorMessage());
@@ -63,8 +61,11 @@ public class EditPricesController {
         Label name = new Label(city.getName());
         name.setStyle("-fx-text-fill: #1F2937; -fx-font-size: 16; -fx-font-weight: bold;");
 
-        // הצגת שני המחירים למשתמש
-        Label price = new Label(String.format("One-time: %.2f | Sub: %.2f", city.getPrice(), city.getSubPrice()));
+        Label price = new Label(
+                String.format("One-time: %.2f | Sub: %.2f",
+                        city.getPrice(),
+                        city.getSubPrice())
+        );
         price.setStyle("-fx-text-fill: #4B5563; -fx-font-size: 13;");
 
         VBox textBox = new VBox(4, name, price);
@@ -77,8 +78,7 @@ public class EditPricesController {
                         "-fx-background-radius: 8; -fx-cursor: hand;"
         );
 
-        // בעת לחיצה, פותחים דיאלוג עריכה מורחב
-        edit.setOnAction(e -> showEditDialog(city, price));
+        edit.setOnAction(e -> showEditDialog(city));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -91,16 +91,14 @@ public class EditPricesController {
         return row;
     }
 
-    private void showEditDialog(City city, Label priceLabel) {
-        // יצירת דיאלוג מותאם אישית שמאפשר החזרת זוג ערכים (Pair)
+    private void showEditDialog(City city) {
         Dialog<Pair<Double, Double>> dialog = new Dialog<>();
         dialog.setTitle("Edit Prices");
-        dialog.setHeaderText("Update prices for " + city.getName());
+        dialog.setHeaderText("Request price change for " + city.getName());
 
-        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        ButtonType saveButtonType = new ButtonType("Send Request", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
 
-        // יצירת טופס עם שני שדות
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(10);
@@ -116,15 +114,14 @@ public class EditPricesController {
 
         dialog.getDialogPane().setContent(grid);
 
-        // המרת התוצאה ל-Pair בעת לחיצה על שמירה
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == saveButtonType) {
+        dialog.setResultConverter(button -> {
+            if (button == saveButtonType) {
                 try {
-                    double newPrice = Double.parseDouble(priceField.getText());
-                    double newSubPrice = Double.parseDouble(subPriceField.getText());
-                    return new Pair<>(newPrice, newSubPrice);
-                } catch (NumberFormatException e) {
-                    return null; // יטופל בחוץ
+                    double p = Double.parseDouble(priceField.getText());
+                    double sp = Double.parseDouble(subPriceField.getText());
+                    return new Pair<>(p, sp);
+                } catch (Exception e) {
+                    return null;
                 }
             }
             return null;
@@ -132,7 +129,6 @@ public class EditPricesController {
 
         Optional<Pair<Double, Double>> result = dialog.showAndWait();
 
-        // אם המשתמש לחץ Save והערכים תקינים
         result.ifPresent(prices -> {
             double newPrice = prices.getKey();
             double newSubPrice = prices.getValue();
@@ -142,13 +138,16 @@ public class EditPricesController {
                 return;
             }
 
-            updatePricesOnServer(city, newPrice, newSubPrice, priceLabel);
+            sendPriceChangeRequest(city, newPrice, newSubPrice);
         });
     }
 
-    private void updatePricesOnServer(City city, double newPrice, double newSubPrice, Label priceLabel) {
-        // הנחה: עדכנת את CityPricingItem שיהיה לו בנאי שמקבל את שני המחירים
-        CityPricingItem item = new CityPricingItem(city.getId(), newPrice, newSubPrice);
+    private void sendPriceChangeRequest(City city,
+                                        double newPrice,
+                                        double newSubPrice) {
+
+        CityPricingItem payload =
+                new CityPricingItem(city.getId(), newPrice, newSubPrice);
 
         client.setResponseHandler(response -> Platform.runLater(() -> {
             if (!response.isSuccess()) {
@@ -156,17 +155,18 @@ public class EditPricesController {
                 return;
             }
 
-            // עדכון המודל המקומי
-            city.setPrice(newPrice);
-            city.setSubPrice(newSubPrice);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setHeaderText(null);
+            alert.setContentText("Price change request sent for approval.");
+            alert.showAndWait();
 
-            // עדכון התצוגה למשתמש
-            priceLabel.setText(String.format("One-time: %.2f | Sub: %.2f", newPrice, newSubPrice));
+            ClientApp.getNavigator()
+                    .show(ContentManagerController.class);
         }));
 
         client.sendRequest(new GcmRequest(
-                RequestType.UPDATE_CITY_PRICE,
-                item
+                RequestType.REQUEST_CITY_PRICE_CHANGE,
+                payload
         ));
     }
 
@@ -180,6 +180,6 @@ public class EditPricesController {
 
     @FXML
     private void handleClose() {
-        ClientApp.getNavigator().show(WelcomeController.class);
+        ClientApp.getNavigator().show(ContentManagerController.class);
     }
 }

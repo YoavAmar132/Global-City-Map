@@ -1,145 +1,492 @@
 package gcm.server.data;
-import common.model.POI_Category;
-import common.model.Poi ;
-import common.model.Route;
+
+import common.model.PendingRoute;
+import common.model.*;
+
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RouteRepo {
-    public int getLastRouteId() throws SQLException {
-        String sql = "SELECT MAX(id) AS max_id FROM routes";
 
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
 
-            if (rs.next()) {
-                return rs.getInt("max_id"); // returns 0 if table is empty
+    public boolean insertPendingRoute(PendingRoute route) throws SQLException {
+
+        String insertRouteSql = """
+        INSERT INTO pending_routes
+        (name, description, cityID, is_edit, sourceRouteID)
+        VALUES (?, ?, ?, ?, ?)
+    """;
+
+        String insertStopSql = """
+        INSERT INTO pending_route_stops (routeID, poiId, stop_order)
+        VALUES (?, ?, ?)
+    """;
+
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
+
+            int routeId;
+
+            try (PreparedStatement ps = conn.prepareStatement(
+                    insertRouteSql,
+                    Statement.RETURN_GENERATED_KEYS
+            )) {
+                ps.setString(1, route.getName());
+                ps.setString(2, route.getDescription());
+                ps.setInt(3, route.getCityId());
+                ps.setBoolean(4, route.isEdit());
+                ps.setObject(5, route.getSourceRouteId(), Types.INTEGER);
+
+                ps.executeUpdate();
+
+                ResultSet rs = ps.getGeneratedKeys();
+                if (!rs.next()) {
+                    conn.rollback();
+                    return false;
+                }
+                routeId = rs.getInt(1);
             }
-            return 0;
-        }
-    }
-    public boolean insertRoute(Route route) {
-        List<double[]> points = route.getBasePoints();
 
-        // LINESTRING requires at least 2 points
-        if (points == null || points.size() < 2) {
-            return false;
-        }
-
-        StringBuilder wkt = new StringBuilder("LINESTRING(");
-
-        for (int i = 0; i < points.size(); i++) {
-            double[] p = points.get(i);
-
-            // safety check
-            if (p == null || p.length != 2) {
-                return false;
+            try (PreparedStatement ps = conn.prepareStatement(insertStopSql)) {
+                int order = 1;
+                for (int poiId : route.getStops()) {
+                    ps.setInt(1, routeId);
+                    ps.setInt(2, poiId);
+                    ps.setInt(3, order++);
+                    ps.addBatch();
+                }
+                ps.executeBatch();
             }
 
-            wkt.append(p[0]).append(" ").append(p[1]);
-
-            if (i < points.size() - 1) {
-                wkt.append(", ");
-            }
-        }
-        wkt.append(")");
-
-        String sql = """
-        INSERT INTO routes (name, description, category, basePoints)
-        VALUES (?, ?, ?, ST_GeomFromText(?))
-        """;
-
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, route.getName());
-            stmt.setString(2, route.getDescription());
-            stmt.setString(3, route.getCategory().name());
-            stmt.setString(4, wkt.toString());
-
-            stmt.executeUpdate();
+            conn.commit();
             return true;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
         }
     }
-    public boolean insertAllRoutes(ArrayList <Route> routes) throws SQLException
-    {
-        for (Route route : routes) {
-            if(!insertRoute(route))
-            {
-                System.out.println("faild to insert route");
-                return false;
-            }
-        }
 
-        return true;
-    }
-    public ArrayList<Route> loadAllRoutes(int first, int last) {
-        ArrayList<Route> routes = new ArrayList<>();
 
-        String sql = """
-        SELECT id, name, description, category,
-               ST_AsText(basePoints) AS wkt
-        FROM routes
-        WHERE id BETWEEN ? AND ?
-        ORDER BY id
+
+    public boolean approveRoute(int routeId) throws SQLException {
+
+        String insertRouteSql = """
+            INSERT INTO Routes (name, description, cityID)
+            SELECT name, description, cityID
+            FROM pending_routes
+            WHERE routeID= ?
         """;
 
-        try (Connection conn = DbManager.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        String insertStopsSql = """
+            INSERT INTO route_stops (routeID, poiId, stop_order)
+            SELECT ?, poiId, stop_order
+            FROM pending_route_stops
+            WHERE routeID = ?
+        """;
 
-            stmt.setInt(1, first);
-            stmt.setInt(2, last);
+        String deletePendingStopsSql =
+                "DELETE FROM pending_route_stops WHERE routeID = ?";
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    int id = rs.getInt("id");
-                    String name = rs.getString("name");
-                    String description = rs.getString("description");
-                    String string_category = rs.getString("category");
-                    POI_Category category = POI_Category.valueOf(string_category);
+        String deletePendingRouteSql =
+                "DELETE FROM pending_routes WHERE routeID = ?";
 
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
 
-                    Route route = new Route(id, name, description, category, null);
+            //  Create approved route
+            try (PreparedStatement ps = conn.prepareStatement(
+                    insertRouteSql, Statement.RETURN_GENERATED_KEYS)) {
 
-                    // Parse LINESTRING
-                    String wkt = rs.getString("wkt");
-                    parseLineString(wkt, route.getBasePoints());
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
 
-                    routes.add(route);
+                ResultSet rs = ps.getGeneratedKeys();
+                if (!rs.next()) {
+                    conn.rollback();
+                    return false;
+                }
+
+                int newRouteId = rs.getInt(1);
+
+                //  Copy stops
+                try (PreparedStatement psStops =
+                             conn.prepareStatement(insertStopsSql)) {
+                    psStops.setInt(1, newRouteId);
+                    psStops.setInt(2, routeId);
+                    psStops.executeUpdate();
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
+
+            // Cleanup pending
+            try (PreparedStatement ps = conn.prepareStatement(deletePendingStopsSql)) {
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(deletePendingRouteSql)) {
+                ps.setInt(1, routeId);
+                ps.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        }
+    }
+
+
+    public PendingRoute getPendingRouteById(int routeId)
+            throws SQLException {
+
+        String sql = """
+    SELECT routeID, cityID, name, description, sourceRouteID
+    FROM pending_routes
+    WHERE routeID = ?
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, routeId);
+            ResultSet rs = ps.executeQuery();
+
+            if (!rs.next()) return null;
+
+            PendingRoute r = new PendingRoute(
+                    rs.getInt("routeID"),
+                    rs.getString("name"),
+                    rs.getString("description"),
+                    rs.getInt("cityID"),
+                    new ArrayList<>()
+            );
+
+            r.setSourceRouteId(
+                    rs.getObject("sourceRouteID", Integer.class)
+            );
+
+            return r;
+        }
+    }
+
+    public List<PendingRoute> getPendingRoutes() throws SQLException {
+
+        List<PendingRoute> routes = new ArrayList<>();
+
+        String routeSql = """
+            SELECT routeID, cityID, name, description, sourceRouteID
+            FROM pending_routes
+        """;
+
+
+        String stopsSql = """
+        SELECT poiID, stop_order
+        FROM pending_route_stops
+        WHERE routeID = ?
+        ORDER BY stop_order
+    """;
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement routeStmt = conn.prepareStatement(routeSql);
+             ResultSet rs = routeStmt.executeQuery()) {
+
+            while (rs.next()) {
+
+                int routeId = rs.getInt("routeID");
+                int cityId  = rs.getInt("cityID");
+                String name = rs.getString("name");
+                String desc = rs.getString("description");
+                Integer sourceRouteId =
+                        rs.getObject("sourceRouteID", Integer.class);
+
+                ArrayList<Integer> stops = new ArrayList<>();
+
+                try (PreparedStatement stopsStmt = conn.prepareStatement(stopsSql)) {
+                    stopsStmt.setInt(1, routeId);
+
+                    try (ResultSet rsStops = stopsStmt.executeQuery()) {
+                        while (rsStops.next()) {
+                            stops.add(rsStops.getInt("poiID"));
+                        }
+                    }
+                }
+
+                PendingRoute route = new PendingRoute(
+                        routeId,
+                        name,
+                        desc,
+                        cityId,
+                        stops
+                );
+                route.setSourceRouteId(sourceRouteId);
+                routes.add(route);
+            }
         }
 
         return routes;
     }
-    private void parseLineString(String wkt, List<double[]> basePoints) {
-        if (wkt == null || !wkt.startsWith("LINESTRING")) {
-            return;
+
+
+
+
+    public RouteSheet loadRouteSheet(int routeId) throws SQLException {
+
+        String routeSql = """
+        SELECT r.routeID, r.cityID, r.name, r.description, c.baseMap
+        FROM routes r
+        JOIN Cities c ON r.cityID = c.CityID
+        WHERE r.routeID = ?
+    """;
+
+        String stopsSql = """
+        SELECT p.*
+        FROM route_stops rs
+        JOIN pois p ON rs.poiID = p.id
+        WHERE rs.routeID = ?
+        ORDER BY rs.stop_order
+    """;
+
+        try (Connection conn = DbManager.getConnection()) {
+
+            Route route;
+            int cityId;
+            String tilePath;
+
+            try (PreparedStatement ps = conn.prepareStatement(routeSql)) {
+                ps.setInt(1, routeId);
+                ResultSet rs = ps.executeQuery();
+
+                if (!rs.next()) return null;
+
+                cityId = rs.getInt("cityID");
+                tilePath = rs.getString("baseMap");
+
+                route = new Route(
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        null
+                );
+            }
+
+            List<Poi> pois = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(stopsSql)) {
+                ps.setInt(1, routeId);
+                ResultSet rs = ps.executeQuery();
+
+                while (rs.next()) {
+                    pois.add(PoiRepo.fromResultSet(rs));
+                }
+            }
+
+            return new RouteSheet(
+                    routeId,
+                    cityId,
+                    tilePath,
+                    route,
+                    pois
+            );
+        }
+    }
+
+    public RouteSheet loadPendingRouteSheet(int routeId) throws SQLException {
+        String routeSql = """
+        SELECT pr.routeID, pr.cityID, pr.name, pr.description, c.baseMap
+        FROM pending_routes pr
+        JOIN Cities c ON pr.cityID = c.CityID
+        WHERE pr.routeID = ?
+    """;
+
+        String stopsSql = """
+        SELECT p.*
+        FROM pending_route_stops prs
+        JOIN pois p ON prs.poiID = p.id
+        WHERE prs.routeID = ?
+        ORDER BY prs.stop_order
+    """;
+
+        try (Connection conn = DbManager.getConnection()) {
+
+            Route route;
+            int cityId;
+            String tilePath;
+
+            try (PreparedStatement ps = conn.prepareStatement(routeSql)) {
+                ps.setInt(1, routeId);
+                ResultSet rs = ps.executeQuery();
+                if (!rs.next()) return null;
+
+                cityId = rs.getInt("cityID");
+                tilePath = rs.getString("baseMap");
+
+                route = new Route(
+                        rs.getString("name"),
+                        rs.getString("description"),
+                        null
+                );
+            }
+
+            List<Poi> pois = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(stopsSql)) {
+                ps.setInt(1, routeId);
+                ResultSet rs = ps.executeQuery();
+                while (rs.next()) {
+                    pois.add(PoiRepo.fromResultSet(rs));
+                }
+            }
+
+            return new RouteSheet(routeId, cityId, tilePath, route, pois);
+        }
+    }
+
+    public List<RouteSheet> loadApprovedRoutesForCity(int cityId) throws SQLException {
+
+        String sql = """
+        SELECT routeID
+        FROM routes
+        WHERE cityID = ?
+    """;
+
+        List<RouteSheet> result = new ArrayList<>();
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, cityId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int routeId = rs.getInt("routeID");
+
+                    // reuse existing method
+                    RouteSheet sheet = loadRouteSheet(routeId);
+                    if (sheet != null) result.add(sheet);
+                }
+            }
         }
 
-        // Remove "LINESTRING(" and ")"
-        String pointsPart = wkt.substring(
-                wkt.indexOf('(') + 1,
-                wkt.lastIndexOf(')')
-        );
+        return result;
+    }
 
-        String[] points = pointsPart.split(",");
 
-        for (String point : points) {
-            String[] xy = point.trim().split("\\s+");
-            double x = Double.parseDouble(xy[0]);
-            double y = Double.parseDouble(xy[1]);
+    public boolean deleteApprovedRoute(int routeId) throws SQLException {
 
-            basePoints.add(new double[]{x, y});
+        String deleteStops = "DELETE FROM route_stops WHERE routeID = ?";
+        String deleteRoute = "DELETE FROM routes WHERE routeID = ?";
+
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps1 = conn.prepareStatement(deleteStops)) {
+                ps1.setInt(1, routeId);
+                ps1.executeUpdate();
+            }
+
+            try (PreparedStatement ps2 = conn.prepareStatement(deleteRoute)) {
+                ps2.setInt(1, routeId);
+                ps2.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        }
+    }
+
+
+    public boolean isPoiUsedInAnyRoute(int poiId) {
+
+        String sql1 = "SELECT 1 FROM route_stops WHERE poiID = ? LIMIT 1";
+        String sql2 = "SELECT 1 FROM pending_route_stops WHERE poiID = ? LIMIT 1";
+
+        try (Connection conn = DbManager.getConnection()) {
+
+            try (PreparedStatement ps = conn.prepareStatement(sql1)) {
+                ps.setInt(1, poiId);
+                if (ps.executeQuery().next()) return true;
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(sql2)) {
+                ps.setInt(1, poiId);
+                if (ps.executeQuery().next()) return true;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return true; // FAIL SAFE
+        }
+
+        return false;
+    }
+
+
+    public void deletePendingRouteBySourceRouteId(int sourceRouteId)
+            throws SQLException {
+
+        String sql = "DELETE FROM pending_routes WHERE sourceRouteID = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, sourceRouteId);
+            ps.executeUpdate();
+        }
+    }
+
+
+    public void deleteApprovedRoute2(int routeId) throws SQLException {
+
+        String sql = "DELETE FROM routes WHERE id = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, routeId);
+            ps.executeUpdate();
+        }
+    }
+
+    public boolean deletePoiById(int poiId) {
+
+        String sql = "DELETE FROM pois WHERE id = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, poiId);
+            return ps.executeUpdate() == 1;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
+    public boolean deletePendingRoute(int routeId) throws SQLException {
+
+        String deleteStopsSql =
+                "DELETE FROM pending_route_stops WHERE routeID = ?";
+
+        String deleteRouteSql =
+                "DELETE FROM pending_routes WHERE routeID = ?";
+
+        try (Connection conn = DbManager.getConnection()) {
+            conn.setAutoCommit(false);
+
+            try (
+                    PreparedStatement psStops =
+                            conn.prepareStatement(deleteStopsSql);
+                    PreparedStatement psRoute =
+                            conn.prepareStatement(deleteRouteSql)
+            ) {
+                psStops.setInt(1, routeId);
+                psStops.executeUpdate();
+
+                psRoute.setInt(1, routeId);
+                int affected = psRoute.executeUpdate();
+
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
         }
     }
 

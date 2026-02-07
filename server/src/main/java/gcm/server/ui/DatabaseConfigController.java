@@ -1,10 +1,8 @@
 package gcm.server.ui;
 
+import gcm.server.bot.BotConfig;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.application.Platform;
 import java.sql.Connection;
@@ -18,6 +16,7 @@ public class DatabaseConfigController {
     @FXML private TextField urlField;
     @FXML private TextField userField;
     @FXML private PasswordField passField;
+    @FXML private CheckBox enableBotCheckBox;
     @FXML private Button startButton;
     @FXML private Label statusLabel;
 
@@ -61,10 +60,10 @@ public class DatabaseConfigController {
             Stage stage = (Stage) startButton.getScene().getWindow();
             stage.close();
 
+            BotConfig botConfig = BotConfig.getInstance();
+            botConfig.setEnabled(enableBotCheckBox.isSelected());
+
             ServerBootstrap.startServer();
-
-
-
 
         } catch (Exception e) {
             statusLabel.setText("Connection failed: " + e.getMessage());

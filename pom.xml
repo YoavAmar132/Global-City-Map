@@ -13,11 +13,54 @@
         <module>common</module>
         <module>client</module>
         <module>server</module>
+        <module>tests</module>
     </modules>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <!-- Java -->
+        <java.version>21</java.version>
+        <maven.compiler.release>21</maven.compiler.release>
+
+        <!-- JavaFX -->
         <javafx.version>21.0.4</javafx.version>
+
+        <!-- Build -->
+        <surefire.version>3.2.5</surefire.version>
     </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+
+                <!-- Compiler (single source of truth) -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <release>${maven.compiler.release}</release>
+                    </configuration>
+                </plugin>
+
+                <!-- Surefire (JavaFX + TestFX friendly) -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire.version}</version>
+                    <configuration>
+                        <useModulePath>false</useModulePath>
+                        <argLine>
+                            --add-modules javafx.controls,javafx.fxml
+                            --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+                            --add-opens javafx.graphics/com.sun.javafx.scene=ALL-UNNAMED
+                            --add-opens javafx.graphics/com.sun.javafx.stage=ALL-UNNAMED
+                            --add-opens javafx.controls/javafx.scene.control=ALL-UNNAMED
+                        </argLine>
+                    </configuration>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+    </build>
+
 </project>

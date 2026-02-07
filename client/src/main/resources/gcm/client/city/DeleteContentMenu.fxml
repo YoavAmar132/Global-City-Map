@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<?import javafx.scene.Group?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.City.DeleteContentMenuController"
+            prefHeight="550.0" prefWidth="600.0"
+
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+
+    <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Group StackPane.alignment="TOP_RIGHT">
+            <!-- Return (↷) button -->
+            <Button text="&#x21b7;"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
+                    onAction="#handleClose"
+                    AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+        </Group>
+
+        <Group StackPane.alignment="CENTER">
+            <!-- Center card -->
+            <StackPane prefWidth="400.0" prefHeight="360.0"
+                       layoutX="100.0" layoutY="65.0"
+                       style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+                <VBox spacing="14.0" prefWidth="620.0" prefHeight="340.0" alignment="CENTER">
+
+
+                    <Label text="Delete Content"
+                           style="-fx-text-fill: white;">
+                        <font>
+                            <Font size="28"/>
+                        </font>
+                    </Label>
+
+                    <Button text="Delete POI"
+                            onAction="#onDeletePoi"
+                            style="-fx-background-color: #ff6b6b;
+                       -fx-text-fill: white;
+                       -fx-font-size: 16;
+                       -fx-background-radius: 8;
+                       -fx-padding: 12 30;
+                       -fx-cursor: hand;" />
+
+                    <Button text="Delete Map"
+                            onAction="#onDeleteMap"
+                            style="-fx-background-color: #ffa502;
+                       -fx-text-fill: white;
+                       -fx-font-size: 16;
+                       -fx-background-radius: 8;
+                       -fx-padding: 12 30;
+                       -fx-cursor: hand;" />
+
+                    <Button text="Delete Route"
+                            onAction="#onDeleteRoute"
+                            style="-fx-background-color: #1e90ff;
+                       -fx-text-fill: white;
+                       -fx-font-size: 16;
+                       -fx-background-radius: 8;
+                       -fx-padding: 12 30;
+                       -fx-cursor: hand;" />
+
+                </VBox>
+            </StackPane>
+
+        </Group>
+    </StackPane>
+
+
+</AnchorPane>

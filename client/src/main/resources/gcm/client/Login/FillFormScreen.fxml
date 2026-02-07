@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.util.Duration?>
+
+<?import javafx.scene.Group?>
+<AnchorPane prefHeight="400.0" prefWidth="600.0"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="gcm.client.controllers.FillFormController">
+
+    <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Group StackPane.alignment="TOP_RIGHT">
+            <!-- Return (↷) button -->
+            <Button text="&#x21b7;"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
+                    onAction="#handleClose"
+                    AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+        </Group>
+
+        <Group StackPane.alignment="CENTER">
+            <StackPane layoutX="100" layoutY="60" prefWidth="400" prefHeight="300"
+                       style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+                <effect>
+                    <DropShadow radius="10" color="#00000055"/>
+                </effect>
+
+                <VBox spacing="15" alignment="CENTER">
+
+                    <!-- FIRST NAME -->
+                    <VBox spacing="5">
+                        <Label text="First Name" textFill="white"/>
+                        <TextField fx:id="FirstName"/>
+                    </VBox>
+
+                    <!-- LAST NAME -->
+                    <VBox spacing="5">
+                        <Label text="Last Name" textFill="white"/>
+                        <TextField fx:id="LastName"/>
+                    </VBox>
+
+                    <!-- PHONE -->
+                    <VBox spacing="5">
+                        <HBox spacing="6">
+                            <Label text="Phone Number" textFill="white"/>
+                            <Label text="❓"
+                                   textFill="white"
+                                   mouseTransparent="false"
+                                   style="-fx-cursor: hand; -fx-padding: 4 6;">
+                                <tooltip>
+                                    <Tooltip text="Exactly 10 digits">
+                                        <showDelay><Duration millis="200"/></showDelay>
+                                    </Tooltip>
+                                </tooltip>
+                            </Label>
+                        </HBox>
+                        <TextField fx:id="PhoneNumber"/>
+                    </VBox>
+
+                    <!-- EMAIL -->
+                    <VBox spacing="5">
+                        <HBox spacing="6">
+                            <Label text="Email" textFill="white"/>
+                            <Label text="❓"
+                                   textFill="white"
+                                   mouseTransparent="false"
+                                   style="-fx-cursor: hand; -fx-padding: 4 6;">
+                                <tooltip>
+                                    <Tooltip text="Classic email format
+Must contain @ and .
+At least 2 letters after last dot">
+                                        <showDelay><Duration millis="200"/></showDelay>
+                                    </Tooltip>
+                                </tooltip>
+                            </Label>
+                        </HBox>
+                        <TextField fx:id="email"/>
+                    </VBox>
+
+                    <!-- CREDIT CARD -->
+                    <VBox spacing="5">
+                        <HBox spacing="6">
+                            <Label text="Credit Card" textFill="white"/>
+                            <Label text="❓"
+                                   textFill="white"
+                                   mouseTransparent="false"
+                                   style="-fx-cursor: hand; -fx-padding: 4 6;">
+                                <tooltip>
+                                    <Tooltip text="4 digits per field
+Total 16 digits">
+                                        <showDelay><Duration millis="200"/></showDelay>
+                                    </Tooltip>
+                                </tooltip>
+                            </Label>
+                        </HBox>
+                        <HBox spacing="8">
+                            <PasswordField fx:id="CreditNumber1" prefWidth="60"/>
+                            <PasswordField fx:id="CreditNumber2" prefWidth="60"/>
+                            <PasswordField fx:id="CreditNumber3" prefWidth="60"/>
+                            <PasswordField fx:id="CreditNumber4" prefWidth="60"/>
+                        </HBox>
+                    </VBox>
+
+                    <!-- PIN -->
+                    <VBox spacing="5">
+                        <HBox spacing="6">
+                            <Label text="PIN" textFill="white"/>
+                            <Label text="❓"
+                                   textFill="white"
+                                   mouseTransparent="false"
+                                   style="-fx-cursor: hand; -fx-padding: 4 6;">
+                                <tooltip>
+                                    <Tooltip text="Exactly 3 digits">
+                                        <showDelay><Duration millis="200"/></showDelay>
+                                    </Tooltip>
+                                </tooltip>
+                            </Label>
+                        </HBox>
+                        <PasswordField fx:id="PinNumber" prefWidth="60"/>
+                    </VBox>
+
+                    <Button fx:id="sendButton"
+                            text="send"
+                            onAction="#onSendClicked"
+                            prefWidth="160"
+                            style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);
+                           -fx-text-fill: white;
+                           -fx-font-size: 15;
+                           -fx-background-radius: 8;
+                           -fx-cursor: hand;" />
+                </VBox>
+            </StackPane>
+        </Group>
+    </StackPane>
+
+</AnchorPane>

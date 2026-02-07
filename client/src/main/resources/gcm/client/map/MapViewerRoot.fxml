@@ -22,20 +22,34 @@
             <Region prefWidth="20"/>
             <Button text="Zoom +" onAction="#onZoomIn"/>
             <Button text="Zoom -" onAction="#onZoomOut"/>
-            <Region fx:id="spacer" BorderPane.alignment="CENTER" />
-            <!-- Close (X) button -->
-            <Button alignment="TOP_RIGHT" onAction="#handleClose" prefHeight="39.0" prefWidth="47.0" style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18;" text="✕">
-                <opaqueInsets>
-                    <Insets />
-                </opaqueInsets></Button>
 
             <Region prefWidth="20"/>
 
-            <!-- New buttons -->
-            <Button text="Add POI"   onAction="#onAddPoiMode"/>
-            <Button text="Add Route" onAction="#onAddRouteMode"/>
-            <Button text="Submit Map" onAction="#onSubmitMap"/>
+            <Button fx:id="addPoiButton"
+                    text="Add Map"
+                    onAction="#onAddPoiMode"/>
+
+            <Button fx:id="addRouteButton"
+                    text="Add Route"
+                    onAction="#onAddRouteMode"/>
+
+            <Button fx:id="submitMapButton"
+                    text="Submit Map"
+                    onAction="#onSubmitPois"/>
+
+            <Button fx:id="submitRouteButton"
+                    text="Submit Route"
+                    onAction="#onSubmitRoute"/>
+
+
+            <Region prefWidth="20"/>
+
+            <Button text="✕"
+                    onAction="#handleClose"
+                    style="-fx-background-color: transparent; -fx-text-fill: black; -fx-font-size: 18;" />
         </ToolBar>
+
+
     </top>
 
     <!-- Center: StackPane with 2 included FXMLs -->

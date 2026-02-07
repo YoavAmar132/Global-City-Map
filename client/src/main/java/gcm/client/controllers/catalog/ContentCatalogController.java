@@ -1,7 +1,10 @@
 package gcm.client.controllers.catalog;
 
 import gcm.client.controllers.map.MapLoaderController;
+import gcm.client.controllers.map.RouteLoaderController;
 import gcm.client.controllers.map.UserMapViewerController;
+import gcm.client.controllers.menu.ManagerMenuController;
+import gcm.client.controllers.menu.WorkerMenuController;
 import javafx.event.ActionEvent;
 
 import common.messages.*;
@@ -26,6 +29,11 @@ import java.util.stream.Collectors;
 import java.util.List;
 
 public class ContentCatalogController {
+
+
+    public enum OpenIntent { VIEW, EDIT_MAP ,EDIT_ROUTE}
+    private OpenIntent openIntent = OpenIntent.VIEW;
+
     private GcmClient client;
     @FXML
     private VBox Citylist;
@@ -37,9 +45,17 @@ public class ContentCatalogController {
         client.setResponseHandler(this::handleResponse);
 
         EmptyPayload payload=new EmptyPayload();
-        GcmRequest request = new GcmRequest(RequestType.LIST_CITIES, payload);
+        GcmRequest request = new GcmRequest(RequestType.LIST_CITIES_WITH_MAPS, payload);
         client.sendRequest(request);
     }
+
+
+    public void setOpenIntent(OpenIntent intent) {
+        this.openIntent = intent;
+        System.out.println("ContentCatalog openIntent set to: " + intent);
+    }
+
+
 
     public void setCities(ArrayList<City> cities) {
         this.cities = cities;
@@ -73,17 +89,38 @@ public class ContentCatalogController {
 
 
     public void openCity(City city) {
-        System.out.println("gets list of cities");
+
+        System.out.println("City clicked: " + city.getName()
+                + " | openIntent = " + openIntent);
+
+
+        if (openIntent == OpenIntent.EDIT_MAP) {
+
+            SceneNavigator.LoadedView<MapLoaderController> view =
+                    ClientApp.getNavigator().get(MapLoaderController.class);
+
+            view.controller.setVals(city.getName(), true);
+            ClientApp.getNavigator().showLoaded(view.root);
+            return;
+        }
+
+        if (openIntent == OpenIntent.EDIT_ROUTE) {
+
+            SceneNavigator.LoadedView<RouteLoaderController> view =
+                    ClientApp.getNavigator().get(RouteLoaderController.class);
+
+            view.controller.setCity(city);
+            ClientApp.getNavigator().showLoaded(view.root);
+            return;
+        }
+
         SceneNavigator.LoadedView<MapLoaderController> view =
                 ClientApp.getNavigator().get(MapLoaderController.class);
-        // set values BEFORE showing
-        view.controller.setVals(city.getName());
 
-        // now show
+        view.controller.setVals(city.getName(), false);
         ClientApp.getNavigator().showLoaded(view.root);
-
-        System.out.println("opened: " + city.getName());
     }
+
 
 
     private void handleResponse(GcmResponse response) {
@@ -95,6 +132,15 @@ public class ContentCatalogController {
         }else {
 
             Object t = response.getData();
+            if (t instanceof Popup) {
+                if((((Popup) t).isInList(ClientApp.getCurrentUser().getId())))
+                {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("");
+                    alert.setContentText("you have a new message");
+                    alert.showAndWait();
+                }
+            }
             if(t instanceof ArrayList<?>)
             {
                 ArrayList<?> list = (ArrayList<?>) t;
@@ -119,12 +165,19 @@ public class ContentCatalogController {
 
 
     public void onBackClicked(ActionEvent actionEvent) {
-        ClientApp.getNavigator().show(ContentWorkerMenuController.class);
+        String role = ClientApp.getCurrentUser().getRole();
+        if(role.equals("Worker")) {
+            ClientApp.getNavigator().show(WorkerMenuController.class);
+        }
+        else ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        String role = ClientApp.getCurrentUser().getRole();
+        if(role.equals("Worker")) {
+            ClientApp.getNavigator().show(WorkerMenuController.class);
+        }
+        else ClientApp.getNavigator().show(ContentWorkerMenuController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
