@@ -104,6 +104,13 @@ public class PendingMapController {
                         map
                 )
         );
+
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.GET_PENDING_MAPS,
+                        new MaPayload(0, "")
+                )
+        );
     }
 
 
@@ -111,7 +118,6 @@ public class PendingMapController {
     private void ApproveMap(MapSheet map) {
         if (map == null) return;
 
-        // Safety check if cities haven't loaded yet
         if (cities == null || cities.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
             alert.setTitle("Please Wait");
@@ -120,9 +126,13 @@ public class PendingMapController {
             return;
         }
 
-        List<String> cityNames = cities.stream().map(City::getName).collect(Collectors.toList());
+        List<String> cityNames = cities.stream()
+                .map(City::getName)
+                .collect(Collectors.toList());
 
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(cityNames.get(0), cityNames);
+        ChoiceDialog<String> dialog =
+                new ChoiceDialog<>(cityNames.get(0), cityNames);
+
         dialog.setTitle("Approve Map");
         dialog.setHeaderText("Choose a city for this map");
         dialog.setContentText("City:");
@@ -131,14 +141,21 @@ public class PendingMapController {
         if (result.isEmpty()) return;
 
         String chosenCity = result.get();
-        System.out.println("approved for city: " + chosenCity);
 
-        // Send approval request
-        ApprovePayload payload = new ApprovePayload(map, chosenCity);
-        GcmRequest request = new GcmRequest(RequestType.APPROVE_MAP_VERSION, payload);
-        client.sendRequest(request);
+        // Send approval
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.APPROVE_MAP_VERSION,
+                        new ApprovePayload(map, chosenCity)
+                )
+        );
 
-
+        client.sendRequest(
+                new GcmRequest(
+                        RequestType.GET_PENDING_MAPS,
+                        new MaPayload(0, "")
+                )
+        );
     }
 
     public void openPendingMap(MapSheet map) {

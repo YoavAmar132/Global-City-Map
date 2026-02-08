@@ -189,11 +189,10 @@ public class StatsRepo {
                         String payment = rs.getString("PaymentLast4");
 
                         String row = String.format(
-                                "PURCHASE | %s | City: %s | Version: %d | Download used: %s|Payment Method : %s",
+                                "PURCHASE | %s | City: %s | Version: %d | ONE TIME DOWNLOAD |Payment Method : %s",
                                 date,
                                 city,
                                 version,
-                                used ? "Yes" : "No",
                                 payment
                         );
 
