@@ -2,6 +2,7 @@ package gcm.server.data;
 
 import common.model.City;
 import common.model.CityPricingItem;
+import common.model.Complaint;
 import common.model.PendingCityPriceItem;
 
 import java.sql.*;
@@ -33,6 +34,28 @@ public class CityRepo {
         }
     }
 
+    public City getCity(int cityId) throws SQLException {
+        String sql = """
+            SELECT c.CityID, c.CityName, c.baseMap, c.CityPrice, c.SubPrice, c.Description
+            FROM Cities c
+            WHERE CityID = ?
+        """;
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);){
+            stmt.setInt(1, cityId);
+            ResultSet rs = stmt.executeQuery();
+            if (!rs.next()) return null;
+
+            City city = new City(
+                    rs.getInt("CityID"),
+                    rs.getString("CityName"),
+                    rs.getString("baseMap"),
+                    rs.getDouble("CityPrice"),
+                    rs.getDouble("SubPrice"),
+                    rs.getString("description"));
+            return city;
+        }
+    }
 
 
     public List<CityPricingItem> getAllCityPrices() throws SQLException {

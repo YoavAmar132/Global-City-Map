@@ -12,7 +12,7 @@ import common.messages.*;
 import gcm.client.utill.SceneNavigator;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-
+//TODO:make a class,similarly to purchaseSession called browsingMenuSession which will save the menu we need to go back to when pressing x or return
 public class ManagerMenuController {
     private GcmClient client;
 

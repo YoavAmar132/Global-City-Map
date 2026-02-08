@@ -40,7 +40,7 @@ class Registration  {
 
     public static final String DB_URL = "jdbc:mysql://localhost:3306/GCM_DB";
     public static final String DB_USER = "root";
-    public static final String DB_PASS = "Yoavamar132!";
+    public static final String DB_PASS = "123456";
 
     private static final String USERNAME = "Adam123";
     private static final String PASSWORD = "Adam199*";
@@ -53,7 +53,7 @@ class Registration  {
         // init services once
         userRepo = new UserRepo();
         authService = new AuthService(userRepo);
-        requestHandler = new RequestHandler(authService, null, null, null, null);
+        requestHandler = new RequestHandler(authService, null, null, null, null,null);
 
         // make sure starting state is clean so @Order(1) is deterministic
         deleteUserByUsername(USERNAME);

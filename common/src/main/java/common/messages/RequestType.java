@@ -5,6 +5,14 @@ public enum RequestType {
     LOGOUT,
     REGISTER,
 
+    //Complaints
+    SUBMIT_COMPLAINT,
+    GET_COMPLAINT,
+    LIST_USER_COMPLAINTS,
+
+    CLOSE_COMPLAINT_WITH_HUMAN_ANSWER,
+    LIST_CUSTOMER_SUPPORT_COMPLAINTS,
+
     // Catalog
     LIST_CITIES,
     LIST_CITIES_WITH_MAPS,
@@ -14,6 +22,7 @@ public enum RequestType {
     GET_MAP,
     GET_PENDING_MAPS,
     SEARCH_CITY,
+    DOWNLOAD,
 
     //guest catalog
     GET_CITY_CATALOG,

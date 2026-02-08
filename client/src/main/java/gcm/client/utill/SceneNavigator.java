@@ -4,6 +4,8 @@ import gcm.client.controllers.*;
 import gcm.client.controllers.City.*;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalog.ContentCatalogController;
+import gcm.client.controllers.customer_support_worker_util.CustomerSupportComplaintsController;
+import gcm.client.controllers.customer_support_worker_util.ReviewComplaintController;
 import gcm.client.controllers.manager_util.ClientCardController;
 import gcm.client.controllers.manager_util.ManageClientController;
 import gcm.client.controllers.manager_util.ReportResultController;
@@ -11,10 +13,7 @@ import gcm.client.controllers.manager_util.ReportsInputController;
 import gcm.client.controllers.map.*;
 import gcm.client.controllers.menu.*;
 
-import gcm.client.controllers.user_util.BuyMapScreenController;
-import gcm.client.controllers.user_util.MyMapsController;
-import gcm.client.controllers.user_util.SubscriptionMapsController;
-import gcm.client.controllers.user_util.UserSubscriptionsController;
+import gcm.client.controllers.user_util.*;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -51,7 +50,7 @@ public class SceneNavigator {
                 "/gcm/client/catalogPublic/GuestCatalogScreen.fxml");
         routes.put(gcm.client.controllers.catalogPublic.GuestCityMapsController.class,
                 "/gcm/client/catalogPublic/GuestCityMapsScreen.fxml");
-        routes.put(BuyMapScreenController.class, "/gcm/client/user_util/BuyMapScreen.fxml");
+        routes.put(BuyMapScreenController.class, "/gcm/client/user_util/BuyMapCatalog.fxml");
         routes.put(BuyMapCatalogController.class, "/gcm/client/user_util/BuyMapCatalog.fxml");
         routes.put(MyMapsController.class, "/gcm/client/user_util/MyMapsScreen.fxml");
         routes.put(EditPricesController.class, "/gcm/client/user_util/EditPricesScreen.fxml");
@@ -62,7 +61,14 @@ public class SceneNavigator {
         routes.put(MessagesController.class, "/gcm/client/menu/MessagesScreen.fxml"); //yoav
         routes.put(ManageClientController.class, "/gcm/client/manager_util/ManageClientScreen.fxml");
         routes.put(ClientCardController.class, "/gcm/client/manager_util/ClientCardScreen.fxml");
+        routes.put(CreateComplaintController.class, "/gcm/client/user_util/CreateComplaint.fxml");
+        routes.put(ComplaintHistoryController.class, "/gcm/client/user_util/ComplaintHistory.fxml");
+        routes.put(ViewComplaintController.class, "/gcm/client/user_util/ViewComplaint.fxml");
 
+        routes.put(CustomerSupportComplaintsController.class,
+                "/gcm/client/customer_support_worker_util/CustomerSupportComplaints.fxml");
+        routes.put(ReviewComplaintController.class,
+                "/gcm/client/customer_support_worker_util/ReviewComplaint.fxml");
 
         routes.put(PendingRouteController.class, "/gcm/client/map/PendingRouteScreen.fxml");
         routes.put(RouteLoaderController.class, "/gcm/client/map/RouteLoaderScreen.fxml");
@@ -110,6 +116,41 @@ public class SceneNavigator {
 
             stage.setScene(scene);
             if (!stage.isShowing()) stage.show();
+            /*
+            double currentSceneWidth = 0;
+            double currentSceneHeight = 0;
+            if(stage.getScene()!=null) {
+                //if we switch to a new scene from an existing one ,we'll ensure that its new width/height is
+                // the maximum between the last scene width and the new scene preferred width/height
+                currentSceneWidth = stage.getScene().getWindow().getWidth();
+                currentSceneHeight = stage.getScene().getWindow().getHeight();
+
+
+                if(currentSceneWidth<scene.getWidth()) {
+                    currentSceneWidth = scene.getWidth();
+                }
+                if(currentSceneHeight<scene.getHeight()) {
+                    currentSceneHeight = scene.getHeight();
+                }
+
+                scene.getStylesheets().add(
+                        getClass().getResource("/gcm/client/map/map.css").toExternalForm()
+                );
+
+                stage.setScene(scene);
+                if (!stage.isShowing()) stage.show();
+                stage.setWidth(currentSceneWidth);
+                stage.setHeight(currentSceneHeight);
+            }
+            else {
+                scene.getStylesheets().add(
+                        getClass().getResource("/gcm/client/map/map.css").toExternalForm()
+                );
+
+                stage.setScene(scene);
+                if (!stage.isShowing()) stage.show();
+            }
+            */
         } catch (IOException e) {
             throw new RuntimeException("Failed to load " + fxml, e);
         }

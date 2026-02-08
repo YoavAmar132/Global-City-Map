@@ -58,9 +58,10 @@ public class StatsRepo {
                     int views = countDateRange(conn,
                             "SELECT COUNT(*) FROM ViewLogs WHERE CityID = ? AND viewDate BETWEEN ? AND ?",
                             currentCityId, fromDateTime, toDateTime);
+                    int downloads =getDownloadsRemaining(currentCityId);
 
                     // הוספת השורה לדו"ח
-                    reports.add(new CityReportData(cityName, maps, purchases, subs, views));
+                    reports.add(new CityReportData(cityName, maps, purchases, subs, views,downloads));
 
                 } catch (SQLException e) {
                     System.err.println("Error calculating stats for city: " + cityName);
@@ -71,6 +72,27 @@ public class StatsRepo {
             e.printStackTrace();
         }
         return reports;
+    }
+
+    public int getDownloadsRemaining(int currentCityId) {
+        String sql = "SELECT DownloadsRemaining FROM Subscriptions WHERE CityID = ?";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, currentCityId);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("DownloadsRemaining");
+                }
+                return 0; // or -1 if you prefer "not found"
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     // פונקציות עזר

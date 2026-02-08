@@ -58,6 +58,10 @@ public class CityService {
         return cityRepo.getAllCityPrices();
     }
 
+    public boolean existsByCityName(String city) throws SQLException {
+        return cityRepo.existsByCityName(city);
+    }
+
     public boolean updateCityPrice(CityPricingItem item) throws SQLException {
         return cityRepo.updateCityPrice(item);
     }

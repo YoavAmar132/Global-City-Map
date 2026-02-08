@@ -42,6 +42,7 @@ public class ClientApp extends Application {
         primaryStage = stage;
 
         primaryStage.setOnCloseRequest(event -> {
+            System.out.println("setOnCloseRequest received");
             shuttingDown = true;
 
             if (gcmClient != null) {
@@ -99,6 +100,7 @@ public class ClientApp extends Application {
         currentUser = null;
 
         if (!shuttingDown && navigator != null) {
+            System.out.println("returning to welcome screen");
             navigator.show(WelcomeController.class);
         }
     }

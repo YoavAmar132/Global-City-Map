@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.Group?>
+
+<!--
+    <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Group StackPane.alignment="TOP_RIGHT">
+            <Button text="&#x21b7;"
+            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
+            onAction="#handleClose"
+            AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+        </Group>
+
+        <Group StackPane.alignment="CENTER">
+        </Group>
+    </StackPane>
+        -->
+
+
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="gcm.client.controllers.user_util.ViewComplaintController"
+            prefHeight="500.0" prefWidth="820.0"
+            style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
+
+
+    <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Group StackPane.alignment="TOP_RIGHT">
+            <!-- Return (↷) button -->
+            <Button text="&#x21b7;"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
+                    onAction="#handleClose"
+                    AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+        </Group>
+
+        <Group StackPane.alignment="CENTER">
+            <StackPane
+                    layoutX="210.0" layoutY="80.0"
+                    prefWidth="400.0" prefHeight="340.0" minWidth="400.0" minHeight="340.0" maxWidth="400.0"
+                    maxHeight="340.0"
+                    style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+                <effect>
+                    <DropShadow radius="10.0" color="#00000055"/>
+                </effect>
+
+                <VBox spacing="15.0" alignment="CENTER">
+                    <padding>
+                        <Insets top="25.0" right="30.0" bottom="25.0" left="30.0"/>
+                    </padding>
+
+
+                    <Text text="My complaint:" fill="white">
+                        <font>
+                            <Font name="Segoe UI Semibold" size="24.0"/>
+                        </font>
+                    </Text>
+
+                    <VBox spacing="10.0" alignment="CENTER_LEFT"
+                          style="-fx-background-color: rgba(0,0,0,0.2); -fx-background-radius: 10; -fx-padding: 15;">
+
+                        <Label text="My complaint:" textFill="white" style="-fx-font-size: 12;"/>
+
+                        <Label fx:id="complaintDescription" textFill="white" style="-fx-font-size: 11;"/>
+                    </VBox>
+
+                    <VBox fx:id="responseBox" spacing="10.0" alignment="CENTER_LEFT"
+                          style="-fx-background-color: rgba(0,0,0,0.2); -fx-background-radius: 10; -fx-padding: 15;">
+                    </VBox>
+
+                </VBox>
+            </StackPane>
+
+        </Group>
+    </StackPane>
+
+
+
+
+</AnchorPane>

@@ -3,7 +3,10 @@ package gcm.client.controllers.menu;
 import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.catalog.BuyMapCatalogController;
 import gcm.client.controllers.catalogPublic.GuestCatalogController;
+import gcm.client.controllers.user_util.ComplaintHistoryController;
+import gcm.client.controllers.user_util.CreateComplaintController;
 import gcm.client.controllers.manager_util.ClientCardController;
+import gcm.client.controllers.user_util.BuyMapScreenController;
 import gcm.client.controllers.user_util.MyMapsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
@@ -113,5 +116,11 @@ public class UserMenuController {
         int id=ClientApp.getCurrentUser().getId();
         GcmRequest request=new GcmRequest(RequestType.GET_USER_BY_ID,id);
         client.sendRequest(request);
+    }
+
+    @FXML
+    private void onViewComplaintHistoryClicked(ActionEvent event) {
+        System.out.println("View previous complaints");
+        ClientApp.getNavigator().show(ComplaintHistoryController.class);
     }
 }

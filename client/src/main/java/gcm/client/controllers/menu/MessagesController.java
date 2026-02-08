@@ -104,9 +104,18 @@ public class MessagesController {
                 if (!list.isEmpty() && list.get(0) instanceof Message) {
                     messages = (ArrayList<Message>) list;
                     Baselist.getChildren().clear();
+                    String download="";
+                    Message summary=new Message("City downloaded succsesfuly","");
                     for (Message message  : messages) {
+                        if(message.getMessage().startsWith("Map"))
+                        {
+                            download=download+message.getMessage();
+                            summary.setMessage(download);
+                            continue;
+                        }
                         Baselist.getChildren().add(createMapRow(message));
                     }
+                    Baselist.getChildren().add(createMapRow(summary));
                     System.out.println("City list success");
                 }
 

@@ -19,16 +19,19 @@ public class RequestHandler {
     private final CityService cityService;
     private final CatalogService catalogService;
     private final StatsService statsService;
+    private final ComplaintService complaintService;
+
     private static final List<User> online_users = new ArrayList<>();
     private User loggedInUser = null;
-     public Message message=new Message("new map added","");;
+     public Message message=new Message("new map added","");
     public RequestHandler(AuthService authService, MapService mapservice, CityService cityService,
-                          CatalogService catalogService, StatsService statsService) {
+                          CatalogService catalogService, StatsService statsService,ComplaintService complaintService) {
         this.authService = authService;
         this.mapService = mapservice;
         this.cityService = cityService;
         this.catalogService = catalogService;
         this.statsService = statsService;
+        this.complaintService = complaintService;
     }
 
     /**
@@ -171,6 +174,46 @@ public class RequestHandler {
                     r.setRefresh(1);
                 }
                 return r;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.SUBMIT_COMPLAINT) {
+            try {
+                return handleSubmitComplaint(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.CLOSE_COMPLAINT_WITH_HUMAN_ANSWER) {
+            try {
+                return handleCloseWithHumanAnswer(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+        if (type == RequestType.GET_COMPLAINT) {
+            try {
+                return handleGetComplaint(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (type == RequestType.LIST_USER_COMPLAINTS) {
+            try {
+                return handleGetUserComplaints(request);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        if (type == RequestType.LIST_CUSTOMER_SUPPORT_COMPLAINTS) {
+            try {
+                return handleGetCustomerSupportComplaints(request);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -416,6 +459,14 @@ public class RequestHandler {
                 throw new RuntimeException("failed to reject pending map", e);
             }
         }
+        if (type == RequestType.DOWNLOAD) {
+            System.out.println("requesting  download");
+            try {
+                return handledownload(request);
+            } catch (SQLException e) {
+                throw new RuntimeException("failed to download  map", e);
+            }
+        }
 
 
 
@@ -426,6 +477,7 @@ public class RequestHandler {
         // later you'll add more cases for other RequestTypes
         return GcmResponse.error("Unsupported request type: " + type);
     }
+
     /**
      * Handles LOGIN requests.
      * Expects payload = LoginPayload
@@ -755,6 +807,106 @@ public class RequestHandler {
         }
     }
 
+    private GcmResponse handleSubmitComplaint(GcmRequest request) throws SQLException {
+        System.out.println("SUBMIT_COMPLAINT request received");
+        if (request.getPayload() instanceof SubmitComplaintPayload payload) {
+            return complaintService.submitComplaint(payload.getComplaint());
+        }
+        return GcmResponse.error("Invalid Payload for SUBMIT_COMPLAINT");
+    }
+
+
+    private GcmResponse handleGetComplaint(GcmRequest request) throws SQLException {
+        System.out.println("get complaint request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof ComplaintIdPayload complaintIdPayload)) {
+            return GcmResponse.error("Invalid payload for complaint request");
+        }
+        Complaint complaint = complaintService.getComplaint(complaintIdPayload.getComplaintId());
+        if(complaint==null){ return GcmResponse.error("faild to get complaint");}
+        return GcmResponse.ok(complaint);
+    }
+
+    private GcmResponse handleGetUserComplaints(GcmRequest request) throws SQLException {
+        System.out.println("LIST_USER_COMPLAINT received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof User)) {
+            return GcmResponse.error("Invalid payload for complaint catalog");
+        }
+
+        try{
+            List<Complaint> complaints =
+                    complaintService.getUserComplaints(((User) rawPayload).getId());
+
+            if (complaints == null) {
+                return GcmResponse.error("no complaints found");
+            }
+
+            return GcmResponse.ok(complaints);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return GcmResponse.error("server error");
+        }
+
+
+    }
+
+
+    private GcmResponse handleGetCustomerSupportComplaints(GcmRequest request) throws SQLException {
+        System.out.println("LIST_CUSTOMER_SUPPORT_COMPLAINTS received");
+
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof EmptyPayload)) {
+            return GcmResponse.error("Invalid payload for LIST_CUSTOMER_SUPPORT_COMPLAINTS");
+        }
+
+        try{
+            List<Complaint> complaints =
+                    complaintService.getAllComplaintsForCustomerSupport();
+
+            if (complaints == null) {
+                return GcmResponse.error("no complaints found");
+            }
+
+            return GcmResponse.ok(complaints);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return GcmResponse.error("server error");
+        }
+
+
+    }
+
+    private GcmResponse handleCloseWithHumanAnswer(GcmRequest request) throws SQLException {
+        System.out.println("CLOSE_COMPLAINT_WITH_HUMAN_ANSWER request received");
+        try {
+            if (request.getPayload() instanceof SubmitComplaintPayload payload) {
+                Complaint complaint = payload.getComplaint();
+                boolean isComplaintAlreadyClosed =
+                        complaintService.closeWithHumanAnswer(complaint.getId(),complaint.getResponse());
+                if(isComplaintAlreadyClosed){
+                    Message successful = new Message("Response sent","Your response has been sent to the user");
+                    return GcmResponse.ok(successful);
+                }
+                else{
+                    return GcmResponse.error("Someone else has already responded to the user's complaint");
+                }
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return GcmResponse.error("server error");
+        }
+        return GcmResponse.error("Invalid Payload for CLOSE_COMPLAINT_WITH_HUMAN_ANSWER");
+    }
+
+
+
     private GcmResponse handleGetCityPurchases(GcmRequest request) throws SQLException {
         System.out.println("LIST_USER_PURCHASES request received");
         if (request.getPayload() instanceof Integer userId) {
@@ -883,6 +1035,19 @@ public class RequestHandler {
         List<CityCatalogItem> results = catalogService.searchCities(payload.getQuery());
 
         return GcmResponse.ok(results);
+    }
+    private GcmResponse handledownload(GcmRequest request) throws SQLException {
+        System.out.println("download request received");
+        Object rawPayload = request.getPayload();
+        if (!(rawPayload instanceof Download download)) {
+            return GcmResponse.error("Invalid payload for download");
+        }
+        boolean result=mapService.addDownload(download.getId(),download.getCityid());
+       if(result)
+       {
+           return GcmResponse.ok(null);
+       }
+        return GcmResponse.error("faild to increment");
     }
 
 
