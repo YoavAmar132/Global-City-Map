@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <VBox
-        xmlns="http://javafx.com/javafx/21.0.9"
+        xmlns="http://javafx.com/javafx"
         xmlns:fx="http://javafx.com/fxml/1"
         fx:controller="gcm.client.controllers.ui.ClientConnectionController"
         spacing="12"

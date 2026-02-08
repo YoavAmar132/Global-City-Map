@@ -99,6 +99,15 @@ public class BuyMapCatalogController {
                 alert.showAndWait();
             } else {
                 Object t = response.getData();
+                if (t instanceof Popup) {
+                    if((((Popup) t).isInList(ClientApp.getCurrentUser().getId())))
+                    {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("");
+                        alert.setContentText("you have a new message");
+                        alert.showAndWait();
+                    }
+                }
                 if (t instanceof ArrayList<?>) {
                     ArrayList<?> list = (ArrayList<?>) t;
                     // בדיקה שהרשימה לא ריקה ושהאיבר הראשון הוא אכן City
@@ -114,12 +123,15 @@ public class BuyMapCatalogController {
                         statusLabel.setText("No cities available.");
                     }
                 }
+
             }
         });
     }
 
     public void onBackClicked(ActionEvent actionEvent) {
+
         ClientApp.getNavigator().show(UserMenuController.class);
+
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
@@ -127,7 +139,6 @@ public class BuyMapCatalogController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        Platform.exit();
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
 }

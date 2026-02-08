@@ -19,16 +19,16 @@ public class CatalogRepo {
         List<CityCatalogItem> result = new ArrayList<>();
 
         String sql = """
-            SELECT
+           SELECT
                 c.CityID,
                 c.CityName,
                 c.CityPrice,
-                COUNT(m.mapID) AS mapCount,
-                MIN(JSON_EXTRACT(m.map, '$.price')) AS minPrice,
-                MAX(JSON_EXTRACT(m.map, '$.price')) AS maxPrice
+                c.SubPrice,
+                c.description,
+                COUNT(m.mapID) AS mapCount
             FROM Cities c
             LEFT JOIN Maps m ON m.cityID = c.CityID
-            GROUP BY c.CityID, c.CityName, c.CityPrice
+            GROUP BY c.CityID, c.CityName, c.CityPrice, c.SubPrice, c.description
         """;
 
         try (Connection conn = DbManager.getConnection();
@@ -36,23 +36,17 @@ public class CatalogRepo {
              ResultSet rs = stmt.executeQuery()) {
 
             while (rs.next()) {
-
-                double minPrice = rs.getObject("minPrice") != null
-                        ? rs.getDouble("minPrice")
-                        : 0;
-
-                double maxPrice = rs.getObject("maxPrice") != null
-                        ? rs.getDouble("maxPrice")
-                        : 0;
-
                 result.add(new CityCatalogItem(
                         rs.getInt("CityID"),
                         rs.getString("CityName"),
                         rs.getInt("mapCount"),
-                        minPrice,
-                        maxPrice,
-                        rs.getDouble("CityPrice")
+                        rs.getDouble("CityPrice"),
+                        rs.getDouble("SubPrice"),
+                        rs.getInt("PoiCount"),
+                        rs.getInt("RouteCount"),
+                        rs.getString("description")
                 ));
+
             }
 
         } catch (SQLException e) {
@@ -102,4 +96,117 @@ public class CatalogRepo {
 
         return result;
     }
+
+    /**
+     * Logs a user view for a specific city.
+     * If the user is a Guest, userId should be 0.
+     */
+    public void logCityView(int cityId, int userId) {
+
+        String sql = "INSERT INTO ViewLogs (userID, CityID, viewDate) VALUES (?, ?, NOW())";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+            stmt.setInt(2, cityId);
+
+            stmt.executeUpdate();
+            System.out.println("Logged view for CityID: " + cityId + ", UserID: " + userId);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<CityCatalogItem> searchCities(String queryText) throws SQLException {
+        // NEW LOGIC:
+        // 1. The WHERE IN (...) clause finds the valid CityIDs based on your search.
+        // 2. The main SELECT joins everything again to get the TOTAL counts for those cities.
+
+        String sql = """
+        
+                SELECT
+            c.CityID,
+            c.CityName,
+            c.CityPrice,
+            c.SubPrice,
+            c.description,
+        
+            COUNT(DISTINCT m.mapID) AS MapCount,
+            COUNT(DISTINCT p.id) AS PoiCount,
+            COUNT(DISTINCT r.routeID) AS RouteCount
+        
+        FROM Cities c
+        
+        JOIN Maps m
+            ON c.CityID = m.cityID
+        
+        LEFT JOIN pois p
+             ON c.CityID = p.cityID
+            AND p.is_approved = TRUE
+        
+        LEFT JOIN routes r
+            ON c.CityID = r.cityID
+            AND EXISTS (
+                SELECT 1
+                FROM route_stops rs
+                JOIN pois rp ON rs.poiID = rp.id
+                WHERE rs.routeID = r.routeID
+                  AND rp.is_approved = TRUE
+            )
+        
+        WHERE c.CityID IN (
+            SELECT DISTINCT subC.CityID
+            FROM Cities subC
+            LEFT JOIN pois subP
+                ON subC.CityID = subP.cityID
+               AND subP.is_approved = TRUE
+            WHERE
+                subC.CityName LIKE ?
+                OR subC.description LIKE ?
+                OR subP.name LIKE ?
+                OR subP.description LIKE ?
+        )
+        
+        GROUP BY
+            c.CityID,
+            c.CityName,
+            c.CityPrice,
+            c.SubPrice,
+            c.description
+        """;
+
+
+        List<CityCatalogItem> resultList = new ArrayList<>();
+        String searchPattern = "%" + queryText + "%";
+
+        try (Connection conn = DbManager.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, searchPattern);
+            stmt.setString(2, searchPattern);
+            stmt.setString(3, searchPattern);
+            stmt.setString(4, searchPattern);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    resultList.add(new CityCatalogItem(
+                            rs.getInt("CityID"),
+                            rs.getString("CityName"),
+                            rs.getInt("MapCount"),
+                            rs.getDouble("CityPrice"),
+                            rs.getDouble("SubPrice"),
+                            rs.getInt("PoiCount"),
+                            rs.getInt("RouteCount"),
+                            rs.getString("description")
+                    ));
+                }
+            }
+        }
+
+        return resultList;
+    }
+
+
 }

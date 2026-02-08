@@ -1,10 +1,12 @@
 package gcm.server.service;
 
 import common.model.CityCatalogItem;
+import common.model.CityReportData;
 import common.model.MapCatalogItem;
 import gcm.server.data.CatalogRepo;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 public class CatalogService {
@@ -25,5 +27,15 @@ public class CatalogService {
 
     public List<MapCatalogItem> loadMapsForCity(int cityId) throws SQLException {
         return catalogRepo.loadMapsForCity(cityId);
+    }
+
+    public void newLogCityView(int cityId, int userId) throws SQLException {
+        catalogRepo.logCityView(cityId, userId);
+        return;
+    }
+
+    public List<CityCatalogItem> searchCities(String query) throws SQLException {
+        // Optional: Add logic here (e.g., logging)
+        return catalogRepo.searchCities(query);
     }
 }

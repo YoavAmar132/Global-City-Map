@@ -12,92 +12,101 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
+<?import javafx.scene.Group?>
 <AnchorPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="gcm.client.controllers.map.PendingMapController"
             prefHeight="500.0" prefWidth="820.0"
             style="-fx-background-color: linear-gradient(to bottom right, #141E30, #243B55);">
 
-    <!-- Close (X) button -->
-    <Button text="✕"
-            style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 18; -fx-cursor: hand;"
-            onAction="#handleClose"
-            AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+    <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" AnchorPane.rightAnchor="0.0">
+        <Group StackPane.alignment="TOP_RIGHT">
+            <!-- Return (↷) button -->
+            <Button text="&#x21b7;"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 26; -fx-cursor: hand;"
+                    onAction="#handleClose"
+                    AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0"/>
+        </Group>
 
-    <!-- Center card -->
-    <StackPane layoutX="80.0" layoutY="60.0"
-               prefWidth="660.0" prefHeight="380.0"
-               style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
-        <effect>
-            <DropShadow radius="10.0" color="#00000055"/>
-        </effect>
+        <Group StackPane.alignment="CENTER">
+            <!-- Center card -->
+            <StackPane layoutX="80.0" layoutY="60.0"
+                       prefWidth="660.0" prefHeight="380.0"
+                       style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 16;">
+                <effect>
+                    <DropShadow radius="10.0" color="#00000055"/>
+                </effect>
 
-        <VBox spacing="14.0" prefWidth="620.0" prefHeight="340.0" alignment="TOP_CENTER">
-            <padding>
-                <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
-            </padding>
+                <VBox spacing="14.0" prefWidth="620.0" prefHeight="340.0" alignment="TOP_CENTER">
+                    <padding>
+                        <Insets top="20.0" right="20.0" bottom="20.0" left="20.0"/>
+                    </padding>
 
-            <!-- Title -->
-            <Text text="Pending Maps" fill="white">
-                <font>
-                    <Font name="Segoe UI Semibold" size="28.0"/>
-                </font>
-            </Text>
+                    <!-- Title -->
+                    <Text text="Pending Maps" fill="white">
+                        <font>
+                            <Font name="Segoe UI Semibold" size="28.0"/>
+                        </font>
+                    </Text>
 
-            <Label text="Select a map to review"
-                   textFill="white"
-                   style="-fx-font-size: 13; -fx-opacity: 0.9;"/>
+                    <Label text="Select a map to review"
+                           textFill="white"
+                           style="-fx-font-size: 13; -fx-opacity: 0.9;"/>
 
-            <!-- Actions -->
-            <HBox spacing="10.0" alignment="CENTER">
-                <Button fx:id="refreshButton" text="Refresh"
-                        prefWidth="120.0" prefHeight="32.0"
-                        style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
-                        onAction="#onRefreshClicked"/>
+                    <!-- Actions -->
+                    <HBox spacing="10.0" alignment="CENTER">
+                        <Button fx:id="refreshButton" text="Refresh"
+                                prefWidth="120.0" prefHeight="32.0"
+                                style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
+                                onAction="#onRefreshClicked"/>
 
-                <Button fx:id="backButton" text="Back"
-                        prefWidth="120.0" prefHeight="32.0"
-                        style="-fx-background-color: rgba(255,255,255,0.20); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
-                        onAction="#onBackClicked"/>
-            </HBox>
+                        <Button fx:id="backButton" text="Back"
+                                prefWidth="120.0" prefHeight="32.0"
+                                style="-fx-background-color: rgba(255,255,255,0.20); -fx-text-fill: white; -fx-font-size: 14; -fx-background-radius: 8; -fx-cursor: hand;"
+                                onAction="#onBackClicked"/>
+                    </HBox>
 
-            <!-- List of maps -->
-            <ScrollPane fitToWidth="true"
-                        prefWidth="620.0" prefHeight="250.0"
-                        hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
-                        style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;">
-                <content>
-                    <VBox fx:id="pendingList" spacing="10.0">
-                        <padding>
-                            <Insets top="8.0" right="8.0" bottom="8.0" left="8.0"/>
-                        </padding>
+                    <!-- List of maps -->
+                    <ScrollPane fitToWidth="true"
+                                prefWidth="620.0" prefHeight="250.0"
+                                hbarPolicy="NEVER" vbarPolicy="AS_NEEDED"
+                                style="-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent;">
+                        <content>
+                            <VBox fx:id="pendingList" spacing="10.0">
+                                <padding>
+                                    <Insets top="8.0" right="8.0" bottom="8.0" left="8.0"/>
+                                </padding>
 
-                        <!-- Example row (you can delete this in production) -->
-                        <HBox spacing="12.0" alignment="CENTER_LEFT"
-                              style="-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;">
-                            <padding>
-                                <Insets top="10.0" right="12.0" bottom="10.0" left="12.0"/>
-                            </padding>
+                                <!-- Example row (you can delete this in production) -->
+                                <HBox spacing="12.0" alignment="CENTER_LEFT"
+                                      style="-fx-background-color: rgba(255,255,255,0.14); -fx-background-radius: 12;">
+                                    <padding>
+                                        <Insets top="10.0" right="12.0" bottom="10.0" left="12.0"/>
+                                    </padding>
 
-                            <Label text=""
-                                   textFill="white"
-                                   style="-fx-font-size: 14;"/>
+                                    <Label text=""
+                                           textFill="white"
+                                           style="-fx-font-size: 14;"/>
 
-                            <HBox HBox.hgrow="ALWAYS"/>
+                                    <HBox HBox.hgrow="ALWAYS"/>
 
-                            <Button text="Open"
-                                    prefWidth="90.0" prefHeight="30.0"
-                                    style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;"/>
-                        </HBox>
+                                    <Button text="Open"
+                                            prefWidth="90.0" prefHeight="30.0"
+                                            style="-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); -fx-text-fill: white; -fx-font-size: 13; -fx-background-radius: 8; -fx-cursor: hand;"/>
+                                </HBox>
 
-                    </VBox>
-                </content>
-            </ScrollPane>
+                            </VBox>
+                        </content>
+                    </ScrollPane>
 
-            <Label fx:id="statusLabel"
-                   text="Loading pending maps..."
-                   textFill="white"
-                   style="-fx-font-size: 12; -fx-opacity: 0.85;"/>
-        </VBox>
+                    <Label fx:id="statusLabel"
+                           text="Loading pending maps..."
+                           textFill="white"
+                           style="-fx-font-size: 12; -fx-opacity: 0.85;"/>
+                </VBox>
+            </StackPane>
+        </Group>
     </StackPane>
+
+
 </AnchorPane>

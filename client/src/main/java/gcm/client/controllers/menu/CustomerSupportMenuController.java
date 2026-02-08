@@ -1,5 +1,7 @@
 package gcm.client.controllers.menu;
 
+import gcm.client.controllers.WelcomeController;
+import gcm.client.controllers.customer_support_worker_util.CustomerSupportComplaintsController;
 import gcm.client.network.GcmClient ;
 import gcm.client.utill.ClientApp;
 import common.messages.*;
@@ -10,17 +12,20 @@ public class CustomerSupportMenuController {
 
     public void initialize() {
         client = ClientApp.getClient();
-
-        // for now: handle all responses here (only LOGIN exists)
-        client.setResponseHandler(this::handleResponse);
     }
-    private void handleResponse(GcmResponse response) {}
+
     public void handleClose(ActionEvent actionEvent) {
-        client.closeConnectionSafe();
-        javafx.application.Platform.exit();
+        String role = ClientApp.getCurrentUser().getRole();
+        if(role.equals("CompanyManager")) {
+            ClientApp.getNavigator().show(ManagerMenuController.class);
+        }
+        else if(role.equals("ContentManager")) {
+            ClientApp.getNavigator().show(ContentManagerController.class);
+        }
+        else ClientApp.logout();
     }
 
     public void onSupportButton(ActionEvent actionEvent) {
-
+        ClientApp.getNavigator().show(CustomerSupportComplaintsController.class);
     }
 }
