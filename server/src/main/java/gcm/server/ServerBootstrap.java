@@ -117,7 +117,7 @@ public class ServerBootstrap {
         botToolRegistry.register(new GetCityExistTool());
         botToolRegistry.register(new GetCityRoutes());
         botToolRegistry.register(new GetCitySubPrice());
-
+        botToolRegistry.register(new GuideMapPurchase());
     }
 
 }
