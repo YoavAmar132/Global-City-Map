@@ -97,35 +97,39 @@ public class GuestCatalogController {
     }
 
     private HBox createCityRow(CityCatalogItem city) {
-        // 1. City Name
+
         Label name = new Label(city.getCityName());
         name.setStyle("-fx-text-fill: #1F2937; -fx-font-size: 16; -fx-font-weight: bold;");
 
-        String description = city.getCityDescription();
-        if (description == null || description.isBlank()) {
-            description = "No description";
-        }
-
         String statsText = String.format(
-                "Maps: %d  |  POIs: %d  |  Tours: %d  | Description: %s",
+                "Maps: %d  |  POIs: %d  |  Tours: %d",
                 city.getMapCount(),
                 city.getPoiCount(),
-                city.getToursCount(),
-                description
+                city.getToursCount()
         );
-
-
 
         Label statsLabel = new Label(statsText);
         statsLabel.setStyle("-fx-text-fill: #0072ff; -fx-font-weight: bold; -fx-font-size: 12;");
 
-        // REMOVED: Description Label logic
+        String description = city.getCityDescription();
+        if (description == null || description.isBlank()) {
+            description = "No description available.";
+        }
 
-        VBox textBox = new VBox(4, name, statsLabel);
+        Label descriptionLabel = new Label(description);
+        descriptionLabel.setWrapText(true);
+        descriptionLabel.setMaxWidth(Double.MAX_VALUE);
+        descriptionLabel.setStyle("-fx-text-fill: #374151; -fx-font-size: 13;");
 
-        // 3. Action Button
+        descriptionLabel.setTooltip(new javafx.scene.control.Tooltip(description));
+
+        VBox textBox = new VBox(4, name, statsLabel, descriptionLabel);
+        textBox.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(textBox, Priority.ALWAYS);
+
         Button open = new Button("Open");
-        open.setPrefSize(90, 34);
+        open.setMinWidth(90);
+        open.setPrefHeight(34);
         open.setStyle(
                 "-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff);" +
                         "-fx-text-fill: white; -fx-font-size: 13; -fx-font-weight: bold;" +
@@ -133,13 +137,14 @@ public class GuestCatalogController {
         );
         open.setOnAction(e -> openCity(city));
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox row = new HBox(16, textBox, spacer, open);
+        HBox row = new HBox(16, textBox, open);
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(14, 18, 14, 18));
-        row.setStyle("-fx-background-color: #F9FAFB; -fx-background-radius: 14; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);");
+        row.setStyle(
+                "-fx-background-color: #F9FAFB;" +
+                        "-fx-background-radius: 14;" +
+                        "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 0);"
+        );
 
         return row;
     }
