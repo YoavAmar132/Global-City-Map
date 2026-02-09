@@ -611,7 +611,9 @@ public class RequestHandler {
         if(!mapService.sendApprovedMap(approvePayload)){ return GcmResponse.error("faild to pend");}
          mapService.SendMessage(((ApprovePayload) rawPayload).getCityName());
         Popup p=new Popup(mapService.getPopup(((ApprovePayload) rawPayload).getCityName()));
-        return GcmResponse.ok(p);
+        GcmResponse response =GcmResponse.ok(p);
+        response.setRefresh(1);
+        return response;
     }
     //map request handler
     private GcmResponse handleMapRequest(GcmRequest request) throws SQLException {
