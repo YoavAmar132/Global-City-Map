@@ -11,9 +11,10 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <javafx.version>21.0.6</javafx.version>
+        <javafx.version>21.0.4</javafx.version>
         <junit.version>5.12.1</junit.version>
     </properties>
 
@@ -57,16 +58,6 @@
 
     <build>
         <plugins>
-            <!-- Java 21 compiler -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
-            </plugin>
 
             <!-- JavaFX Maven plugin -->
             <plugin>

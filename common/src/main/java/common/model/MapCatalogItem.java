@@ -10,7 +10,7 @@ public class MapCatalogItem implements Serializable {
     private final double price;
 
     public MapCatalogItem(int mapId, String mapName,
-                          String description, double price) {
+                           String description, double price) {
         this.mapId = mapId;
         this.mapName = mapName;
         this.description = description;

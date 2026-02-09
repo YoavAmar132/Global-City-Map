@@ -2,6 +2,8 @@ package gcm.client.controllers.user_util;
 
 import common.messages.*;
 import common.model.MapSheet;
+import common.model.Poi;
+import gcm.client.controllers.WelcomeController;
 import gcm.client.controllers.map.UserMapViewerController;
 import gcm.client.controllers.menu.UserMenuController;
 import gcm.client.network.GcmClient;
@@ -28,25 +30,19 @@ public class MyMapsController {
     private void initialize() {
         client = ClientApp.getClient();
         client.setResponseHandler(this::handleResponse);
-        loadMyMaps();
-    }
-
-    private void loadMyMaps() {
         int userId = ClientApp.getCurrentUser().getId();
-        // RequestType.LIST_USER_PURCHASES must be handled in RequestHandler
-        // to return List<MapSheet> (OTP maps + active subscription maps)
-        // In MyMapsController.java
         GcmRequest request = new GcmRequest(RequestType.LIST_USER_MAPS, userId);
         client.sendRequest(request);
-        CstatusLabel.setText("Fetching your maps...");
+
     }
+
 
     /**
      * Creates the "View Subscriptions" button dynamically.
      * We add this to the top of the list every time we reload.
      */
     private Button createSubscriptionButton() {
-        Button subBtn = new Button("View My Subscriptions");
+        Button subBtn = new Button("View My Subscriptions maps:");
         subBtn.setMaxWidth(Double.MAX_VALUE);
         subBtn.setPrefHeight(40);
         subBtn.setStyle(
@@ -57,9 +53,6 @@ public class MyMapsController {
                         "-fx-background-radius: 8; " +
                         "-fx-cursor: hand;"
         );
-
-        // Navigate to the Subscriptions Controller (Ensure you created this class!)
-        subBtn.setOnAction(e -> ClientApp.getNavigator().show(UserSubscriptionsController.class));
         return subBtn;
     }
 
@@ -85,17 +78,44 @@ public class MyMapsController {
                         "-fx-cursor: hand;"
         );
         open.setOnAction(e -> openMap(map));
+        Button download = new Button("download Map");
+        download.setPrefSize(100, 30);
+        download.setStyle(
+                "-fx-background-color: linear-gradient(to right, #00c6ff, #0072ff); " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-size: 13; " +
+                        "-fx-background-radius: 20; " +
+                        "-fx-cursor: hand;"
+        );
+        download.setOnAction(e -> downloadMap(map));
 
         // 4. Layout
         HBox spacer = new HBox();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        HBox row = new HBox(12, textBox, spacer, open);
+        HBox row = new HBox(12, textBox, spacer, open,download);
         row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 12;");
         row.setPadding(new javafx.geometry.Insets(10, 15, 10, 15));
 
         return row;
+    }
+
+    public void downloadMap(MapSheet map) {
+        String pois="";
+        for(Poi p:map.getPois())
+        {
+            pois= pois+"  poi name: "+p.getName()+" poi description: "+p.getDescription()+" recomended time to stay: "+p.getRecommendedMinutes()
+                    +" Accessable?: "+p.isAccessible();
+        }
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("map downloaded");
+        alert.setContentText( "Map: "+map.getName()+ System.lineSeparator()+" description:"+map.getDescription()+ System.lineSeparator()+" point of intrests : || "+pois+ System.lineSeparator());
+        alert.showAndWait();
+       Download download=new Download(ClientApp.getCurrentUser().getId(), map.getCityID());
+       GcmRequest request=new GcmRequest(RequestType.DOWNLOAD,download);
+       client.sendRequest(request);
+
     }
 
     public void openMap(MapSheet map) {
@@ -104,6 +124,11 @@ public class MyMapsController {
 
         // Pass the MapSheet object to the viewer
         view.controller.setVals(map);
+
+        //
+        if (view.root instanceof javafx.scene.layout.Region) {
+            ((javafx.scene.layout.Region) view.root).setPrefSize(500, 350);
+        }
 
         ClientApp.getNavigator().showLoaded(view.root);
         System.out.println("Opened map: " + map.getName() + " v" + map.getVersion());
@@ -119,8 +144,18 @@ public class MyMapsController {
                 alert.showAndWait();
             } else {
                 Object t = response.getData();
+                if (t instanceof Popup) {
+                    if((((Popup) t).isInList(ClientApp.getCurrentUser().getId())))
+                    {
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setTitle("");
+                        alert.setContentText("you have a new message");
+                        alert.showAndWait();
+                    }
+                }
                 if (t instanceof ArrayList<?>) {
                     ArrayList<?> list = (ArrayList<?>) t;
+
 
                     Citylist.getChildren().clear();
 
@@ -132,15 +167,16 @@ public class MyMapsController {
                     Citylist.getChildren().add(spacer);
 
                     // 2. Add the maps
-                    if (list.isEmpty()) {
-                        CstatusLabel.setText("You don't have any maps yet.");
-                    } else {
+                    if (!list.isEmpty() && list.get(0) instanceof MapSheet) {
+                        ArrayList<MapSheet> maps=(ArrayList<MapSheet>)list;
                         CstatusLabel.setText("");
-                        for (Object obj : list) {
-                            if (obj instanceof MapSheet) {
-                                Citylist.getChildren().add(createMapRow((MapSheet) obj));
+                        for (MapSheet map : maps) {
+                                Citylist.getChildren().add(createMapRow(map));
                             }
-                        }
+
+
+                    } else {
+                        CstatusLabel.setText("You don't have any maps yet.");
                     }
                 }
             }
@@ -152,10 +188,10 @@ public class MyMapsController {
     }
 
     public void handleClose(ActionEvent actionEvent) {
-        Platform.exit();
+        ClientApp.getNavigator().show(UserMenuController.class);
     }
 
     public void onRefreshClicked(ActionEvent actionEvent) {
-        loadMyMaps();
+
     }
 }

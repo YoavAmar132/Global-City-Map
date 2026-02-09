@@ -1,5 +1,6 @@
 package gcm.client.controllers.map;
 
+import gcm.client.utill.ClientApp;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
@@ -13,14 +14,22 @@ import javafx.scene.image.Image;
 
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Consumer;
 
 public class MapBaseLayerController {
     public enum InteractionMode {
         VIEW,
-        ADD_POI
+        ADD_POI,
+        ADD_ROUTE
     }
+
+    private URI tileRootUri;
+
 
     private InteractionMode mode = InteractionMode.VIEW;
     // make tiles cache to load smoother
@@ -88,9 +97,11 @@ public class MapBaseLayerController {
     private void initialize() {
         gc = mapCanvas.getGraphicsContext2D();
 
-        File testTile = new File(
-               "client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
-       );
+
+        tileRootUri = Paths.get(
+                "C:/Users/ADAM/Desktop/DONT YOU DARE/Labs/Project/Global-City-Map/client/src/main/resources/gcm/client/map/Haifa/13/4891/3303.jpg"
+        ).toUri();
+        File testTile = new File(tileRootUri);
         System.out.println("DEBUG testTile: " + testTile.getAbsolutePath()
                 + " exists=" + testTile.exists());
 
@@ -220,7 +231,6 @@ public class MapBaseLayerController {
     /* ================= drawing ================= */
 
     private void redraw() {
-        System.out.println("redraw: start");
         if (gc == null)
         {
             System.out.println("gc was null");
@@ -233,9 +243,7 @@ public class MapBaseLayerController {
         drawTiles(gc, mapCanvas);
 
         if (onViewChanged != null) {
-            System.out.println("redraw: calling onViewChanged");
             onViewChanged.run();
-            System.out.println("redraw: returned from onViewChanged");
         }
     }
 
@@ -262,14 +270,8 @@ public class MapBaseLayerController {
 
         // ✅ if view is outside the world (or overflow happened), nothing to draw
         if (clampedMaxX < clampedMinX || clampedMaxY < clampedMinY) {
-            System.out.println("drawTiles: nothing in range (clamped)");
             return;
         }
-
-        // ✅ Debug (TEMP): print ranges so we can confirm it’s sane
-        System.out.println("drawTiles range: z=" + z +
-                " X=" + clampedMinX + ".." + clampedMaxX +
-                " Y=" + clampedMinY + ".." + clampedMaxY);
 
         int drawn = 0;
 
@@ -298,65 +300,73 @@ public class MapBaseLayerController {
             }
         }
 
-        System.out.println("drawTiles: zoom=" + z + " tilesDrawn=" + drawn);
     }
 
 
 
     /** copied from your test app, adapted to use tileRoot + mapCanvas */
     private void centerOnAvailableTiles() {
-        if (mapCanvas.getWidth() <= 0 || mapCanvas.getHeight() <= 0) return;
-        File test = new File(tileRoot);
-        String pathh =  test.getAbsolutePath();
-
-        System.out.println("pathh=" + pathh);
-
-        File zoomDir = new File(pathh + File.separator + zoom);
-
-        System.out.println("pathh=" + zoomDir.getAbsolutePath());
-
-        File[] xDirs = zoomDir.listFiles(File::isDirectory);
-        if (xDirs == null || xDirs.length == 0) return;
-
-        int minX = Integer.MAX_VALUE, maxX = Integer.MIN_VALUE;
-        int minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
-
-        for (File xDir : xDirs) {
-            int tx;
-            try {
-                tx = Integer.parseInt(xDir.getName());
-            } catch (NumberFormatException e) {
-                continue;
+        if (!(this.mapCanvas.getWidth() <= (double)0.0F) && !(this.mapCanvas.getHeight() <= (double)0.0F)) {
+            File zoomDir;
+            if (isRunningFromJar()) {
+                System.out.println("ran from jar");
+                String city = (new File(this.tileRoot)).getName();
+                Path jarDir = this.getJarDir();
+                Path tilesDir = jarDir.resolve("maps").resolve(city);
+                this.tileRoot = tilesDir.toString();
+                zoomDir = new File(this.tileRoot + File.separator + this.zoom);
+            } else {
+                System.out.println("ran from local");
+                File test = new File(this.tileRoot);
+                String pathh = test.getAbsolutePath();
+                zoomDir = new File(pathh + File.separator + this.zoom);
             }
-            minX = Math.min(minX, tx);
-            maxX = Math.max(maxX, tx);
 
-            File[] yFiles = xDir.listFiles(File::isFile);
-            if (yFiles == null) continue;
-            for (File f : yFiles) {
-                String name = f.getName(); // e.g. "3303.jpg"
-                int dot = name.indexOf('.');
-                if (dot <= 0) continue;
-                try {
-                    int ty = Integer.parseInt(name.substring(0, dot));
-                    minY = Math.min(minY, ty);
-                    maxY = Math.max(maxY, ty);
-                } catch (NumberFormatException ignored) {}
+            File[] xDirs = zoomDir.listFiles(File::isDirectory);
+            if (xDirs != null && xDirs.length != 0) {
+                int minX = Integer.MAX_VALUE;
+                int maxX = Integer.MIN_VALUE;
+                int minY = Integer.MAX_VALUE;
+                int maxY = Integer.MIN_VALUE;
+
+                for(File xDir : xDirs) {
+                    int tx;
+                    try {
+                        tx = Integer.parseInt(xDir.getName());
+                    } catch (NumberFormatException var21) {
+                        continue;
+                    }
+
+                    minX = Math.min(minX, tx);
+                    maxX = Math.max(maxX, tx);
+                    File[] yFiles = xDir.listFiles(File::isFile);
+                    if (yFiles != null) {
+                        for(File f : yFiles) {
+                            String name = f.getName();
+                            int dot = name.indexOf(46);
+                            if (dot > 0) {
+                                try {
+                                    int ty = Integer.parseInt(name.substring(0, dot));
+                                    minY = Math.min(minY, ty);
+                                    maxY = Math.max(maxY, ty);
+                                } catch (NumberFormatException var20) {
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (minX != Integer.MAX_VALUE && minY != Integer.MAX_VALUE) {
+                    double centerTileX = (double)(minX + maxX) / (double)2.0F;
+                    double centerTileY = (double)(minY + maxY) / (double)2.0F;
+                    double centerWorldX = centerTileX * (double)256.0F;
+                    double centerWorldY = centerTileY * (double)256.0F;
+                    this.offsetX = this.mapCanvas.getWidth() / (double)2.0F - centerWorldX;
+                    this.offsetY = this.mapCanvas.getHeight() / (double)2.0F - centerWorldY;
+                }
             }
         }
-
-        if (minX == Integer.MAX_VALUE || minY == Integer.MAX_VALUE) return;
-
-        double centerTileX = (minX + maxX) / 2.0;
-        double centerTileY = (minY + maxY) / 2.0;
-
-        double centerWorldX = centerTileX * TILE_SIZE;
-        double centerWorldY = centerTileY * TILE_SIZE;
-
-        offsetX = mapCanvas.getWidth()  / 2.0 - centerWorldX;
-        offsetY = mapCanvas.getHeight() / 2.0 - centerWorldY;
     }
-
 
     public void handleExternalClick(double sceneX, double sceneY) {
         javafx.geometry.Point2D local = mapCanvas.sceneToLocal(sceneX, sceneY);
@@ -398,6 +408,7 @@ public class MapBaseLayerController {
         redraw();
     }
 
+
     public void handleExternalScroll(double deltaY) {
         if (deltaY > 0 && zoom < MAX_ZOOM) setZoom(zoom + 1);
         else if (deltaY < 0 && zoom > MIN_ZOOM) setZoom(zoom - 1);
@@ -405,6 +416,23 @@ public class MapBaseLayerController {
     public void recenterNow() {
         centerOnAvailableTiles();
         redraw();
+    }
+
+    public Path getJarDir() {
+        try {
+            return Paths.get(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean isRunningFromJar() {
+        try {
+            String path = ClientApp.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+            return path.endsWith(".jar");
+        } catch (Exception var1) {
+            return false;
+        }
     }
 
 }

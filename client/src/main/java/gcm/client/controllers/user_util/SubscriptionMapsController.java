@@ -79,7 +79,7 @@ public class SubscriptionMapsController {
 
     private void addMapToLibrary(MapSheet map) {
         if (currentCity == null) return;
-
+        System.out.println(map.getName());
         BuyMapPayload payload = new BuyMapPayload(
                 ClientApp.getCurrentUser().getId(),
                 currentCity.getName(),
